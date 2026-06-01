@@ -11,6 +11,8 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { Header } from "@/components/layout/Header";
+import { Footer } from "@/components/layout/Footer";
 
 function NotFoundComponent() {
   return (
@@ -77,19 +79,46 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
-      { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { title: "MAVI Centro de Estética — Sete Lagoas" },
+      {
+        name: "description",
+        content:
+          "Centro de estética facial e corporal em Sete Lagoas. Drenagem linfática, depilação a laser, limpeza de pele e mais. Agende sua avaliação.",
+      },
+      { name: "author", content: "MAVI Centro de Estética" },
+      { property: "og:title", content: "MAVI Centro de Estética" },
+      {
+        property: "og:description",
+        content: "Tratamentos faciais e corporais em Sete Lagoas. Seja a sua melhor versão.",
+      },
+      { property: "og:site_name", content: "MAVI Centro de Estética" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
-      { name: "twitter:site", content: "@Lovable" },
     ],
     links: [
       {
         rel: "stylesheet",
         href: appCss,
+      },
+    ],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "HealthAndBeautyBusiness",
+          name: "MAVI Centro de Estética",
+          description:
+            "Centro de estética facial e corporal em Sete Lagoas — drenagem linfática, depilação a laser, limpeza de pele e tratamentos exclusivos.",
+          telephone: "+5531971671266",
+          address: {
+            "@type": "PostalAddress",
+            addressLocality: "Sete Lagoas",
+            addressRegion: "MG",
+            addressCountry: "BR",
+          },
+          sameAs: ["https://www.instagram.com/mavicentrodeestetica/"],
+        }),
       },
     ],
   }),
@@ -101,7 +130,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="pt-BR">
       <head>
         <HeadContent />
       </head>
@@ -118,8 +147,14 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-      <Outlet />
+      <div className="flex flex-col min-h-screen">
+        <Header />
+        <main className="flex-1">
+          {/* Required: nested routes render here. */}
+          <Outlet />
+        </main>
+        <Footer />
+      </div>
     </QueryClientProvider>
   );
 }
