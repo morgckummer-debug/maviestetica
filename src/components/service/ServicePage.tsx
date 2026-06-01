@@ -104,8 +104,11 @@ export function ServicePage({ service }: { service: Service }) {
                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-primary/60 via-primary/10 to-transparent" />
-                  <div className="absolute bottom-5 left-5 right-5 text-primary-foreground flex items-end justify-between gap-2">
-                    <h3 className="font-display text-xl">{s.name}</h3>
+                  <div
+                    className="absolute bottom-5 left-5 right-5 text-white flex items-end justify-between gap-2"
+                    style={{ textShadow: "0 2px 8px rgba(0,0,0,0.55), 0 1px 2px rgba(0,0,0,0.45)" }}
+                  >
+                    <h3 className="font-display text-2xl">{s.name}</h3>
                     <ArrowUpRight className="h-5 w-5 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
                   </div>
                 </div>

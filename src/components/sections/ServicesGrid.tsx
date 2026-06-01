@@ -39,9 +39,12 @@ export function ServicesGrid() {
                   <div className="absolute top-4 right-4 w-9 h-9 rounded-full bg-background/90 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                     <ArrowUpRight className="h-4 w-4 text-primary" />
                   </div>
-                  <div className="absolute bottom-5 left-5 right-5 text-primary-foreground">
-                    <h3 className="font-display text-xl leading-tight">{s.name}</h3>
-                    <p className="mt-1 text-xs text-primary-foreground/80">{s.short}</p>
+                  <div
+                    className="absolute bottom-5 left-5 right-5 text-white"
+                    style={{ textShadow: "0 2px 8px rgba(0,0,0,0.55), 0 1px 2px rgba(0,0,0,0.45)" }}
+                  >
+                    <h3 className="font-display text-2xl lg:text-[1.75rem] leading-tight">{s.name}</h3>
+                    <p className="mt-1.5 text-sm text-white/90">{s.short}</p>
                   </div>
                 </div>
               </Link>

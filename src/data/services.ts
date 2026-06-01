@@ -6,6 +6,7 @@ import posOperatorio from "@/assets/services/pos-operatorio.jpg";
 import limpezaDePele from "@/assets/services/limpeza-de-pele.jpg";
 import drenagemGestantes from "@/assets/services/drenagem-gestantes.jpg";
 import correnteRussa from "@/assets/services/corrente-russa.jpg";
+import tapingPosParto from "@/assets/services/taping-pos-parto.jpg";
 
 export type Service = {
   slug: string;
@@ -178,6 +179,26 @@ export const services: Service[] = [
       "Resultados a partir das primeiras sessões",
     ],
     image: correnteRussa,
+  },
+  {
+    slug: "taping-pos-parto",
+    name: "Taping Pós-Parto",
+    short: "Suporte e conforto no pós-parto",
+    tagline: "Sustentação delicada para o seu corpo após o parto",
+    description:
+      "Aplicação de bandagens elásticas terapêuticas (taping) no pós-parto, que ajudam a sustentar a musculatura abdominal, aliviar desconfortos, estimular a drenagem e devolver sensação de firmeza e conforto durante a recuperação.",
+    indicated: [
+      "Mulheres no pós-parto (normal ou cesárea, após liberação médica)",
+      "Sensação de flacidez e desconforto abdominal",
+      "Quem busca suporte adicional na recuperação",
+    ],
+    benefits: [
+      "Sustentação confortável da parede abdominal",
+      "Estímulo à drenagem e redução de inchaço",
+      "Alívio de desconfortos posturais",
+      "Sensação de firmeza e bem-estar",
+    ],
+    image: tapingPosParto,
   },
 ];
 
