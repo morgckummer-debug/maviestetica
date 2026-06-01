@@ -1,6 +1,8 @@
-## Trocar logo do MAVI
+## Foto de fundo no Hero
 
-1. Copiar a imagem enviada (`mavi (1).png`) para `src/assets/logo-mavi-dark.png`.
-2. Atualizar `src/components/layout/Header.tsx` e `src/components/layout/Footer.tsx` para importar e usar `logo-mavi-dark.png` no lugar do logo claro atual.
-3. Remover o `logo-mavi.png` antigo (não usado em mais lugares) para manter o projeto limpo.
-4. Verificar contraste sobre o fundo off-white do header/footer e ajustar tamanho se necessário.
+1. Copiar a imagem enviada para `src/assets/hero-bg.jpg`.
+2. Atualizar `src/components/sections/Hero.tsx`:
+   - Adicionar a imagem como `background-image` cobrindo toda a seção (`object-cover`, `bg-center`).
+   - Aplicar overlay com a paleta off-white/lavanda (gradiente claro com ~70-80% de opacidade) para garantir contraste do texto e manter o ar premium.
+   - Ajustar cores do texto/CTA se necessário para legibilidade sobre a foto suavizada.
+3. Manter os blobs orgânicos e animações já existentes acima do overlay.
