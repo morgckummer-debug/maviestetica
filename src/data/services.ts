@@ -66,7 +66,7 @@ export const services: Service[] = [
     short: "Triple Wave para todos os fototipos",
     tagline: "O laser mais avançado de Sete Lagoas",
     description:
-      "Realizamos a depilação a laser com o equipamento Ácrus Triple Wave — confortável, seguro e eficaz para todos os tipos de pele e tons. Protocolos personalizados conduzidos por profissionais especializados.",
+      "Realizamos a depilação a laser com o equipamento Ácrus Triple Wave — confortável, seguro e eficaz para todos os tipos de pele e tons. Protocolos personalizados conduzidos por profissional especializada.",
     indicated: [
       "Todos os fototipos de pele",
       "Rosto, axilas, virilha, pernas e corpo todo",

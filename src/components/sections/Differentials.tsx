@@ -14,8 +14,8 @@ const items = [
   },
   {
     icon: ShieldCheck,
-    title: "Profissionais especializados",
-    desc: "Equipe formada, com protocolos validados e formação contínua nas técnicas mais avançadas da estética.",
+    title: "Profissional especializada",
+    desc: "Cuidado individualizado conduzido por fisioterapeuta especializada, com protocolos validados e constante atualização nas técnicas mais avançadas da estética.",
   },
 ];
 
