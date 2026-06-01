@@ -1,26 +1,21 @@
 import { MessageCircle, Instagram } from "lucide-react";
 import { motion } from "motion/react";
-import heroImg from "@/assets/hero-stilllife.jpg";
 import heroBg from "@/assets/hero-bg.jpg";
 import { OrganicBlob } from "@/components/ui/OrganicBlob";
 import { WHATSAPP_URL, INSTAGRAM_URL, CITY } from "@/data/services";
 
 export function Hero() {
   return (
-    <section className="relative overflow-hidden pt-12 pb-24 lg:pt-20 lg:pb-32">
+    <section className="relative overflow-hidden pt-24 pb-32 lg:pt-40 lg:pb-48">
       {/* Imagem de fundo translúcida */}
       <div
         aria-hidden
-        className="absolute inset-0 -z-20 bg-center bg-cover opacity-60"
+        className="absolute inset-0 -z-20 bg-center bg-cover opacity-75"
         style={{ backgroundImage: `url(${heroBg})` }}
       />
       <div
         aria-hidden
-        className="absolute inset-0 -z-20 bg-gradient-to-b from-background/70 via-background/40 to-background/85"
-      />
-      <div
-        aria-hidden
-        className="absolute inset-0 -z-20 hidden lg:block bg-gradient-to-r from-background/80 via-background/30 to-transparent"
+        className="absolute inset-0 -z-20 bg-gradient-to-br from-primary/55 via-primary/30 to-background/60"
       />
 
       <OrganicBlob
@@ -32,22 +27,29 @@ export function Hero() {
         className="absolute -bottom-40 right-[-15%] w-[520px] h-[520px] text-lavender/40 -z-10"
       />
 
-      <div className="mx-auto max-w-7xl px-6 lg:px-10 grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+      <div className="mx-auto max-w-7xl px-6 lg:px-10">
         <motion.div
           initial={{ opacity: 1, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.8, ease: "easeOut" }}
+          className="max-w-2xl"
         >
-          <p className="text-xs tracking-[0.3em] uppercase text-primary/70 mb-6">
+          <p className="text-xs tracking-[0.3em] uppercase text-white/80 mb-6">
             Centro de Estética · {CITY}
           </p>
-          <h1 className="font-display text-5xl sm:text-6xl lg:text-7xl text-primary leading-[1.05]">
+          <h1
+            className="font-display text-5xl sm:text-6xl lg:text-7xl text-white leading-[1.05]"
+            style={{ textShadow: "0 2px 14px rgba(0,0,0,0.35)" }}
+          >
             Seja a sua
             <br />
-            <em className="italic font-normal text-rose">melhor versão</em>.
+            <em className="italic font-normal text-lavender-soft">melhor versão</em>.
           </h1>
-          <p className="mt-8 text-lg text-foreground/70 max-w-md leading-relaxed">
+          <p
+            className="mt-8 text-lg text-white/90 max-w-md leading-relaxed"
+            style={{ textShadow: "0 1px 8px rgba(0,0,0,0.35)" }}
+          >
             Tratamentos faciais e corporais conduzidos com tecnologia avançada,
             sensibilidade e o cuidado que sua pele merece.
           </p>
@@ -57,7 +59,7 @@ export function Hero() {
               href={WHATSAPP_URL}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center gap-2 rounded-full bg-primary text-primary-foreground px-7 py-3.5 text-sm font-medium hover:bg-primary/90 transition-all hover:-translate-y-0.5"
+              className="inline-flex items-center gap-2 rounded-full bg-white text-primary px-7 py-3.5 text-sm font-medium hover:bg-white/90 transition-all hover:-translate-y-0.5 shadow-lg shadow-primary/20"
             >
               <MessageCircle className="h-4 w-4" />
               Agendar avaliação
@@ -66,33 +68,11 @@ export function Hero() {
               href={INSTAGRAM_URL}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center gap-2 rounded-full border border-primary/30 text-primary px-7 py-3.5 text-sm font-medium hover:bg-primary/5 transition-colors"
+              className="inline-flex items-center gap-2 rounded-full border border-white/60 text-white px-7 py-3.5 text-sm font-medium hover:bg-white/10 transition-colors"
             >
               <Instagram className="h-4 w-4" />
               Instagram
             </a>
-          </div>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 1, scale: 0.95 }}
-          whileInView={{ opacity: 1, scale: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 1, ease: "easeOut", delay: 0.2 }}
-          className="relative"
-        >
-          <div className="relative aspect-[4/5] rounded-[3rem] overflow-hidden shadow-2xl shadow-primary/10">
-            <img
-              src={heroImg}
-              alt="Produtos de cuidado com lavanda em ambiente de spa"
-              className="w-full h-full object-cover"
-              width={1280}
-              height={1280}
-            />
-          </div>
-          <div className="absolute -bottom-8 -left-8 hidden md:block bg-cream rounded-2xl px-6 py-4 shadow-xl">
-            <p className="font-display italic text-2xl text-primary">+4 anos</p>
-            <p className="text-xs text-muted-foreground tracking-wide">de cuidado e transformação</p>
           </div>
         </motion.div>
       </div>

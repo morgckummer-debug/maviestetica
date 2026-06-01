@@ -1,20 +1,25 @@
-## O que aconteceu
+## O que mudar no Hero
 
-A foto anterior (`hero-bg.jpg`) estava aplicada, mas com `opacity-25` + um overlay quase opaco (`from-background/85 via-background/75 to-background`) por cima — resultado: praticamente invisível. Além disso, você acabou de enviar uma nova foto (spa/massagem) que faz mais sentido como fundo do Hero.
+A imagem arredondada da direita (`hero-stilllife.jpg` + cartão "+4 anos") está cobrindo metade da foto de fundo. Vamos removê-la e deixar o texto direto sobre a foto, com um overlay lavanda/roxo para contraste.
 
-## Mudanças
+## Mudanças em `src/components/sections/Hero.tsx`
 
-1. **Substituir a imagem de fundo**
-   - Copiar `user-uploads://IMG_2263-2.jpeg` sobre `src/assets/hero-bg.jpg` (mantém o import existente, nenhuma outra referência precisa mudar).
+1. **Remover** a coluna da direita inteira:
+   - O `motion.div` com a `<img src={heroImg} … />`.
+   - O cartão flutuante "+4 anos".
+   - O import `heroImg` de `@/assets/hero-stilllife.jpg`.
 
-2. **Ajustar o `Hero.tsx` para a foto aparecer**
-   - Subir a opacidade da camada da imagem de `opacity-25` para `opacity-60`.
-   - Trocar o overlay sólido por um gradiente mais leve: `from-background/70 via-background/40 to-background/85` (claro no topo onde está o título, fade no meio para a foto respirar, fechando no rodapé da seção para a transição com a próxima seção).
-   - Adicionar um segundo gradiente lateral só atrás do bloco de texto (lg+): `bg-gradient-to-r from-background/80 via-background/30 to-transparent`, garantindo contraste do H1/parágrafo sem escurecer a foto inteira.
-   - Manter os `OrganicBlob` e o card "+4 anos".
+2. **Layout single-column**:
+   - Trocar `grid lg:grid-cols-2 gap-12 lg:gap-20 items-center` por um container com `max-w-2xl` para o bloco de texto, alinhado à esquerda.
+   - Aumentar o padding vertical (`pt-24 pb-32 lg:pt-40 lg:pb-48`) para o Hero ganhar presença sem a imagem da direita.
 
-3. **Sem mudanças** em dados, tokens, outras seções ou rotas.
+3. **Overlay para contraste**:
+   - Substituir o gradiente atual por um overlay lavanda: `bg-gradient-to-br from-primary/55 via-primary/30 to-background/60` (puxa do roxo da marca em cima/esquerda, suaviza em direção à direita/baixo).
+   - Manter a camada da foto em `opacity-75` (um pouco mais nítida, já que agora o overlay cuida do contraste).
+   - Trocar o `text-primary` do H1 por `text-white` (com `drop-shadow` discreto) e o parágrafo por `text-white/90`, já que o fundo passa a ser escuro/colorido. O eyebrow vira `text-white/80` e o botão Instagram ganha borda branca translúcida.
 
-## Resultado esperado
+4. **Manter** os `OrganicBlob` (eles continuam funcionando como camada decorativa atrás do overlay).
 
-A foto da massagem aparece nítida atrás do conteúdo do Hero, com os textos ainda totalmente legíveis no mobile (393px) e no desktop.
+## Resultado
+
+Hero com a foto da massagem ocupando toda a seção, um wash lavanda elegante por cima e o texto branco confortavelmente legível — sem o card da direita competindo com a foto.
