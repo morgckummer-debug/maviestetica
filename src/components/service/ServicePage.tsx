@@ -20,7 +20,8 @@ export function ServicePage({ service }: { service: Service }) {
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-start">
             <motion.div
               initial={{ opacity: 0, scale: 0.97 }}
-              animate={{ opacity: 1, scale: 1 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
               transition={{ duration: 0.7 }}
               className="aspect-[4/5] rounded-[2.5rem] overflow-hidden shadow-xl shadow-primary/10"
             >
@@ -29,7 +30,8 @@ export function ServicePage({ service }: { service: Service }) {
 
             <motion.div
               initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
               transition={{ duration: 0.7, delay: 0.1 }}
             >
               <p className="text-xs tracking-[0.3em] uppercase text-primary/70 mb-6">Tratamento</p>
