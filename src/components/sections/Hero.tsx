@@ -1,12 +1,24 @@
 import { MessageCircle, Instagram } from "lucide-react";
 import { motion } from "motion/react";
 import heroImg from "@/assets/hero-stilllife.jpg";
+import heroBg from "@/assets/hero-bg.jpg";
 import { OrganicBlob } from "@/components/ui/OrganicBlob";
 import { WHATSAPP_URL, INSTAGRAM_URL, CITY } from "@/data/services";
 
 export function Hero() {
   return (
     <section className="relative overflow-hidden pt-12 pb-24 lg:pt-20 lg:pb-32">
+      {/* Imagem de fundo translúcida */}
+      <div
+        aria-hidden
+        className="absolute inset-0 -z-20 bg-center bg-cover opacity-25"
+        style={{ backgroundImage: `url(${heroBg})` }}
+      />
+      <div
+        aria-hidden
+        className="absolute inset-0 -z-20 bg-gradient-to-b from-background/85 via-background/75 to-background"
+      />
+
       <OrganicBlob
         variant={1}
         className="absolute -top-32 -left-40 w-[680px] h-[680px] text-lavender-soft -z-10"
