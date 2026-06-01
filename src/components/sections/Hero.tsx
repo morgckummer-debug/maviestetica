@@ -11,12 +11,16 @@ export function Hero() {
       {/* Imagem de fundo translúcida */}
       <div
         aria-hidden
-        className="absolute inset-0 -z-20 bg-center bg-cover opacity-25"
+        className="absolute inset-0 -z-20 bg-center bg-cover opacity-60"
         style={{ backgroundImage: `url(${heroBg})` }}
       />
       <div
         aria-hidden
-        className="absolute inset-0 -z-20 bg-gradient-to-b from-background/85 via-background/75 to-background"
+        className="absolute inset-0 -z-20 bg-gradient-to-b from-background/70 via-background/40 to-background/85"
+      />
+      <div
+        aria-hidden
+        className="absolute inset-0 -z-20 hidden lg:block bg-gradient-to-r from-background/80 via-background/30 to-transparent"
       />
 
       <OrganicBlob
