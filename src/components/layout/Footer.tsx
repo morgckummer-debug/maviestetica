@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { Instagram, MessageCircle, MapPin, Clock } from "lucide-react";
-import logo from "@/assets/logo-mavi.png";
+import logo from "@/assets/logo-mavi-dark.png";
 import {
   WHATSAPP_URL,
   WHATSAPP_DISPLAY,
