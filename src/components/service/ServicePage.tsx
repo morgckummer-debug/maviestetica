@@ -19,7 +19,7 @@ export function ServicePage({ service }: { service: Service }) {
 
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-start">
             <motion.div
-              initial={{ opacity: 0, scale: 0.97 }}
+              initial={{ opacity: 1, scale: 0.97 }}
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}
               transition={{ duration: 0.7 }}
@@ -29,7 +29,7 @@ export function ServicePage({ service }: { service: Service }) {
             </motion.div>
 
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 1, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.7, delay: 0.1 }}

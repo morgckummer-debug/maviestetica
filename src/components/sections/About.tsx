@@ -5,7 +5,7 @@ export function About() {
     <section id="sobre" className="py-24 lg:py-32 relative">
       <div className="mx-auto max-w-4xl px-6 lg:px-10 text-center">
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
+          initial={{ opacity: 1, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-100px" }}
           transition={{ duration: 0.7 }}

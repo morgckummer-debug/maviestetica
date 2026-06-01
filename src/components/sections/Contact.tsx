@@ -13,7 +13,7 @@ export function Contact() {
     <section id="contato" className="py-24 lg:py-32">
       <div className="mx-auto max-w-6xl px-6 lg:px-10">
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
+          initial={{ opacity: 1, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.7 }}
