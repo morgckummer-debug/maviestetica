@@ -1,25 +1,50 @@
-## O que mudar no Hero
+## Novo Hero (referência da imagem enviada)
 
-A imagem arredondada da direita (`hero-stilllife.jpg` + cartão "+4 anos") está cobrindo metade da foto de fundo. Vamos removê-la e deixar o texto direto sobre a foto, com um overlay lavanda/roxo para contraste.
+Estrutura inspirada no modelo: fundo claro e arejado, texto à esquerda, foto à direita ocupando boa parte da seção, sem overlay roxo cobrindo a foto.
 
-## Mudanças em `src/components/sections/Hero.tsx`
+### Layout (`src/components/sections/Hero.tsx`)
 
-1. **Remover** a coluna da direita inteira:
-   - O `motion.div` com a `<img src={heroImg} … />`.
-   - O cartão flutuante "+4 anos".
-   - O import `heroImg` de `@/assets/hero-stilllife.jpg`.
+```
+┌─────────────────────────────────────────────┐
+│  [eyebrow: Centro de Estética · Sete Lagoas]│
+│                                             │
+│  "Seja a sua                       [FOTO    │
+│   melhor versão"                    massagem│
+│                                     grande, │
+│  ──── Tratamentos faciais e         lado    │
+│       corporais com cuidado…        direito]│
+│                                             │
+│  ( Agendar avaliação )  Instagram           │
+└─────────────────────────────────────────────┘
+```
 
-2. **Layout single-column**:
-   - Trocar `grid lg:grid-cols-2 gap-12 lg:gap-20 items-center` por um container com `max-w-2xl` para o bloco de texto, alinhado à esquerda.
-   - Aumentar o padding vertical (`pt-24 pb-32 lg:pt-40 lg:pb-48`) para o Hero ganhar presença sem a imagem da direita.
+- Fundo da seção: claro (`bg-background` com leve gradiente lavanda muito sutil), sem foto cobrindo tudo.
+- Coluna esquerda (`max-w-xl`): eyebrow em caps espaçadas, H1 grande entre aspas com `font-display italic` no destaque, divisor curto (linha + parágrafo curto ao lado), CTAs.
+- Coluna direita: foto enviada (`hero-bg.jpg`) em card arredondado grande (`rounded-[2rem] lg:rounded-[3rem]`), `aspect-[4/5]`, `object-cover`, com sombra suave (`shadow-2xl shadow-primary/10`).
+- Grid: `grid lg:grid-cols-[1.05fr_1fr] gap-12 lg:gap-16 items-center`.
+- Mobile: foto vai abaixo do texto, mantendo respiro.
+- Manter `OrganicBlob` decorativos atrás, bem suaves (opacidade baixa).
 
-3. **Overlay para contraste**:
-   - Substituir o gradiente atual por um overlay lavanda: `bg-gradient-to-br from-primary/55 via-primary/30 to-background/60` (puxa do roxo da marca em cima/esquerda, suaviza em direção à direita/baixo).
-   - Manter a camada da foto em `opacity-75` (um pouco mais nítida, já que agora o overlay cuida do contraste).
-   - Trocar o `text-primary` do H1 por `text-white` (com `drop-shadow` discreto) e o parágrafo por `text-white/90`, já que o fundo passa a ser escuro/colorido. O eyebrow vira `text-white/80` e o botão Instagram ganha borda branca translúcida.
+### Estilo
 
-4. **Manter** os `OrganicBlob` (eles continuam funcionando como camada decorativa atrás do overlay).
+- Texto volta para tokens da marca: eyebrow `text-muted-foreground`, H1 `text-foreground` com `<em>` em `text-primary italic`, parágrafo `text-muted-foreground`.
+- CTA primário: pílula `bg-primary text-primary-foreground` arredondada (`rounded-full`), sombra suave.
+- CTA secundário: texto + ícone, sem borda pesada (`text-foreground/80 hover:text-primary`).
+- Tipografia: manter `font-display` no H1, tamanhos `text-5xl sm:text-6xl lg:text-7xl`, leading apertado.
+- Espaçamento generoso: `pt-20 pb-24 lg:pt-32 lg:pb-40`.
 
-## Resultado
+### Conteúdo (mantém)
 
-Hero com a foto da massagem ocupando toda a seção, um wash lavanda elegante por cima e o texto branco confortavelmente legível — sem o card da direita competindo com a foto.
+- Eyebrow: "Centro de Estética · Sete Lagoas"
+- H1: "Seja a sua *melhor versão*." (com aspas tipográficas opcionais — confirmo com você se quiser as aspas como no modelo)
+- Subtítulo curto ao lado do divisor: "Tratamentos faciais e corporais com tecnologia, sensibilidade e cuidado."
+- CTAs: WhatsApp (Agendar avaliação) e Instagram.
+
+### Imagem
+
+Usa `src/assets/hero-bg.jpg` (foto da massagem que você já enviou) — agora visível inteira na coluna da direita, sem overlay cobrindo.
+
+### Arquivos
+
+- `src/components/sections/Hero.tsx` — reescrita do layout conforme acima.
+- Nenhum outro arquivo precisa mudar.
