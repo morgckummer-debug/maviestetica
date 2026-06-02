@@ -12,8 +12,8 @@ import {
 
 export function Footer() {
   return (
-    <footer className="bg-secondary/40 border-t border-border/50 mt-32">
-      <div className="mx-auto max-w-7xl px-6 lg:px-10 py-16 grid gap-12 md:grid-cols-4">
+    <footer className="bg-secondary/40 border-t border-border/50 mt-0">
+      <div className="mx-auto max-w-7xl px-6 lg:px-10 py-10 grid gap-10 md:grid-cols-4">
         <div className="md:col-span-1">
           <img src={logo} alt="MAVI" className="h-14 w-auto mb-4" />
           <p className="text-sm text-muted-foreground leading-relaxed">

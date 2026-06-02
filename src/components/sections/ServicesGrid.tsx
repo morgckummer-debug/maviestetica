@@ -5,9 +5,9 @@ import { services } from "@/data/services";
 
 export function ServicesGrid() {
   return (
-    <section id="servicos" className="py-24 lg:py-32 bg-secondary/30">
+    <section id="servicos" className="py-14 lg:py-20 bg-secondary/30">
       <div className="mx-auto max-w-7xl px-6 lg:px-10">
-        <div className="max-w-2xl mb-16 lg:mb-20">
+        <div className="max-w-2xl mb-10 lg:mb-14">
           <p className="text-xs tracking-[0.3em] uppercase text-primary/70 mb-6">Tratamentos</p>
           <h2 className="font-display text-4xl lg:text-5xl text-primary leading-tight">
             Cada protocolo, pensado <em className="italic font-normal text-rose">para você</em>.

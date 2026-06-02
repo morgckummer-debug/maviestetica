@@ -10,7 +10,7 @@ import {
 
 export function Contact() {
   return (
-    <section id="contato" className="py-24 lg:py-32">
+    <section id="contato" className="py-14 lg:py-20">
       <div className="mx-auto max-w-6xl px-6 lg:px-10">
         <motion.div
           initial={{ opacity: 1, y: 30 }}

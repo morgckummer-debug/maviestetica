@@ -8,7 +8,7 @@ export function ServicePage({ service }: { service: Service }) {
 
   return (
     <>
-      <article className="pt-12 pb-24">
+      <article className="pt-8 pb-16">
         <div className="mx-auto max-w-6xl px-6 lg:px-10">
           <Link
             to="/"
@@ -53,7 +53,7 @@ export function ServicePage({ service }: { service: Service }) {
             </motion.div>
           </div>
 
-          <div className="mt-24 grid md:grid-cols-2 gap-10 lg:gap-16">
+          <div className="mt-14 grid md:grid-cols-2 gap-8 lg:gap-12">
             <div className="bg-secondary/40 rounded-3xl p-8 lg:p-10">
               <h2 className="font-display text-2xl lg:text-3xl text-primary mb-6">
                 Para quem é indicado
@@ -83,7 +83,7 @@ export function ServicePage({ service }: { service: Service }) {
         </div>
       </article>
 
-      <section className="py-20 bg-secondary/30">
+      <section className="py-14 bg-secondary/30">
         <div className="mx-auto max-w-7xl px-6 lg:px-10">
           <h2 className="font-display text-3xl lg:text-4xl text-primary mb-12">
             Outros tratamentos
