@@ -84,150 +84,158 @@ export function Promotions() {
             </h2>
           </motion.div>
 
-          {/* Setas de navegação — desktop */}
-          <div className="hidden sm:flex items-center gap-2 shrink-0">
-            <button
-              onClick={() => scroll("prev")}
-              disabled={!canPrev}
-              aria-label="Promoção anterior"
-              className="w-10 h-10 rounded-full border border-border flex items-center justify-center
-                         text-foreground/60 hover:text-primary hover:border-primary
-                         disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-            >
-              <ChevronLeft className="h-5 w-5" />
-            </button>
-            <button
-              onClick={() => scroll("next")}
-              disabled={!canNext}
-              aria-label="Próxima promoção"
-              className="w-10 h-10 rounded-full border border-border flex items-center justify-center
-                         text-foreground/60 hover:text-primary hover:border-primary
-                         disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-            >
-              <ChevronRight className="h-5 w-5" />
-            </button>
-          </div>
+          {/* Removido as setas do cabeçalho */}
         </div>
 
-        {/* Track do carrossel */}
-        <div
-          ref={trackRef}
-          className="flex gap-5 overflow-x-auto pb-4 snap-x snap-mandatory
-                     scrollbar-none"
-          style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-        >
-          {promotions.map((promo, i) => {
-            const whatsappMsg = encodeURIComponent(
-              `Olá! Vi a promoção de *${promo.sessions} sessões de ${promo.procedure.replace("\n", " ")}* no site e gostaria de saber mais!`
-            );
-            const totalPrice = promo.installments * promo.installmentPrice;
+        {/* Container do Carrossel com setas nas laterais */}
+        <div className="relative group/carousel">
+          {/* Seta Esquerda */}
+          <button
+            onClick={() => scroll("prev")}
+            disabled={!canPrev}
+            aria-label="Promoção anterior"
+            className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-2 lg:-translate-x-6 z-10
+                       w-11 h-11 rounded-full bg-white/90 dark:bg-card/90 shadow-lg border border-border/80
+                       flex items-center justify-center text-primary hover:bg-primary hover:text-white
+                       disabled:opacity-0 disabled:pointer-events-none transition-all duration-300
+                       backdrop-blur-sm active:scale-95"
+          >
+            <ChevronLeft className="h-6 w-6" />
+          </button>
 
-            const handlePointerDown = (e: React.PointerEvent) => {
-              pointerStartX.current = e.clientX;
-            };
+          {/* Seta Direita */}
+          <button
+            onClick={() => scroll("next")}
+            disabled={!canNext}
+            aria-label="Próxima promoção"
+            className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-2 lg:translate-x-6 z-10
+                       w-11 h-11 rounded-full bg-white/90 dark:bg-card/90 shadow-lg border border-border/80
+                       flex items-center justify-center text-primary hover:bg-primary hover:text-white
+                       disabled:opacity-0 disabled:pointer-events-none transition-all duration-300
+                       backdrop-blur-sm active:scale-95"
+          >
+            <ChevronRight className="h-6 w-6" />
+          </button>
 
-            const handleClick = (e: React.MouseEvent) => {
-              // Se o dedo/mouse se moveu mais de 8px horizontalmente → era swipe, ignora
-              if (Math.abs(e.clientX - pointerStartX.current) > 8) return;
-              window.open(`${WHATSAPP_URL}?text=${whatsappMsg}`, "_blank", "noreferrer");
-            };
+          {/* Track do carrossel */}
+          <div
+            ref={trackRef}
+            className="flex gap-5 overflow-x-auto pb-4 snap-x snap-mandatory
+                       scrollbar-none px-2"
+            style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+          >
+            {promotions.map((promo, i) => {
+              const whatsappMsg = encodeURIComponent(
+                `Olá! Vi a promoção de *${promo.sessions} sessões de ${promo.procedure.replace("\n", " ")}* no site e gostaria de saber mais!`
+              );
+              const totalPrice = promo.installments * promo.installmentPrice;
 
-            return (
-              <motion.div
-                key={promo.id}
-                initial={{ opacity: 0, y: 24 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-30px" }}
-                transition={{ duration: 0.45, delay: Math.min(i * 0.07, 0.35) }}
-                onPointerDown={handlePointerDown}
-                onClick={handleClick}
-                role="link"
-                tabIndex={0}
-                aria-label={`Ver promoção: ${promo.sessions} sessões de ${promo.procedure.replace("\n", " ")} — abrir WhatsApp`}
-                onKeyDown={(e) => e.key === "Enter" && window.open(`${WHATSAPP_URL}?text=${whatsappMsg}`, "_blank", "noreferrer")}
-                className="snap-start shrink-0 flex flex-col rounded-3xl overflow-hidden bg-card
-                           border border-border/60 shadow-sm hover:shadow-lg hover:-translate-y-1
-                           active:scale-[0.98] cursor-pointer select-none
-                           transition-all duration-300 w-[82vw] sm:w-72 lg:w-80
-                           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-              >
-                {/* Corpo */}
-                <div className="flex flex-col flex-1 items-center text-center px-7 pt-8 pb-6 gap-4">
+              const handlePointerDown = (e: React.PointerEvent) => {
+                pointerStartX.current = e.clientX;
+              };
 
-                  {/* Badge categoria */}
-                  <span className="inline-block text-[11px] font-semibold tracking-widest uppercase
-                                   px-4 py-1.5 rounded-full bg-lavender-soft text-primary border border-lavender/40">
-                    {promo.category}
-                  </span>
+              const handleClick = (e: React.MouseEvent) => {
+                if (Math.abs(e.clientX - pointerStartX.current) > 8) return;
+                window.open(`${WHATSAPP_URL}?text=${whatsappMsg}`, "_blank", "noreferrer");
+              };
 
-                  {/* Sessões */}
-                  <p className="text-sm font-medium text-foreground/55 tracking-wide -mb-2">
-                    {promo.sessions} sessões de
-                  </p>
+              return (
+                <motion.div
+                  key={promo.id}
+                  initial={{ opacity: 0, y: 24 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: "-30px" }}
+                  transition={{ duration: 0.45, delay: Math.min(i * 0.07, 0.35) }}
+                  onPointerDown={handlePointerDown}
+                  onClick={handleClick}
+                  role="link"
+                  tabIndex={0}
+                  aria-label={`Ver promoção: ${promo.sessions} sessões de ${promo.procedure.replace("\n", " ")} — abrir WhatsApp`}
+                  onKeyDown={(e) => e.key === "Enter" && window.open(`${WHATSAPP_URL}?text=${whatsappMsg}`, "_blank", "noreferrer")}
+                  className="snap-start shrink-0 flex flex-col rounded-3xl overflow-hidden bg-card
+                             border border-border/60 shadow-sm hover:shadow-lg hover:-translate-y-1
+                             active:scale-[0.98] cursor-pointer select-none
+                             transition-all duration-300 w-[55vw] sm:w-48 lg:w-52
+                             focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                >
+                  {/* Corpo */}
+                  <div className="flex flex-col flex-1 items-center text-center px-4 sm:px-6 pt-8 pb-6 gap-4">
 
-                  {/* Procedimento */}
-                  <h3
-                    className="font-sans font-black text-foreground leading-tight whitespace-pre-line"
-                    style={{ fontSize: "clamp(1.5rem, 4vw, 2rem)" }}
-                  >
-                    {promo.procedure}
-                  </h3>
+                    {/* Badge categoria */}
+                    <span className="inline-block text-[10px] font-semibold tracking-widest uppercase
+                                     px-3 py-1 rounded-full bg-lavender-soft text-primary border border-lavender/40">
+                      {promo.category}
+                    </span>
 
-                  {/* Coração decorativo */}
-                  <span className="text-lavender text-xl select-none" aria-hidden>♡</span>
-
-                  {/* Box preço */}
-                  <div className="w-full rounded-2xl bg-lavender/80 text-white px-5 py-4">
-                    <p className="text-sm font-medium opacity-90 mb-0.5">
-                      {promo.installments}x de
+                    {/* Sessões */}
+                    <p className="text-xs font-medium text-foreground/55 tracking-wide -mb-2">
+                      {promo.sessions} sessões de
                     </p>
-                    <p
-                      className="font-black leading-none"
-                      style={{ fontSize: "clamp(1.8rem, 5vw, 2.5rem)" }}
+
+                    {/* Procedimento */}
+                    <h3
+                      className="font-sans font-black text-foreground leading-tight whitespace-pre-line"
+                      style={{ fontSize: "clamp(1.2rem, 3.5vw, 1.6rem)" }}
                     >
-                      {formatInstallment(promo.installmentPrice)}
+                      {promo.procedure}
+                    </h3>
+
+                    {/* Coração decorativo */}
+                    <span className="text-lavender text-lg select-none" aria-hidden>♡</span>
+
+                    {/* Box preço */}
+                    <div className="w-full rounded-2xl bg-lavender/80 text-white px-4 py-3.5">
+                      <p className="text-xs font-medium opacity-90 mb-0.5">
+                        {promo.installments}x de
+                      </p>
+                      <p
+                        className="font-black leading-none"
+                        style={{ fontSize: "clamp(1.5rem, 4.5vw, 2.1rem)" }}
+                      >
+                        {formatInstallment(promo.installmentPrice)}
+                      </p>
+                      <p className="text-[10px] font-medium opacity-80 mt-1 tracking-wide uppercase">
+                        no cartão
+                      </p>
+                    </div>
+
+                    {/* Total à vista */}
+                    <p className="text-[11px] text-muted-foreground -mt-1">
+                      ou {formatInstallment(totalPrice)} à vista
                     </p>
-                    <p className="text-xs font-medium opacity-80 mt-1 tracking-wide uppercase">
-                      no cartão de crédito
+
+                    {/* Telefone */}
+                    <p className="text-xs font-medium text-primary tracking-wide">
+                      {WHATSAPP_DISPLAY}
+                    </p>
+
+                    {/* Validade */}
+                    <p className="text-[10px] text-muted-foreground -mt-2">
+                      Válido até {promo.validUntil}
                     </p>
                   </div>
 
-                  {/* Total à vista */}
-                  <p className="text-xs text-muted-foreground -mt-1">
-                    ou {formatInstallment(totalPrice)} à vista
-                  </p>
+                  {/* CTA visual — hint de que o card é clicável */}
+                  <div className="px-4 sm:px-6 pb-6">
+                    <span
+                      className="w-full inline-flex items-center justify-center gap-1.5 rounded-2xl
+                                 bg-primary text-primary-foreground px-4 py-3 text-xs font-medium
+                                 shadow-sm shadow-primary/20 pointer-events-none"
+                    >
+                      <MessageCircle className="h-3.5 w-3.5" />
+                      Quero aproveitar
+                    </span>
 
-                  {/* Telefone */}
-                  <p className="text-sm font-medium text-primary tracking-wide">
-                    {WHATSAPP_DISPLAY}
-                  </p>
-
-                  {/* Validade */}
-                  <p className="text-xs text-muted-foreground -mt-2">
-                    Válido até {promo.validUntil}
-                  </p>
-                </div>
-
-                {/* CTA visual — hint de que o card é clicável */}
-                <div className="px-6 pb-6">
-                  <span
-                    className="w-full inline-flex items-center justify-center gap-2 rounded-2xl
-                               bg-primary text-primary-foreground px-5 py-3.5 text-sm font-medium
-                               shadow-sm shadow-primary/20 pointer-events-none"
-                  >
-                    <MessageCircle className="h-4 w-4" />
-                    Quero aproveitar
-                  </span>
-
-                  {promo.note && (
-                    <p className="mt-3 text-[10px] text-muted-foreground text-center leading-snug">
-                      * {promo.note}
-                    </p>
-                  )}
-                </div>
-              </motion.div>
-            );
-          })}
+                    {promo.note && (
+                      <p className="mt-3 text-[9px] text-muted-foreground text-center leading-snug">
+                        * {promo.note}
+                      </p>
+                    )}
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
         </div>
 
         {/* Dots de navegação */}
