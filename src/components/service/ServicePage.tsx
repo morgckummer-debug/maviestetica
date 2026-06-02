@@ -17,41 +17,30 @@ export function ServicePage({ service }: { service: Service }) {
             <ArrowLeft className="h-4 w-4" /> Voltar para o início
           </Link>
 
-          <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-start">
-            <motion.div
-              initial={{ opacity: 1, scale: 0.97 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.7 }}
-              className="aspect-[4/5] rounded-[2.5rem] overflow-hidden shadow-xl shadow-primary/10"
-            >
-              <img src={service.image} alt={service.name} className="w-full h-full object-cover" />
-            </motion.div>
+          <motion.div
+            initial={{ opacity: 1, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.7 }}
+            className="max-w-3xl"
+          >
+            <p className="text-xs tracking-[0.3em] uppercase text-primary/70 mb-6">Tratamento</p>
+            <h1 className="font-display text-4xl lg:text-6xl text-primary leading-[1.05]">
+              {service.name}
+            </h1>
+            <p className="mt-6 text-xl text-rose font-display italic">{service.tagline}</p>
+            <p className="mt-6 text-lg text-foreground/75 leading-relaxed">{service.description}</p>
 
-            <motion.div
-              initial={{ opacity: 1, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.7, delay: 0.1 }}
+            <a
+              href={WHATSAPP_URL}
+              target="_blank"
+              rel="noreferrer"
+              className="mt-10 inline-flex items-center gap-2 rounded-full bg-primary text-primary-foreground px-7 py-3.5 text-sm font-medium hover:bg-primary/90 transition-all hover:-translate-y-0.5"
             >
-              <p className="text-xs tracking-[0.3em] uppercase text-primary/70 mb-6">Tratamento</p>
-              <h1 className="font-display text-4xl lg:text-6xl text-primary leading-[1.05]">
-                {service.name}
-              </h1>
-              <p className="mt-6 text-xl text-rose font-display italic">{service.tagline}</p>
-              <p className="mt-6 text-lg text-foreground/75 leading-relaxed">{service.description}</p>
-
-              <a
-                href={WHATSAPP_URL}
-                target="_blank"
-                rel="noreferrer"
-                className="mt-10 inline-flex items-center gap-2 rounded-full bg-primary text-primary-foreground px-7 py-3.5 text-sm font-medium hover:bg-primary/90 transition-all hover:-translate-y-0.5"
-              >
-                <MessageCircle className="h-4 w-4" />
-                Agendar avaliação
-              </a>
-            </motion.div>
-          </div>
+              <MessageCircle className="h-4 w-4" />
+              Agendar avaliação
+            </a>
+          </motion.div>
 
           <div className="mt-14 grid md:grid-cols-2 gap-8 lg:gap-12">
             <div className="bg-secondary/40 rounded-3xl p-8 lg:p-10">
