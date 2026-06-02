@@ -1,57 +1,157 @@
+import { useRef, useState, useCallback, useEffect } from "react";
 import { Link } from "@tanstack/react-router";
-import { ArrowUpRight } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { motion } from "motion/react";
 import { services } from "@/data/services";
 
 export function ServicesGrid() {
+  const trackRef = useRef<HTMLDivElement>(null);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [canPrev, setCanPrev] = useState(false);
+  const [canNext, setCanNext] = useState(true);
+
+  const CARDS_PER_VIEW = 4;
+  const totalDots = Math.ceil(services.length / CARDS_PER_VIEW);
+
+  const updateState = useCallback(() => {
+    const el = trackRef.current;
+    if (!el) return;
+    const { scrollLeft, scrollWidth, clientWidth } = el;
+    setCanPrev(scrollLeft > 8);
+    setCanNext(scrollLeft < scrollWidth - clientWidth - 8);
+    const pct = scrollLeft / (scrollWidth - clientWidth);
+    setActiveIndex(Math.round(pct * (totalDots - 1)));
+  }, [totalDots]);
+
+  useEffect(() => {
+    const el = trackRef.current;
+    if (!el) return;
+    el.addEventListener("scroll", updateState, { passive: true });
+    updateState();
+    return () => el.removeEventListener("scroll", updateState);
+  }, [updateState]);
+
+  const scroll = (dir: "prev" | "next") => {
+    const el = trackRef.current;
+    if (!el) return;
+    const cardWidth = el.firstElementChild?.clientWidth ?? 200;
+    const gap = 24;
+    el.scrollBy({ left: dir === "next" ? cardWidth + gap : -(cardWidth + gap), behavior: "smooth" });
+  };
+
+  const scrollToDot = (dotIndex: number) => {
+    const el = trackRef.current;
+    if (!el) return;
+    const cardWidth = el.firstElementChild?.clientWidth ?? 200;
+    const gap = 24;
+    const scrollTo = dotIndex * CARDS_PER_VIEW * (cardWidth + gap);
+    el.scrollTo({ left: scrollTo, behavior: "smooth" });
+  };
+
   return (
-    <section id="servicos" className="py-14 lg:py-20 bg-secondary/30">
+    <section id="servicos" className="py-16 lg:py-24 bg-secondary/10 overflow-hidden">
       <div className="mx-auto max-w-7xl px-6 lg:px-10">
-        <div className="max-w-2xl mb-10 lg:mb-14">
-          <p className="text-xs tracking-[0.3em] uppercase text-primary/70 mb-6">Tratamentos</p>
-          <h2 className="font-display text-4xl lg:text-5xl text-primary leading-tight">
+        
+        {/* Cabeçalho */}
+        <div className="max-w-4xl mb-12">
+          <p className="text-xs tracking-[0.3em] uppercase text-primary/70 mb-4">Tratamentos</p>
+          <h2 className="font-display text-4xl lg:text-5xl text-primary leading-tight mb-6">
             Cada protocolo, pensado <em className="italic font-normal text-rose">para você</em>.
           </h2>
+          <p className="text-foreground/80 text-sm sm:text-base leading-relaxed max-w-3xl">
+            No Centro de Estética MAVI, oferecemos tratamentos de estética facial e corporal pensados para valorizar sua beleza, promover autoestima e entregar resultados reais. Seja qual for seu objetivo, desde reduzir medidas, relaxar ou combater a celulite, estamos prontos para cuidar de você com tecnologia avançada e protocolos personalizados.
+          </p>
         </div>
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5 lg:gap-6">
-          {services.map((s, i) => (
-            <motion.div
-              key={s.slug}
-              initial={{ opacity: 1, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-50px" }}
-              transition={{ duration: 0.5, delay: (i % 4) * 0.08 }}
-            >
-              <Link
-                to="/servicos/$slug"
-                params={{ slug: s.slug }}
-                className="group block"
+        {/* Container do Carrossel */}
+        <div className="relative group/services">
+          {/* Seta Esquerda */}
+          <button
+            onClick={() => scroll("prev")}
+            disabled={!canPrev}
+            aria-label="Tratamento anterior"
+            className="absolute left-0 top-[40%] -translate-y-1/2 -translate-x-2 lg:-translate-x-6 z-10
+                       w-11 h-11 rounded-full bg-white/90 dark:bg-card/90 shadow-lg border border-border/80
+                       flex items-center justify-center text-primary hover:bg-primary hover:text-white
+                       disabled:opacity-0 disabled:pointer-events-none transition-all duration-300
+                       backdrop-blur-sm active:scale-95"
+          >
+            <ChevronLeft className="h-6 w-6" />
+          </button>
+
+          {/* Seta Direita */}
+          <button
+            onClick={() => scroll("next")}
+            disabled={!canNext}
+            aria-label="Próximo tratamento"
+            className="absolute right-0 top-[40%] -translate-y-1/2 translate-x-2 lg:translate-x-6 z-10
+                       w-11 h-11 rounded-full bg-white/90 dark:bg-card/90 shadow-lg border border-border/80
+                       flex items-center justify-center text-primary hover:bg-primary hover:text-white
+                       disabled:opacity-0 disabled:pointer-events-none transition-all duration-300
+                       backdrop-blur-sm active:scale-95"
+          >
+            <ChevronRight className="h-6 w-6" />
+          </button>
+
+          {/* Track do carrossel */}
+          <div
+            ref={trackRef}
+            className="flex gap-6 overflow-x-auto pb-6 snap-x snap-mandatory scrollbar-none px-2"
+            style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+          >
+            {services.map((s, i) => (
+              <motion.div
+                key={s.slug}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-30px" }}
+                transition={{ duration: 0.5, delay: Math.min(i * 0.05, 0.3) }}
+                className="snap-start shrink-0 flex flex-col items-center w-[45vw] sm:w-48 lg:w-56"
               >
-                <div className="relative aspect-[4/5] rounded-3xl overflow-hidden bg-muted">
-                  <img
-                    src={s.image}
-                    alt={s.name}
-                    loading="lazy"
-                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-primary/60 via-primary/10 to-transparent opacity-80" />
-                  <div className="absolute top-4 right-4 w-9 h-9 rounded-full bg-background/90 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                    <ArrowUpRight className="h-4 w-4 text-primary" />
+                <Link
+                  to="/servicos/$slug"
+                  params={{ slug: s.slug }}
+                  className="group block w-full text-center"
+                >
+                  {/* Imagem em formato de cápsula (pill) vertical */}
+                  <div className="relative aspect-[9/18] w-full rounded-full overflow-hidden bg-muted border-4 border-white dark:border-card shadow-md group-hover:shadow-xl transition-all duration-300">
+                    <img
+                      src={s.image}
+                      alt={s.name}
+                      loading="lazy"
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-primary/30 via-transparent to-transparent opacity-60" />
                   </div>
-                  <div
-                    className="absolute bottom-5 left-5 right-5 text-white"
-                    style={{ textShadow: "0 2px 8px rgba(0,0,0,0.55), 0 1px 2px rgba(0,0,0,0.45)" }}
-                  >
-                    <h3 className="font-display text-2xl lg:text-[1.75rem] leading-tight">{s.name}</h3>
-                    <p className="mt-1.5 text-sm text-white/90">{s.short}</p>
-                  </div>
-                </div>
-              </Link>
-            </motion.div>
-          ))}
+
+                  {/* Nome do tratamento abaixo da cápsula */}
+                  <h3 className="mt-4 font-sans font-bold text-xs sm:text-sm tracking-widest text-primary uppercase group-hover:text-rose transition-colors duration-300 px-1">
+                    {s.name}
+                  </h3>
+                </Link>
+              </motion.div>
+            ))}
+          </div>
         </div>
+
+        {/* Dots de navegação */}
+        {totalDots > 1 && (
+          <div className="flex items-center justify-center gap-2 mt-4">
+            {Array.from({ length: totalDots }).map((_, di) => (
+              <button
+                key={di}
+                onClick={() => scrollToDot(di)}
+                aria-label={`Ir para página ${di + 1}`}
+                className={`rounded-full transition-all duration-300 ${
+                  di === activeIndex
+                    ? "w-6 h-2 bg-primary"
+                    : "w-2 h-2 bg-border hover:bg-lavender"
+                }`}
+              />
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );
-}
+}
