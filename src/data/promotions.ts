@@ -2,64 +2,132 @@
 //  PROMOÇÕES DO MÊS — edite aqui para atualizar o site
 // ============================================================
 //
-//  Como funciona:
-//  - Altere o array `promotions` abaixo com os combos do mês.
-//  - Se não quiser exibir promoções em algum mês, deixe o array vazio: []
-//  - Cada promoção pode ter um badge opcional (ex: "Mais pedido", "Novidade").
+//  Como funcionar:
+//  - Altere o array `promotions` com as promoções ativas do mês.
+//  - Para tirar o bloco do site em meses sem promoção: deixe o array vazio []
 //  - validUntil: use o formato "DD/MM/AAAA".
+//  - installments: número de parcelas (ex: 10 → "10x de R$75,00")
+//  - Se for à vista (sem parcelamento), use installments: 1
+//  - procedure: use \n para quebrar linha no nome (ex: "Virilha\n+ Perianal")
 // ============================================================
 
 export type Promotion = {
   id: string;
-  /** Exibido no topo do card — ex: "Junho 2026" */
-  month: string;
+  /** Categoria exibida no badge — ex: "Depilação a Laser Feminina" */
+  category: string;
+  /** Número de sessões incluídas */
+  sessions: number;
+  /** Nome do procedimento/área — use \n para quebrar linha */
+  procedure: string;
+  /** Número de parcelas (use 1 para à vista) */
+  installments: number;
+  /** Valor de cada parcela */
+  installmentPrice: number;
   /** Data limite no formato "DD/MM/AAAA" */
   validUntil: string;
-  /** Nome do combo */
-  title: string;
-  /** Frase curta de apoio */
-  tagline: string;
-  /** Lista dos procedimentos incluídos no combo */
-  services: string[];
-  /** Preço cheio (sem o combo) */
-  originalPrice: number;
-  /** Preço promocional */
-  promoPrice: number;
-  /** Badge opcional no card — ex: "Mais pedido" | "Novidade" */
-  badge?: string;
+  /** Observação opcional no rodapé do card */
+  note?: string;
 };
 
 export const promotions: Promotion[] = [
   {
-    id: "combo-verao-junho",
-    month: "Junho 2026",
+    id: "laser-virilha-perianal",
+    category: "Depilação a Laser Feminina",
+    sessions: 10,
+    procedure: "Virilha Completa\n+ Perianal",
+    installments: 10,
+    installmentPrice: 75,
     validUntil: "30/06/2026",
-    title: "Combo Verão",
-    tagline: "Leveza e definição para o calor",
-    services: ["Power Redux", "Drenagem Linfática — Método MAVI"],
-    originalPrice: 480,
-    promoPrice: 380,
-    badge: "Mais pedido",
+    note: "Oferta limitada e não acumulativa com outras promoções.",
   },
   {
-    id: "renove-pele-junho",
-    month: "Junho 2026",
+    id: "laser-axila-feminina",
+    category: "Depilação a Laser Feminina",
+    sessions: 10,
+    procedure: "Axilas",
+    installments: 10,
+    installmentPrice: 45,
     validUntil: "30/06/2026",
-    title: "Renove sua Pele",
-    tagline: "Brilho de dentro para fora",
-    services: ["Limpeza de Pele Profunda", "Hidragloss"],
-    originalPrice: 360,
-    promoPrice: 280,
+    note: "Oferta limitada e não acumulativa com outras promoções.",
   },
   {
-    id: "body-contour-junho",
-    month: "Junho 2026",
+    id: "laser-pernas-inteiras",
+    category: "Depilação a Laser Feminina",
+    sessions: 10,
+    procedure: "Pernas\nInteiras",
+    installments: 10,
+    installmentPrice: 120,
     validUntil: "30/06/2026",
-    title: "Body Contour",
-    tagline: "Tonificação e modelagem em dupla",
-    services: ["Corrente Russa", "Power Redux"],
-    originalPrice: 520,
-    promoPrice: 420,
-    badge: "Novidade",
+    note: "Oferta limitada e não acumulativa com outras promoções.",
+  },
+  {
+    id: "laser-buço",
+    category: "Depilação a Laser Facial",
+    sessions: 10,
+    procedure: "Buço\n+ Queixo",
+    installments: 10,
+    installmentPrice: 55,
+    validUntil: "30/06/2026",
+    note: "Oferta limitada e não acumulativa com outras promoções.",
+  },
+  {
+    id: "laser-virilha-masculina",
+    category: "Depilação a Laser Masculina",
+    sessions: 10,
+    procedure: "Virilha\nCompleta",
+    installments: 10,
+    installmentPrice: 85,
+    validUntil: "30/06/2026",
+    note: "Oferta limitada e não acumulativa com outras promoções.",
+  },
+  {
+    id: "limpeza-pele",
+    category: "Tratamento Facial",
+    sessions: 4,
+    procedure: "Limpeza de\nPele Profunda",
+    installments: 4,
+    installmentPrice: 90,
+    validUntil: "30/06/2026",
+    note: "Oferta limitada e não acumulativa com outras promoções.",
+  },
+  {
+    id: "hidragloss",
+    category: "Tratamento Facial",
+    sessions: 4,
+    procedure: "Hidragloss",
+    installments: 4,
+    installmentPrice: 70,
+    validUntil: "30/06/2026",
+    note: "Oferta limitada e não acumulativa com outras promoções.",
+  },
+  {
+    id: "drenagem-linfatica",
+    category: "Tratamento Corporal",
+    sessions: 10,
+    procedure: "Drenagem\nLinfática",
+    installments: 10,
+    installmentPrice: 80,
+    validUntil: "30/06/2026",
+    note: "Oferta limitada e não acumulativa com outras promoções.",
+  },
+  {
+    id: "power-redux",
+    category: "Tratamento Corporal",
+    sessions: 10,
+    procedure: "Power Redux",
+    installments: 10,
+    installmentPrice: 95,
+    validUntil: "30/06/2026",
+    note: "Oferta limitada e não acumulativa com outras promoções.",
+  },
+  {
+    id: "corrente-russa",
+    category: "Tratamento Corporal",
+    sessions: 10,
+    procedure: "Corrente\nRussa",
+    installments: 10,
+    installmentPrice: 65,
+    validUntil: "30/06/2026",
+    note: "Oferta limitada e não acumulativa com outras promoções.",
   },
 ];
