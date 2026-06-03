@@ -39,7 +39,9 @@ export const services: Service[] = [
       "Pele mais firme e uniforme",
       "Resultados progressivos a cada sessão",
     ],
-    image: powerRedux,
+    image: powerRedux
+    imagePosition: "50% 30%",
+  },,
   },
   {
     slug: "drenagem-linfatica",
@@ -149,11 +151,7 @@ export const services: Service[] = [
     tagline: "Cuidado especializado para a sua gestação",
     description:
       "Drenagem linfática adaptada para gestantes, com técnicas seguras que aliviam o inchaço, melhoram a circulação e proporcionam momentos de relaxamento profundo para mamãe e bebê.",
-    indicated: [
-      "Gestantes a partir do 2º trimestre",
-      "Inchaço nas pernas e pés",
-      "Quem busca relaxamento e bem-estar",
-    ],
+    indicated: ["Gestantes a partir do 2º trimestre", "Inchaço nas pernas e pés", "Quem busca relaxamento e bem-estar"],
     benefits: [
       "Alívio do inchaço gestacional",
       "Melhora da circulação",
