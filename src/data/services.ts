@@ -41,7 +41,6 @@ export const services: Service[] = [
     ],
     image: powerRedux
     imagePosition: "50% 30%",
-  },,
   },
   {
     slug: "drenagem-linfatica",
