@@ -21,7 +21,7 @@ const items = [
 
 export function Differentials() {
   return (
-    <section className="py-14 lg:py-20">
+    <section className="py-8 lg:py-14">
       <div className="mx-auto max-w-7xl px-6 lg:px-10">
         <div className="grid md:grid-cols-3 gap-8 lg:gap-12">
           {items.map((item, i) => (

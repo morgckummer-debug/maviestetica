@@ -49,7 +49,7 @@ export function ServicesGrid() {
   };
 
   return (
-    <section id="servicos" className="py-16 lg:py-24 bg-secondary/10 overflow-hidden">
+    <section id="servicos" className="py-10 lg:py-16 bg-secondary/10 overflow-hidden">
       <div className="mx-auto max-w-7xl px-6 lg:px-10">
         
         {/* Cabeçalho */}

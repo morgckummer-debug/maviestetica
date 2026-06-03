@@ -63,7 +63,7 @@ export function Promotions() {
   };
 
   return (
-    <section id="promocoes" className="py-14 lg:py-20 overflow-hidden">
+    <section id="promocoes" className="py-8 lg:py-14 overflow-hidden">
       <div className="mx-auto max-w-7xl px-6 lg:px-10">
 
         {/* Cabeçalho + setas */}
