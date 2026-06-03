@@ -39,7 +39,7 @@ export const services: Service[] = [
       "Pele mais firme e uniforme",
       "Resultados progressivos a cada sessão",
     ],
-    image: powerRedux
+    image: powerRedux,
     imagePosition: "50% 30%",
   },
   {
