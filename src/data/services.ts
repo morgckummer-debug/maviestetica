@@ -102,6 +102,7 @@ export const services: Service[] = [
       "Procedimento rápido e confortável",
     ],
     image: hidragloss,
+    imagePosition: "40% 50%",
   },
   {
     slug: "pos-operatorio",
