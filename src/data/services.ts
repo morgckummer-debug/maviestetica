@@ -81,6 +81,7 @@ export const services: Service[] = [
       "Resultado progressivo e duradouro",
     ],
     image: depilacaoLaser,
+    imagePosition: "40% 50%",
   },
   {
     slug: "hidragloss",
