@@ -120,7 +120,7 @@ export const services: Service[] = [
       "Resultados estéticos otimizados",
     ],
     image: posOperatorio,
-    imagePosition: "left center",
+    imagePosition: "right center",
   },
   {
     slug: "limpeza-de-pele",
