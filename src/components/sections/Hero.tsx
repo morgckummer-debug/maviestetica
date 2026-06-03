@@ -5,7 +5,7 @@ import { WHATSAPP_URL, CITY } from "@/data/services";
 
 export function Hero() {
   return (
-    <section className="relative overflow-hidden min-h-[55vh] lg:min-h-[65vh] flex items-center pt-16 pb-24 lg:py-0">
+    <section className="relative overflow-hidden min-h-[55vh] lg:min-h-[65vh] flex items-center pt-16 pb-36 lg:py-0">
       {/* Imagem de Fundo e Gradientes de Transição */}
       <div className="absolute inset-0 -z-20">
         <img
