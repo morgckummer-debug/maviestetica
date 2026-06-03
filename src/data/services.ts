@@ -17,6 +17,7 @@ export type Service = {
   indicated: string[];
   benefits: string[];
   image: string;
+  imagePosition?: string;
 };
 
 export const services: Service[] = [
@@ -119,6 +120,7 @@ export const services: Service[] = [
       "Resultados estéticos otimizados",
     ],
     image: posOperatorio,
+    imagePosition: "left center",
   },
   {
     slug: "limpeza-de-pele",
