@@ -1,5 +1,5 @@
 import { useRef, useState, useCallback, useEffect } from "react";
-import { MessageCircle, ChevronLeft, ChevronRight } from "lucide-react";
+import { MessageCircle, ChevronLeft, ChevronRight, Gift } from "lucide-react";
 import { motion } from "motion/react";
 import { promotions } from "@/data/promotions";
 import { WHATSAPP_URL, WHATSAPP_DISPLAY } from "@/data/services";
@@ -161,6 +161,15 @@ export function Promotions() {
                   {/* Corpo */}
                   <div className="flex flex-col flex-1 items-center text-center px-4 sm:px-6 pt-8 pb-6 gap-4">
 
+                    {/* Badge combo (quando aplicável) */}
+                    {promo.comboName && (
+                      <span className="inline-flex items-center gap-1 text-[10px] font-bold tracking-widest uppercase
+                                       px-3 py-1 rounded-full bg-rose/15 text-rose border border-rose/30">
+                        <Gift className="h-3 w-3" />
+                        Combo {promo.comboName}
+                      </span>
+                    )}
+
                     {/* Badge categoria */}
                     <span className="inline-block text-[10px] font-semibold tracking-widest uppercase
                                      px-3 py-1 rounded-full bg-lavender-soft text-primary border border-lavender/40">
@@ -217,6 +226,15 @@ export function Promotions() {
 
                   {/* CTA visual — hint de que o card é clicável */}
                   <div className="px-4 sm:px-6 pb-6">
+                    {/* Bônus combo */}
+                    {promo.comboBonus && (
+                      <div className="mb-3 rounded-xl bg-rose/10 border border-rose/25 px-3 py-2.5 text-center">
+                        <p className="text-[10px] font-semibold text-rose leading-snug">
+                          🎁 {promo.comboBonus}
+                        </p>
+                      </div>
+                    )}
+
                     <span
                       className="w-full inline-flex items-center justify-center gap-1.5 rounded-2xl
                                  bg-primary text-primary-foreground px-4 py-3 text-xs font-medium

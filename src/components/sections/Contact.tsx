@@ -5,7 +5,8 @@ import {
   WHATSAPP_DISPLAY,
   INSTAGRAM_URL,
   INSTAGRAM_HANDLE,
-  CITY,
+  ADDRESS,
+  ADDRESS_MAPS_URL,
 } from "@/data/services";
 
 export function Contact() {
@@ -80,7 +81,16 @@ export function Contact() {
                 <MapPin className="h-5 w-5 mt-1 text-lavender" />
                 <div>
                   <p className="text-xs uppercase tracking-widest text-primary-foreground/60">Localização</p>
-                  <p className="text-lg">{CITY}</p>
+                  <a
+                    href={ADDRESS_MAPS_URL}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="hover:underline underline-offset-2"
+                  >
+                    {ADDRESS.split("\n").map((line, i) => (
+                      <p key={i} className={i === 0 ? "text-lg" : "text-sm text-primary-foreground/70"}>{line}</p>
+                    ))}
+                  </a>
                 </div>
               </li>
               <li className="flex items-start gap-4">

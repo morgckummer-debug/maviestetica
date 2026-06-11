@@ -210,3 +210,5 @@ export const WHATSAPP_DISPLAY = "(31) 97167-1266";
 export const INSTAGRAM_URL = "https://www.instagram.com/mavicentrodeestetica/";
 export const INSTAGRAM_HANDLE = "@mavicentrodeestetica";
 export const CITY = "Sete Lagoas, MG";
+export const ADDRESS = "R. Nestor de Andrade, 142 - Sala 1\nChácara do Paiva, Sete Lagoas - MG\nCEP 35700-167";
+export const ADDRESS_MAPS_URL = "https://maps.google.com/?q=R.+Nestor+de+Andrade,+142,+Sete+Lagoas,+MG";

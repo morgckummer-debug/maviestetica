@@ -119,8 +119,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
           telephone: "+5531971671266",
           address: {
             "@type": "PostalAddress",
+            streetAddress: "R. Nestor de Andrade, 142 - Sala 1",
             addressLocality: "Sete Lagoas",
             addressRegion: "MG",
+            postalCode: "35700-167",
             addressCountry: "BR",
           },
           sameAs: ["https://www.instagram.com/mavicentrodeestetica/"],
