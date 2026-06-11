@@ -27,9 +27,57 @@ export type Promotion = {
   validUntil: string;
   /** Observação opcional no rodapé do card */
   note?: string;
+  /** Nome do combo (ex: "Eu & Você", "das Amigas") — ativa destaque visual */
+  comboName?: string;
+  /** Descrição do bônus que o parceiro/amiga ganha */
+  comboBonus?: string;
 };
 
 export const promotions: Promotion[] = [
+  {
+    id: "combo-eu-voce-axilas",
+    category: "Depilação a Laser",
+    sessions: 10,
+    procedure: "Axilas",
+    installments: 1,
+    installmentPrice: 199.99,
+    validUntil: "30/06/2026",
+    comboName: "Eu & Você",
+    comboBonus: "Seu amor GANHA 10 sessões de Depilação à Laser nas Axilas!",
+  },
+  {
+    id: "combo-eu-voce-limpeza-pele",
+    category: "Tratamento Facial",
+    sessions: 1,
+    procedure: "Limpeza de\nPele Profunda",
+    installments: 1,
+    installmentPrice: 150.0,
+    validUntil: "30/06/2026",
+    comboName: "Eu & Você",
+    comboBonus: "Seu amor GANHA outra sessão de Limpeza de Pele Profunda!",
+  },
+  {
+    id: "combo-amigas-virilha-perianal-axilas",
+    category: "Depilação a Laser",
+    sessions: 10,
+    procedure: "Virilha Completa\n+ Perianal + Axilas",
+    installments: 10,
+    installmentPrice: 159.99,
+    validUntil: "30/06/2026",
+    comboName: "das Amigas",
+    comboBonus: "Sua amiga GANHA 10 sessões nas mesmas áreas!",
+  },
+  {
+    id: "combo-eu-voce-virilha",
+    category: "Depilação a Laser",
+    sessions: 10,
+    procedure: "Virilha\nCompleta",
+    installments: 10,
+    installmentPrice: 99.99,
+    validUntil: "30/06/2026",
+    comboName: "Eu & Você",
+    comboBonus: "Seu amor GANHA 10 sessões de Tórax ou Barba Simples!",
+  },
   {
     id: "laser-virilha-perianal",
     category: "Depilação a Laser Feminina",
