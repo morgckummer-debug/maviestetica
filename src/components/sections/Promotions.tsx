@@ -161,12 +161,12 @@ export function Promotions() {
                   {/* Corpo */}
                   <div className="flex flex-col flex-1 items-center text-center px-4 sm:px-6 pt-8 pb-6 gap-4">
 
-                    {/* Badge combo (quando aplicável) */}
-                    {promo.comboName && (
+                    {/* Badge campanha (quando aplicável) */}
+                    {promo.campaignTag && (
                       <span className="inline-flex items-center gap-1 text-[10px] font-bold tracking-widest uppercase
                                        px-3 py-1 rounded-full bg-rose/15 text-rose border border-rose/30">
                         <Gift className="h-3 w-3" />
-                        Combo {promo.comboName}
+                        {promo.campaignTag}
                       </span>
                     )}
 
