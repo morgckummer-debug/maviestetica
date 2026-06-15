@@ -9,8 +9,10 @@
 //  - installments: número de parcelas (ex: 10 → "10x de R$75,00")
 //  - Se for à vista (sem parcelamento), use installments: 1
 //  - procedure: use \n para quebrar linha no nome (ex: "Virilha\n+ Perianal")
-//  - campaignTag: nome da campanha exibido no topo do card (ex: "Combo Eu & Você", "Amor Próprio")
+//  - campaignTag: nome da campanha exibido no card (ex: "Combo Eu & Você", "Amor Próprio")
+//  - campaignSubtitle: frase pequena abaixo do nome da campanha
 //  - comboBonus: descrição do bônus que o parceiro/amiga ganha (só para combos)
+//  - bgImage: caminho para a imagem de fundo do card (opcional)
 // ============================================================
 
 export type Promotion = {
@@ -29,45 +31,74 @@ export type Promotion = {
   validUntil: string;
   /** Observação opcional no rodapé do card */
   note?: string;
-  /** Nome da campanha exibido no topo do card (ex: "Combo Eu & Você", "Amor Próprio") */
+  /** Nome da campanha exibido no card (ex: "Combo Eu & Você", "Amor Próprio") */
   campaignTag?: string;
+  /** Frase pequena exibida abaixo do nome da campanha */
+  campaignSubtitle?: string;
   /** Descrição do bônus que o parceiro/amiga ganha */
   comboBonus?: string;
+  /** Caminho da imagem de fundo do card */
+  bgImage?: string;
 };
+
+import depilacaoLaser from "@/assets/services/depilacao-laser.jpg";
+import drenagemGestante from "@/assets/services/drenagem-gestantes.jpg";
+import drenagemLinfatica from "@/assets/services/drenagem-linfatica.jpg";
+import posOperatorio from "@/assets/services/pos-operatorio.jpg";
+import heroBg from "@/assets/hero-bg.jpg";
 
 export const promotions: Promotion[] = [
   {
     id: "combo-eu-voce-virilha",
-    campaignTag: "Combo Eu & Você",
-    category: "Depilação a Laser",
+    campaignTag: "Eu & Você",
+    campaignSubtitle: "JUNTOS NA VIDA E LIVRE DOS PELINHOS INDESEJADOS",
+    category: "Depilação à Laser",
     sessions: 10,
     procedure: "Virilha\nCompleta",
     installments: 10,
     installmentPrice: 99.99,
     validUntil: "30/06/2026",
-    comboBonus: "Seu amor GANHA 10 sessões de Tórax ou Barba Simples!",
+    comboBonus: "seu amor GANHA 10 sessões de Tórax ou Barba Simples!",
+    bgImage: heroBg,
+  },
+  {
+    id: "combo-eu-voce-virilha-barba",
+    campaignTag: "Eu & Você",
+    campaignSubtitle: "JUNTOS NA VIDA E LIVRE DOS PELINHOS INDESEJADOS",
+    category: "Depilação à Laser",
+    sessions: 10,
+    procedure: "Virilha\nCompleta",
+    installments: 10,
+    installmentPrice: 99.99,
+    validUntil: "30/06/2026",
+    comboBonus: "seu amor GANHA 10 sessões de Barba Simples!",
+    bgImage: heroBg,
   },
   {
     id: "combo-eu-voce-axilas",
-    campaignTag: "Combo Eu & Você",
-    category: "Depilação a Laser",
+    campaignTag: "Eu & Você",
+    campaignSubtitle: "JUNTOS NA VIDA E LIVRE DOS PELINHOS INDESEJADOS",
+    category: "Depilação à Laser",
     sessions: 10,
     procedure: "Axilas",
     installments: 1,
     installmentPrice: 199.99,
     validUntil: "30/06/2026",
-    comboBonus: "Seu amor GANHA 10 sessões de Depilação à Laser nas Axilas!",
+    comboBonus: "seu amor GANHA 10 sessões de Depilação à Laser nas Axilas!",
+    bgImage: heroBg,
   },
   {
     id: "combo-amigas-virilha-perianal-axilas",
     campaignTag: "Combo das Amigas",
-    category: "Depilação a Laser",
+    campaignSubtitle: "AMIGA QUE É AMIGA DIVIDEM O MELHOR COMBO",
+    category: "Depilação à Laser",
     sessions: 10,
     procedure: "Virilha Completa\n+ Perianal + Axilas",
     installments: 10,
     installmentPrice: 159.99,
     validUntil: "30/06/2026",
-    comboBonus: "Sua amiga GANHA 10 sessões nas mesmas áreas!",
+    comboBonus: "sua amiga GANHA 10 sessões nas mesmas áreas!",
+    bgImage: depilacaoLaser,
   },
   {
     id: "amor-proprio-max-pos-parto",
@@ -78,6 +109,7 @@ export const promotions: Promotion[] = [
     installments: 10,
     installmentPrice: 299.99,
     validUntil: "30/06/2026",
+    bgImage: posOperatorio,
   },
   {
     id: "amor-proprio-drenagem-gestante",
@@ -89,57 +121,7 @@ export const promotions: Promotion[] = [
     installmentPrice: 550.0,
     validUntil: "30/06/2026",
     note: "Parcelável em até 3x no Cartão de Crédito.",
-  },
-  {
-    id: "amor-proprio-costas-masculina",
-    campaignTag: "Amor Próprio",
-    category: "Depilação a Laser Masculina",
-    sessions: 10,
-    procedure: "Costas",
-    installments: 10,
-    installmentPrice: 149.99,
-    validUntil: "30/06/2026",
-  },
-  {
-    id: "amor-proprio-torax-masculina",
-    campaignTag: "Amor Próprio",
-    category: "Depilação a Laser Masculina",
-    sessions: 10,
-    procedure: "Tórax",
-    installments: 12,
-    installmentPrice: 99.99,
-    validUntil: "30/06/2026",
-  },
-  {
-    id: "amor-proprio-buco-feminina",
-    campaignTag: "Amor Próprio",
-    category: "Depilação a Laser Feminina",
-    sessions: 10,
-    procedure: "Buço",
-    installments: 1,
-    installmentPrice: 99.99,
-    validUntil: "30/06/2026",
-  },
-  {
-    id: "amor-proprio-canela-feminina",
-    campaignTag: "Amor Próprio",
-    category: "Depilação a Laser Feminina",
-    sessions: 10,
-    procedure: "Canela",
-    installments: 12,
-    installmentPrice: 99.99,
-    validUntil: "30/06/2026",
-    comboBonus: "Fechando esta PROMO você GANHA 10 sessões de Depilação à Laser na Casa!",
-  },
-  {
-    id: "amor-proprio-virilha-perianal-feminina",
-    campaignTag: "Amor Próprio",
-    category: "Depilação a Laser Feminina",
-    sessions: 10,
-    procedure: "Virilha Completa\ncom Perianal",
-    installments: 10,
-    installmentPrice: 79.99,
-    validUntil: "30/06/2026",
+    bgImage: drenagemGestante,
   },
   {
     id: "amor-proprio-drenagem-metodo-mavi",
@@ -151,16 +133,62 @@ export const promotions: Promotion[] = [
     installmentPrice: 799.99,
     validUntil: "30/06/2026",
     note: "Parcelável em até 6x no Cartão de Crédito.",
+    bgImage: drenagemLinfatica,
   },
   {
-    id: "combo-eu-voce-virilha-barba",
-    campaignTag: "Combo Eu & Você",
-    category: "Depilação a Laser",
+    id: "amor-proprio-costas-masculina",
+    campaignTag: "Amor Próprio",
+    category: "Depilação à Laser Masculina",
     sessions: 10,
-    procedure: "Virilha\nCompleta",
+    procedure: "Costas",
     installments: 10,
+    installmentPrice: 149.99,
+    validUntil: "30/06/2026",
+    bgImage: depilacaoLaser,
+  },
+  {
+    id: "amor-proprio-torax-masculina",
+    campaignTag: "Amor Próprio",
+    category: "Depilação à Laser Masculina",
+    sessions: 10,
+    procedure: "Tórax",
+    installments: 12,
     installmentPrice: 99.99,
     validUntil: "30/06/2026",
-    comboBonus: "Seu amor GANHA 10 sessões de Barba Simples!",
+    bgImage: depilacaoLaser,
+  },
+  {
+    id: "amor-proprio-buco-feminina",
+    campaignTag: "Amor Próprio",
+    category: "Depilação à Laser Feminina",
+    sessions: 10,
+    procedure: "Buço",
+    installments: 1,
+    installmentPrice: 99.99,
+    validUntil: "30/06/2026",
+    bgImage: depilacaoLaser,
+  },
+  {
+    id: "amor-proprio-canela-feminina",
+    campaignTag: "Amor Próprio",
+    category: "Depilação à Laser Feminina",
+    sessions: 10,
+    procedure: "Canela",
+    installments: 12,
+    installmentPrice: 99.99,
+    validUntil: "30/06/2026",
+    comboBonus: "fechando esta PROMO você GANHA 10 sessões de Depilação à Laser na Casa!",
+    bgImage: depilacaoLaser,
+  },
+  {
+    id: "amor-proprio-virilha-perianal-feminina",
+    campaignTag: "Amor Próprio",
+    category: "Depilação à Laser Feminina",
+    sessions: 10,
+    procedure: "Virilha Completa\ncom Perianal",
+    installments: 10,
+    installmentPrice: 79.99,
+    validUntil: "30/06/2026",
+    bgImage: depilacaoLaser,
   },
 ];
