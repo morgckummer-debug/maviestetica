@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ObrigadoRouteImport } from './routes/obrigado'
 import { Route as ResultadosPowerReduxRouteImport } from './routes/power-redux'
+import { Route as DrenagemLinfaticaRouteImport } from './routes/drenagem-linfatica'
 import { Route as ServicosSlugRouteImport } from './routes/servicos.$slug'
 
 const IndexRoute = IndexRouteImport.update({
@@ -29,6 +30,11 @@ const ResultadosPowerReduxRoute = ResultadosPowerReduxRouteImport.update({
   path: '/power-redux',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DrenagemLinfaticaRoute = DrenagemLinfaticaRouteImport.update({
+  id: '/drenagem-linfatica',
+  path: '/drenagem-linfatica',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ServicosSlugRoute = ServicosSlugRouteImport.update({
   id: '/servicos/$slug',
   path: '/servicos/$slug',
@@ -39,12 +45,14 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/obrigado': typeof ObrigadoRoute
   '/power-redux': typeof ResultadosPowerReduxRoute
+  '/drenagem-linfatica': typeof DrenagemLinfaticaRoute
   '/servicos/$slug': typeof ServicosSlugRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/obrigado': typeof ObrigadoRoute
   '/power-redux': typeof ResultadosPowerReduxRoute
+  '/drenagem-linfatica': typeof DrenagemLinfaticaRoute
   '/servicos/$slug': typeof ServicosSlugRoute
 }
 export interface FileRoutesById {
@@ -52,20 +60,22 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/obrigado': typeof ObrigadoRoute
   '/power-redux': typeof ResultadosPowerReduxRoute
+  '/drenagem-linfatica': typeof DrenagemLinfaticaRoute
   '/servicos/$slug': typeof ServicosSlugRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/obrigado' | '/power-redux' | '/servicos/$slug'
+  fullPaths: '/' | '/obrigado' | '/power-redux' | '/drenagem-linfatica' | '/servicos/$slug'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/obrigado' | '/power-redux' | '/servicos/$slug'
-  id: '__root__' | '/' | '/obrigado' | '/power-redux' | '/servicos/$slug'
+  to: '/' | '/obrigado' | '/power-redux' | '/drenagem-linfatica' | '/servicos/$slug'
+  id: '__root__' | '/' | '/obrigado' | '/power-redux' | '/drenagem-linfatica' | '/servicos/$slug'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ObrigadoRoute: typeof ObrigadoRoute
   ResultadosPowerReduxRoute: typeof ResultadosPowerReduxRoute
+  DrenagemLinfaticaRoute: typeof DrenagemLinfaticaRoute
   ServicosSlugRoute: typeof ServicosSlugRoute
 }
 
@@ -92,6 +102,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ResultadosPowerReduxRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/drenagem-linfatica': {
+      id: '/drenagem-linfatica'
+      path: '/drenagem-linfatica'
+      fullPath: '/drenagem-linfatica'
+      preLoaderRoute: typeof DrenagemLinfaticaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/servicos/$slug': {
       id: '/servicos/$slug'
       path: '/servicos/$slug'
@@ -106,6 +123,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ObrigadoRoute: ObrigadoRoute,
   ResultadosPowerReduxRoute: ResultadosPowerReduxRoute,
+  DrenagemLinfaticaRoute: DrenagemLinfaticaRoute,
   ServicosSlugRoute: ServicosSlugRoute,
 }
 export const routeTree = rootRouteImport

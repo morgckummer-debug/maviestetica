@@ -6,6 +6,7 @@ import { getService } from "@/data/services";
 export const Route = createFileRoute("/servicos/$slug")({
   loader: ({ params }) => {
     if (params.slug === "power-redux") throw redirect({ to: "/power-redux" });
+    if (params.slug === "drenagem-linfatica") throw redirect({ to: "/drenagem-linfatica" });
     const service = getService(params.slug);
     if (!service) throw notFound();
     return { service };
