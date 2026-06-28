@@ -11,7 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ObrigadoRouteImport } from './routes/obrigado'
-import { Route as ResultadosPowerReduxRouteImport } from './routes/resultados.power-redux'
+import { Route as ResultadosPowerReduxRouteImport } from './routes/power-redux'
 import { Route as ServicosSlugRouteImport } from './routes/servicos.$slug'
 
 const IndexRoute = IndexRouteImport.update({
@@ -25,8 +25,8 @@ const ObrigadoRoute = ObrigadoRouteImport.update({
   getParentRoute: () => rootRouteImport,
 } as any)
 const ResultadosPowerReduxRoute = ResultadosPowerReduxRouteImport.update({
-  id: '/resultados/power-redux',
-  path: '/resultados/power-redux',
+  id: '/power-redux',
+  path: '/power-redux',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ServicosSlugRoute = ServicosSlugRouteImport.update({
@@ -38,28 +38,28 @@ const ServicosSlugRoute = ServicosSlugRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/obrigado': typeof ObrigadoRoute
-  '/resultados/power-redux': typeof ResultadosPowerReduxRoute
+  '/power-redux': typeof ResultadosPowerReduxRoute
   '/servicos/$slug': typeof ServicosSlugRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/obrigado': typeof ObrigadoRoute
-  '/resultados/power-redux': typeof ResultadosPowerReduxRoute
+  '/power-redux': typeof ResultadosPowerReduxRoute
   '/servicos/$slug': typeof ServicosSlugRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/obrigado': typeof ObrigadoRoute
-  '/resultados/power-redux': typeof ResultadosPowerReduxRoute
+  '/power-redux': typeof ResultadosPowerReduxRoute
   '/servicos/$slug': typeof ServicosSlugRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/obrigado' | '/resultados/power-redux' | '/servicos/$slug'
+  fullPaths: '/' | '/obrigado' | '/power-redux' | '/servicos/$slug'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/obrigado' | '/resultados/power-redux' | '/servicos/$slug'
-  id: '__root__' | '/' | '/obrigado' | '/resultados/power-redux' | '/servicos/$slug'
+  to: '/' | '/obrigado' | '/power-redux' | '/servicos/$slug'
+  id: '__root__' | '/' | '/obrigado' | '/power-redux' | '/servicos/$slug'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -85,10 +85,10 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ObrigadoRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/resultados/power-redux': {
-      id: '/resultados/power-redux'
-      path: '/resultados/power-redux'
-      fullPath: '/resultados/power-redux'
+    '/power-redux': {
+      id: '/power-redux'
+      path: '/power-redux'
+      fullPath: '/power-redux'
       preLoaderRoute: typeof ResultadosPowerReduxRouteImport
       parentRoute: typeof rootRouteImport
     }
