@@ -2,7 +2,7 @@ import { motion } from "motion/react";
 
 export function About() {
   return (
-    <section id="sobre" className="py-8 lg:py-14 relative">
+    <section id="sobre" className="py-4 lg:py-7 relative">
       <div className="mx-auto max-w-4xl px-6 lg:px-10 text-center">
         <motion.div
           initial={{ opacity: 1, y: 30 }}
