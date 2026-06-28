@@ -1,10 +1,11 @@
-import { createFileRoute, notFound } from "@tanstack/react-router";
+import { createFileRoute, notFound, redirect } from "@tanstack/react-router";
 import { SITE_URL } from "@/data/services";
 import { ServicePage } from "@/components/service/ServicePage";
 import { getService } from "@/data/services";
 
 export const Route = createFileRoute("/servicos/$slug")({
   loader: ({ params }) => {
+    if (params.slug === "power-redux") throw redirect({ to: "/power-redux" });
     const service = getService(params.slug);
     if (!service) throw notFound();
     return { service };
