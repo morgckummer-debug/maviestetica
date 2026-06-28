@@ -55,7 +55,7 @@ export function Hero() {
             </p>
           </div>
 
-          <div className="mt-10 flex flex-wrap items-center gap-5 sm:gap-6">
+          <div className="mt-10 flex justify-center lg:justify-start">
             <a
               href={WHATSAPP_URL}
               target="_blank"
@@ -64,12 +64,6 @@ export function Hero() {
             >
               <MessageCircle className="h-4 w-4" />
               Agendar avaliação
-            </a>
-            <a
-              href="#servicos"
-              className="inline-flex items-center gap-2 text-sm font-medium text-foreground/80 hover:text-primary transition-colors py-2"
-            >
-              Conhecer Serviços
             </a>
           </div>
         </motion.div>
