@@ -109,8 +109,8 @@ export function ServicesGrid() {
                 className="snap-start shrink-0 flex flex-col items-center w-[45vw] sm:w-48 lg:w-56"
               >
                 <Link
-                  to="/servicos/$slug"
-                  params={{ slug: s.slug }}
+                  to={s.slug === "power-redux" ? "/resultados/power-redux" : "/servicos/$slug"}
+                  params={s.slug === "power-redux" ? undefined : { slug: s.slug }}
                   className="group block w-full text-center"
                 >
                   {/* Imagem em formato de cápsula (pill) vertical */}
