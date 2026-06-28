@@ -118,6 +118,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
           "@context": "https://schema.org",
           "@type": "HealthAndBeautyBusiness",
           name: "MAVI Centro de Estética",
+          url: "https://www.maviestetica.com.br",
           description:
             "Centro de estética facial e corporal em Sete Lagoas — drenagem linfática, depilação a laser, limpeza de pele e tratamentos exclusivos.",
           telephone: "+5531971671266",

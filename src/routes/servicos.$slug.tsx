@@ -1,4 +1,5 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
+import { SITE_URL } from "@/data/services";
 import { ServicePage } from "@/components/service/ServicePage";
 import { getService } from "@/data/services";
 
@@ -19,11 +20,11 @@ export const Route = createFileRoute("/servicos/$slug")({
         { name: "description", content: `${service.description} Agende em Sete Lagoas, MG — MAVI Centro de Estética.` },
         { property: "og:title", content: `${service.name} em Sete Lagoas | MAVI Centro de Estética` },
         { property: "og:description", content: `${service.description} Agende em Sete Lagoas, MG — MAVI Centro de Estética.` },
-        { property: "og:url", content: `/servicos/${params.slug}` },
+        { property: "og:url", content: `${SITE_URL}/servicos/${params.slug}` },
         { property: "og:image", content: service.image },
         { property: "og:type", content: "article" },
       ],
-      links: [{ rel: "canonical", href: `/servicos/${params.slug}` }],
+      links: [{ rel: "canonical", href: `${SITE_URL}/servicos/${params.slug}` }],
     };
   },
   component: ServiceRoute,

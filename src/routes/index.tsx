@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { SITE_URL } from "@/data/services";
 import { Hero } from "@/components/sections/Hero";
 import { About } from "@/components/sections/About";
 import { ServicesGrid } from "@/components/sections/ServicesGrid";
@@ -22,9 +23,9 @@ export const Route = createFileRoute("/")({
         content:
           "Centro de estética em Sete Lagoas, MG. Especialistas em drenagem linfática, depilação a laser Ácrus, limpeza de pele profunda, pós-operatório e tratamentos corporais. Agende sua avaliação.",
       },
-      { property: "og:url", content: "/" },
+      { property: "og:url", content: SITE_URL },
     ],
-    links: [{ rel: "canonical", href: "/" }],
+    links: [{ rel: "canonical", href: SITE_URL }],
   }),
   component: Index,
 });
