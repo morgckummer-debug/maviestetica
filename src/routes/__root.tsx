@@ -86,18 +86,22 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
           "Centro de estética facial e corporal em Sete Lagoas. Drenagem linfática, depilação a laser, limpeza de pele e mais. Agende sua avaliação.",
       },
       { name: "author", content: "MAVI Centro de Estética" },
-      { property: "og:title", content: "MAVI Centro de Estética — Sete Lagoas" },
+      { name: "robots", content: "index, follow" },
+      { property: "og:title", content: "MAVI Centro de Estética | Sete Lagoas, MG" },
       {
         property: "og:description",
-        content: "Tratamentos faciais e corporais em Sete Lagoas. Seja a sua melhor versão.",
+        content:
+          "Centro de estética em Sete Lagoas, MG. Especialistas em drenagem linfática, depilação a laser Ácrus, limpeza de pele profunda, pós-operatório e tratamentos corporais personalizados.",
       },
       { property: "og:site_name", content: "MAVI Centro de Estética" },
       { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
-      { name: "twitter:title", content: "MAVI Centro de Estética — Sete Lagoas" },
-      { name: "description", content: "MAVI Site is a modern web application for a facial and body aesthetics clinic." },
-      { property: "og:description", content: "MAVI Site is a modern web application for a facial and body aesthetics clinic." },
-      { name: "twitter:description", content: "MAVI Site is a modern web application for a facial and body aesthetics clinic." },
+      { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "MAVI Centro de Estética | Sete Lagoas, MG" },
+      {
+        name: "twitter:description",
+        content:
+          "Centro de estética em Sete Lagoas, MG. Especialistas em drenagem linfática, depilação a laser Ácrus, limpeza de pele profunda, pós-operatório e tratamentos corporais personalizados.",
+      },
       { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/35b528cb-fade-48da-818f-063dbb7855d3/id-preview-d1c63947--647d26de-8c81-42f7-9ade-43a6f84e6481.lovable.app-1780275909504.png" },
       { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/35b528cb-fade-48da-818f-063dbb7855d3/id-preview-d1c63947--647d26de-8c81-42f7-9ade-43a6f84e6481.lovable.app-1780275909504.png" },
     ],
@@ -114,6 +118,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
           "@context": "https://schema.org",
           "@type": "HealthAndBeautyBusiness",
           name: "MAVI Centro de Estética",
+          url: "https://www.maviestetica.com.br",
           description:
             "Centro de estética facial e corporal em Sete Lagoas — drenagem linfática, depilação a laser, limpeza de pele e tratamentos exclusivos.",
           telephone: "+5531971671266",

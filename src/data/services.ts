@@ -205,6 +205,8 @@ export const services: Service[] = [
 
 export const getService = (slug: string) => services.find((s) => s.slug === slug);
 
+export const SITE_URL = "https://www.maviestetica.com.br";
+
 export const WHATSAPP_URL = "https://wa.me/5531971671266";
 export const WHATSAPP_DISPLAY = "(31) 97167-1266";
 export const INSTAGRAM_URL = "https://www.instagram.com/mavicentrodeestetica/";

@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { SITE_URL } from "@/data/services";
 import { Hero } from "@/components/sections/Hero";
 import { About } from "@/components/sections/About";
 import { ServicesGrid } from "@/components/sections/ServicesGrid";
@@ -10,20 +11,21 @@ import { Contact } from "@/components/sections/Contact";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "MAVI Centro de Estética — Sete Lagoas" },
+      { title: "MAVI Centro de Estética | Sete Lagoas, MG" },
       {
         name: "description",
         content:
-          "Tratamentos faciais e corporais em Sete Lagoas. Drenagem linfática, depilação a laser, limpeza de pele e mais. Seja a sua melhor versão.",
+          "Centro de estética em Sete Lagoas, MG. Especialistas em drenagem linfática, depilação a laser Ácrus, limpeza de pele profunda, pós-operatório e tratamentos corporais. Agende sua avaliação.",
       },
-      { property: "og:title", content: "MAVI Centro de Estética — Sete Lagoas" },
+      { property: "og:title", content: "MAVI Centro de Estética | Sete Lagoas, MG" },
       {
         property: "og:description",
-        content: "Tratamentos faciais e corporais em Sete Lagoas. Seja a sua melhor versão.",
+        content:
+          "Centro de estética em Sete Lagoas, MG. Especialistas em drenagem linfática, depilação a laser Ácrus, limpeza de pele profunda, pós-operatório e tratamentos corporais. Agende sua avaliação.",
       },
-      { property: "og:url", content: "/" },
+      { property: "og:url", content: SITE_URL },
     ],
-    links: [{ rel: "canonical", href: "/" }],
+    links: [{ rel: "canonical", href: SITE_URL }],
   }),
   component: Index,
 });
