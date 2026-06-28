@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { MessageCircle, Check, ArrowLeft, ArrowUpRight, ImageIcon } from "lucide-react";
+import { MessageCircle, Check, ArrowLeft, ArrowUpRight } from "lucide-react";
 import { motion } from "motion/react";
 import { services, type Service, WHATSAPP_URL } from "@/data/services";
 
@@ -31,26 +31,15 @@ export function ServicePage({ service }: { service: Service }) {
             <p className="mt-6 text-xl text-rose font-display italic">{service.tagline}</p>
             <p className="mt-6 text-lg text-foreground/75 leading-relaxed">{service.description}</p>
 
-            <div className="mt-10 flex flex-wrap items-center gap-4">
-              <a
-                href={WHATSAPP_URL}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-2 rounded-full bg-primary text-primary-foreground px-7 py-3.5 text-sm font-medium hover:bg-primary/90 transition-all hover:-translate-y-0.5"
-              >
-                <MessageCircle className="h-4 w-4" />
-                Agendar avaliação
-              </a>
-              {service.slug === "power-redux" && (
-                <Link
-                  to="/power-redux"
-                  className="inline-flex items-center gap-2 rounded-full border border-primary text-primary px-7 py-3.5 text-sm font-medium hover:bg-primary/10 transition-all hover:-translate-y-0.5"
-                >
-                  <ImageIcon className="h-4 w-4" />
-                  Ver antes & depois
-                </Link>
-              )}
-            </div>
+            <a
+              href={WHATSAPP_URL}
+              target="_blank"
+              rel="noreferrer"
+              className="mt-10 inline-flex items-center gap-2 rounded-full bg-primary text-primary-foreground px-7 py-3.5 text-sm font-medium hover:bg-primary/90 transition-all hover:-translate-y-0.5"
+            >
+              <MessageCircle className="h-4 w-4" />
+              Agendar avaliação
+            </a>
           </motion.div>
 
           <div className="mt-14 grid md:grid-cols-2 gap-8 lg:gap-12">

@@ -28,11 +28,10 @@ export function PowerReduxResultados() {
 
         <div className="mx-auto max-w-6xl px-6 lg:px-10 w-full">
           <Link
-            to="/servicos/$slug"
-            params={{ slug: "power-redux" }}
+            to="/"
             className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors mb-8"
           >
-            <ArrowLeft className="h-4 w-4" /> Voltar para Power Redux
+            <ArrowLeft className="h-4 w-4" /> Voltar para o início
           </Link>
 
           <motion.div
@@ -117,11 +116,10 @@ export function PowerReduxResultados() {
                 Agendar avaliação
               </a>
               <Link
-                to="/servicos/$slug"
-                params={{ slug: "power-redux" }}
+                to="/"
                 className="inline-flex items-center gap-2 text-sm font-medium text-foreground/80 hover:text-primary transition-colors"
               >
-                Conhecer o tratamento <ArrowUpRight className="h-4 w-4" />
+                Ver todos os tratamentos <ArrowUpRight className="h-4 w-4" />
               </Link>
             </div>
           </motion.div>
