@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { PowerReduxResultados } from "@/components/resultados/PowerReduxResultados";
 import { SITE_URL } from "@/data/services";
 
-export const Route = createFileRoute("/resultados/power-redux")({
+export const Route = createFileRoute("/power-redux")({
   head: () => ({
     meta: [
       { title: "Power Redux — Antes e Depois | MAVI Centro de Estética" },
@@ -17,10 +17,10 @@ export const Route = createFileRoute("/resultados/power-redux")({
         content:
           "Resultados reais do Power Redux em Sete Lagoas, MG. Redução de medidas e celulite com protocolo corporal de alta performance.",
       },
-      { property: "og:url", content: `${SITE_URL}/resultados/power-redux` },
+      { property: "og:url", content: `${SITE_URL}/power-redux` },
       { property: "og:type", content: "website" },
     ],
-    links: [{ rel: "canonical", href: `${SITE_URL}/resultados/power-redux` }],
+    links: [{ rel: "canonical", href: `${SITE_URL}/power-redux` }],
   }),
   component: PowerReduxResultados,
 });

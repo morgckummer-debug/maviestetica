@@ -43,7 +43,7 @@ export function ServicePage({ service }: { service: Service }) {
               </a>
               {service.slug === "power-redux" && (
                 <Link
-                  to="/resultados/power-redux"
+                  to="/power-redux"
                   className="inline-flex items-center gap-2 rounded-full border border-primary text-primary px-7 py-3.5 text-sm font-medium hover:bg-primary/10 transition-all hover:-translate-y-0.5"
                 >
                   <ImageIcon className="h-4 w-4" />

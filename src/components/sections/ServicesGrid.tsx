@@ -109,7 +109,7 @@ export function ServicesGrid() {
                 className="snap-start shrink-0 flex flex-col items-center w-[45vw] sm:w-48 lg:w-56"
               >
                 <Link
-                  to={s.slug === "power-redux" ? "/resultados/power-redux" : "/servicos/$slug"}
+                  to={s.slug === "power-redux" ? "/power-redux" : "/servicos/$slug"}
                   params={s.slug === "power-redux" ? undefined : { slug: s.slug }}
                   className="group block w-full text-center"
                 >
