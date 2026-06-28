@@ -4,76 +4,17 @@ import { motion } from "motion/react";
 import { WHATSAPP_URL } from "@/data/services";
 import powerReduxBg from "@/assets/services/power-redux.jpg";
 
-export type ResultadoItem = {
-  id: number;
-  antes: string;
-  depois: string;
-  descricao?: string;
-};
-
-const resultados: ResultadoItem[] = [
-  // Adicione os objetos com antes/depois aqui quando tiver as imagens
-  // Exemplo:
-  // { id: 1, antes: antesImg1, depois: depoisImg1, descricao: "Após 8 sessões" },
+const resultados = [
+  { id: 1, src: "/power-1.jpeg", alt: "Power Redux antes e depois — vista lateral" },
+  { id: 2, src: "/power-2.jpeg", alt: "Power Redux antes e depois — vista traseira" },
+  { id: 3, src: "/power-3.jpeg", alt: "Power Redux antes e depois — vista lateral 2" },
+  { id: 4, src: "/power-4.jpeg", alt: "Power Redux antes e depois — vista frontal" },
 ];
 
-function PlaceholderCard({ label }: { label: string }) {
-  return (
-    <div className="flex-1 flex flex-col gap-2">
-      <span className="text-xs tracking-[0.2em] uppercase text-primary/60 font-medium">{label}</span>
-      <div className="aspect-[3/4] rounded-2xl bg-secondary/60 border border-border/40 flex items-center justify-center">
-        <p className="text-sm text-muted-foreground/50">Imagem em breve</p>
-      </div>
-    </div>
-  );
-}
-
-function ResultadoCard({ item }: { item: ResultadoItem }) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 24 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-30px" }}
-      transition={{ duration: 0.5 }}
-      className="flex flex-col gap-4 bg-white/60 dark:bg-card/60 rounded-3xl p-5 shadow-sm border border-border/30"
-    >
-      <div className="flex gap-3">
-        <div className="flex-1 flex flex-col gap-2">
-          <span className="text-xs tracking-[0.2em] uppercase text-primary/60 font-medium">Antes</span>
-          <div className="aspect-[3/4] rounded-2xl overflow-hidden bg-secondary/40">
-            <img
-              src={item.antes}
-              alt="Antes do tratamento Power Redux"
-              className="w-full h-full object-cover"
-              loading="lazy"
-            />
-          </div>
-        </div>
-        <div className="flex-1 flex flex-col gap-2">
-          <span className="text-xs tracking-[0.2em] uppercase text-primary/60 font-medium">Depois</span>
-          <div className="aspect-[3/4] rounded-2xl overflow-hidden bg-secondary/40">
-            <img
-              src={item.depois}
-              alt="Depois do tratamento Power Redux"
-              className="w-full h-full object-cover"
-              loading="lazy"
-            />
-          </div>
-        </div>
-      </div>
-      {item.descricao && (
-        <p className="text-sm text-muted-foreground text-center">{item.descricao}</p>
-      )}
-    </motion.div>
-  );
-}
-
 export function PowerReduxResultados() {
-  const temResultados = resultados.length > 0;
-
   return (
     <>
-      {/* Hero da página */}
+      {/* Hero */}
       <section className="relative overflow-hidden min-h-[40vh] flex items-center pt-20 pb-16">
         <div className="absolute inset-0 -z-10">
           <img
@@ -107,7 +48,7 @@ export function PowerReduxResultados() {
               <span className="italic font-normal">antes & depois</span>
             </h1>
             <p className="mt-6 text-lg text-foreground/75 leading-relaxed max-w-xl">
-              Veja as transformações reais das nossas clientes com o protocolo Power Redux — redução de medidas, suavização da celulite e pele mais firme.
+              Transformações reais das nossas clientes — redução de medidas, suavização da celulite e pele mais firme com o protocolo Power Redux.
             </p>
 
             <a
@@ -125,33 +66,26 @@ export function PowerReduxResultados() {
 
       {/* Grid de resultados */}
       <section className="py-14 lg:py-20">
-        <div className="mx-auto max-w-6xl px-6 lg:px-10">
-          {temResultados ? (
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {resultados.map((item) => (
-                <ResultadoCard key={item.id} item={item} />
-              ))}
-            </div>
-          ) : (
-            /* Placeholders enquanto não há imagens */
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[1, 2, 3, 4, 5, 6].map((n) => (
-                <motion.div
-                  key={n}
-                  initial={{ opacity: 0, y: 24 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, margin: "-30px" }}
-                  transition={{ duration: 0.5, delay: n * 0.05 }}
-                  className="flex flex-col gap-4 bg-white/60 dark:bg-card/60 rounded-3xl p-5 shadow-sm border border-border/30"
-                >
-                  <div className="flex gap-3">
-                    <PlaceholderCard label="Antes" />
-                    <PlaceholderCard label="Depois" />
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          )}
+        <div className="mx-auto max-w-5xl px-6 lg:px-10">
+          <div className="grid sm:grid-cols-2 gap-6 lg:gap-8">
+            {resultados.map((item, i) => (
+              <motion.div
+                key={item.id}
+                initial={{ opacity: 0, y: 24 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-40px" }}
+                transition={{ duration: 0.5, delay: i * 0.08 }}
+                className="rounded-3xl overflow-hidden shadow-md border border-border/20"
+              >
+                <img
+                  src={item.src}
+                  alt={item.alt}
+                  loading="lazy"
+                  className="w-full h-auto object-cover"
+                />
+              </motion.div>
+            ))}
+          </div>
         </div>
       </section>
 
