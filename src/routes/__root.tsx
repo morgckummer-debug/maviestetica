@@ -120,7 +120,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         children: `window.dataLayer = window.dataLayer || [];
 function gtag(){dataLayer.push(arguments);}
 gtag('js', new Date());
-gtag('config', 'G-S3GDQ5D7V6');`,
+gtag('config', 'G-S3GDQ5D7V6');
+gtag('config', 'AW-18281593078');`,
       },
       {
         type: "application/ld+json",
