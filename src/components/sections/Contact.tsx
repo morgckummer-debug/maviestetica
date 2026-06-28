@@ -97,8 +97,8 @@ export function Contact() {
                 <Clock className="h-5 w-5 mt-1 text-lavender" />
                 <div>
                   <p className="text-xs uppercase tracking-widest text-primary-foreground/60">Atendimento</p>
-                  <p className="text-lg">Seg a Sex · 09h–19h</p>
-                  <p className="text-sm text-primary-foreground/70">Sábado · 09h–14h</p>
+                  <p className="text-lg">Seg a Sex · 13h–19h</p>
+                  <p className="text-sm text-primary-foreground/70">Sábado · 08h–17h</p>
                 </div>
               </li>
             </ul>
