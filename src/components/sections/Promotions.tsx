@@ -2,7 +2,7 @@ import { useRef, useState, useCallback, useEffect } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { motion } from "motion/react";
 import { promotions } from "@/data/promotions";
-import { WHATSAPP_URL, WHATSAPP_DISPLAY } from "@/data/services";
+import { WHATSAPP_BASE_URL, WHATSAPP_DISPLAY } from "@/data/services";
 import logoDark from "@/assets/logo-mavi-dark.png";
 
 function formatPrice(value: number) {
@@ -134,7 +134,7 @@ export function Promotions() {
               };
               const handleClick = (e: React.MouseEvent) => {
                 if (Math.abs(e.clientX - pointerStartX.current) > 8) return;
-                window.open(`${WHATSAPP_URL}?text=${whatsappMsg}`, "_blank", "noreferrer");
+                window.open(`${WHATSAPP_BASE_URL}?text=${whatsappMsg}`, "_blank", "noreferrer");
               };
 
               return (
@@ -149,7 +149,7 @@ export function Promotions() {
                   role="link"
                   tabIndex={0}
                   aria-label={`Ver promoção: ${promo.sessions} sessões de ${promo.procedure.replace("\n", " ")} — abrir WhatsApp`}
-                  onKeyDown={(e) => e.key === "Enter" && window.open(`${WHATSAPP_URL}?text=${whatsappMsg}`, "_blank", "noreferrer")}
+                  onKeyDown={(e) => e.key === "Enter" && window.open(`${WHATSAPP_BASE_URL}?text=${whatsappMsg}`, "_blank", "noreferrer")}
                   className="snap-start shrink-0 relative rounded-[28px] overflow-hidden cursor-pointer select-none
                              hover:-translate-y-1 hover:shadow-2xl active:scale-[0.98]
                              transition-all duration-300
