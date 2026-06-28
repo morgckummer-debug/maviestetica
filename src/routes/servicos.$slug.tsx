@@ -16,9 +16,9 @@ export const Route = createFileRoute("/servicos/$slug")({
     return {
       meta: [
         { title: `${service.name} — MAVI Centro de Estética` },
-        { name: "description", content: service.description },
-        { property: "og:title", content: `${service.name} — MAVI Centro de Estética` },
-        { property: "og:description", content: service.description },
+        { name: "description", content: `${service.description} Agende em Sete Lagoas, MG — MAVI Centro de Estética.` },
+        { property: "og:title", content: `${service.name} em Sete Lagoas | MAVI Centro de Estética` },
+        { property: "og:description", content: `${service.description} Agende em Sete Lagoas, MG — MAVI Centro de Estética.` },
         { property: "og:url", content: `/servicos/${params.slug}` },
         { property: "og:image", content: service.image },
         { property: "og:type", content: "article" },
