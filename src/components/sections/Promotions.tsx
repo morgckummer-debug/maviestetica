@@ -93,9 +93,9 @@ export function Promotions() {
             onClick={() => scroll("prev")}
             disabled={!canPrev}
             aria-label="Promoção anterior"
-            className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-2 lg:-translate-x-6 z-10
+            className="hidden sm:flex absolute left-0 top-1/2 -translate-y-1/2 -translate-x-2 lg:-translate-x-6 z-10
                        w-11 h-11 rounded-full bg-white/90 shadow-lg border border-border/80
-                       flex items-center justify-center text-primary hover:bg-primary hover:text-white
+                       items-center justify-center text-primary hover:bg-primary hover:text-white
                        disabled:opacity-0 disabled:pointer-events-none transition-all duration-300
                        backdrop-blur-sm active:scale-95"
           >
@@ -107,9 +107,9 @@ export function Promotions() {
             onClick={() => scroll("next")}
             disabled={!canNext}
             aria-label="Próxima promoção"
-            className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-2 lg:translate-x-6 z-10
+            className="hidden sm:flex absolute right-0 top-1/2 -translate-y-1/2 translate-x-2 lg:translate-x-6 z-10
                        w-11 h-11 rounded-full bg-white/90 shadow-lg border border-border/80
-                       flex items-center justify-center text-primary hover:bg-primary hover:text-white
+                       items-center justify-center text-primary hover:bg-primary hover:text-white
                        disabled:opacity-0 disabled:pointer-events-none transition-all duration-300
                        backdrop-blur-sm active:scale-95"
           >
@@ -119,7 +119,7 @@ export function Promotions() {
           {/* Track */}
           <div
             ref={trackRef}
-            className="flex gap-5 overflow-x-auto pb-4 snap-x snap-mandatory px-2"
+            className="flex gap-5 overflow-x-auto pb-4 snap-x snap-mandatory px-2 sm:px-2"
             style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
           >
             {promotions.map((promo, i) => {
@@ -154,7 +154,7 @@ export function Promotions() {
                              hover:-translate-y-1 hover:shadow-2xl active:scale-[0.98]
                              transition-all duration-300
                              focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary
-                             w-[62vw] sm:w-[220px] lg:w-[240px]"
+                             w-[78vw] sm:w-[220px] lg:w-[240px]"
                   style={{ minHeight: "480px" }}
                 >
                   {/* Foto de fundo */}
