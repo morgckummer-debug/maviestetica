@@ -2,20 +2,7 @@ import { useRef, useState, useCallback, useEffect } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { motion } from "motion/react";
 import { promotions } from "@/data/promotions";
-import { WHATSAPP_BASE_URL, WHATSAPP_DISPLAY } from "@/data/services";
-import logoDark from "@/assets/logo-mavi-dark.png";
-
-function formatPrice(value: number) {
-  return value.toLocaleString("pt-BR", {
-    minimumFractionDigits: 2,
-  });
-}
-
-function getCampaignBadgeLabel(tag?: string) {
-  if (!tag) return null;
-  if (tag.toLowerCase().includes("combo") || tag.toLowerCase().includes("eu &") || tag.toLowerCase().includes("eu&")) return "COMBO";
-  return "PROMO";
-}
+import { WHATSAPP_BASE_URL } from "@/data/services";
 
 export function Promotions() {
   if (promotions.length === 0) return null;
@@ -124,17 +111,18 @@ export function Promotions() {
           >
             {promotions.map((promo, i) => {
               const whatsappMsg = encodeURIComponent(
-                `Olá! Vi a promoção de *${promo.sessions} sessões de ${promo.procedure.replace("\n", " ")}* no site e gostaria de saber mais!`
+                `Olá! Vi a promoção *${promo.title}* (Arraiá Mavi) no site e gostaria de saber mais!`
               );
-              const badgeLabel = getCampaignBadgeLabel(promo.campaignTag);
-              const isAVista = promo.installments === 1;
+
+              const openWhatsapp = () =>
+                window.open(`${WHATSAPP_BASE_URL}?text=${whatsappMsg}`, "_blank", "noreferrer");
 
               const handlePointerDown = (e: React.PointerEvent) => {
                 pointerStartX.current = e.clientX;
               };
               const handleClick = (e: React.MouseEvent) => {
                 if (Math.abs(e.clientX - pointerStartX.current) > 8) return;
-                window.open(`${WHATSAPP_BASE_URL}?text=${whatsappMsg}`, "_blank", "noreferrer");
+                openWhatsapp();
               };
 
               return (
@@ -148,123 +136,21 @@ export function Promotions() {
                   onClick={handleClick}
                   role="link"
                   tabIndex={0}
-                  aria-label={`Ver promoção: ${promo.sessions} sessões de ${promo.procedure.replace("\n", " ")} — abrir WhatsApp`}
-                  onKeyDown={(e) => e.key === "Enter" && window.open(`${WHATSAPP_BASE_URL}?text=${whatsappMsg}`, "_blank", "noreferrer")}
+                  aria-label={`Ver promoção: ${promo.title} — abrir WhatsApp`}
+                  onKeyDown={(e) => e.key === "Enter" && openWhatsapp()}
                   className="snap-start shrink-0 relative rounded-[28px] overflow-hidden cursor-pointer select-none
                              hover:-translate-y-1 hover:shadow-2xl active:scale-[0.98]
-                             transition-all duration-300
+                             transition-all duration-300 bg-primary/5
                              focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary
-                             w-[78vw] sm:w-[220px] lg:w-[240px]"
-                  style={{ minHeight: "480px" }}
+                             w-[78vw] sm:w-[220px] lg:w-[240px] aspect-[9/16]"
                 >
-                  {/* Foto de fundo */}
-                  {promo.bgImage ? (
-                    <img
-                      src={promo.bgImage}
-                      alt=""
-                      className="absolute inset-0 w-full h-full object-cover"
-                      draggable={false}
-                    />
-                  ) : (
-                    <div className="absolute inset-0 bg-gray-800" />
-                  )}
-
-                  {/* Gradiente escuro */}
-                  <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/55 to-black/90" />
-
-                  {/* Conteúdo */}
-                  <div className="relative z-10 flex flex-col h-full p-4 text-white" style={{ minHeight: "480px" }}>
-
-                    {/* Topo: logo + validade */}
-                    <div className="flex items-center justify-between mb-3">
-                      <img src={logoDark} alt="Mavi" className="h-7 brightness-0 invert opacity-90" draggable={false} />
-                      <span className="text-[9px] text-white/65 text-right leading-tight">
-                        Válido até<br />{promo.validUntil}
-                      </span>
-                    </div>
-
-                    {/* Badge PROMO / COMBO */}
-                    {badgeLabel && (
-                      <span className="self-start mb-1 px-3 py-0.5 rounded-full bg-rose text-white text-[10px] font-bold uppercase tracking-wider">
-                        {badgeLabel}
-                      </span>
-                    )}
-
-                    {/* Nome da campanha */}
-                    {promo.campaignTag && (
-                      <h2 className="font-display text-[1.85rem] italic text-white leading-tight mb-0.5">
-                        {promo.campaignTag}
-                      </h2>
-                    )}
-
-                    {/* Subtítulo da campanha */}
-                    {promo.campaignSubtitle && (
-                      <p className="text-[8px] uppercase tracking-widest text-white/65 mb-3 leading-snug">
-                        {promo.campaignSubtitle}
-                      </p>
-                    )}
-
-                    {/* Badge categoria */}
-                    <span className="self-start mb-3 px-3 py-1 rounded-full bg-rose/90 text-white text-[9px] font-bold uppercase tracking-wide">
-                      {promo.category}
-                    </span>
-
-                    {/* Sessões */}
-                    <p className="text-[11px] text-white/75 mb-0.5 font-medium">
-                      {promo.sessions} sessões de
-                    </p>
-
-                    {/* Procedimento */}
-                    <h3
-                      className="font-black text-white leading-tight whitespace-pre-line mb-3"
-                      style={{ fontSize: "clamp(1.4rem, 4.5vw, 1.8rem)" }}
-                    >
-                      {promo.procedure}
-                    </h3>
-
-                    {/* Preço */}
-                    <div className="mb-0.5">
-                      {isAVista ? (
-                        <div className="flex items-baseline gap-1">
-                          <span className="text-sm text-white/80">R$</span>
-                          <span className="font-black text-rose leading-none" style={{ fontSize: "clamp(2rem, 6vw, 2.6rem)" }}>
-                            {formatPrice(promo.installmentPrice)}
-                          </span>
-                        </div>
-                      ) : (
-                        <div className="flex items-baseline gap-1 flex-wrap">
-                          <span className="text-sm text-white/80">{promo.installments}x de R$</span>
-                          <span className="font-black text-rose leading-none" style={{ fontSize: "clamp(2rem, 6vw, 2.6rem)" }}>
-                            {formatPrice(promo.installmentPrice)}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                    <p className="text-[10px] text-white/60 mb-3">
-                      {isAVista ? "à vista" : "no Cartão de Crédito"}
-                    </p>
-
-                    {/* Bônus combo */}
-                    {promo.comboBonus && (
-                      <div className="rounded-lg bg-rose/80 px-3 py-2 mb-3">
-                        <p className="text-[10px] font-semibold text-white leading-snug">
-                          <span className="font-black">Fechando este {badgeLabel},</span> {promo.comboBonus}
-                        </p>
-                      </div>
-                    )}
-
-                    {/* Telefone */}
-                    <div className="mt-auto rounded-full border border-white/30 bg-white/10 backdrop-blur-sm px-4 py-2 text-center">
-                      <p className="text-xs font-bold text-white tracking-wide">{WHATSAPP_DISPLAY}</p>
-                    </div>
-
-                    {/* Nota de rodapé */}
-                    {promo.note && (
-                      <p className="mt-2 text-[8px] text-white/45 text-center leading-snug">
-                        * {promo.note}
-                      </p>
-                    )}
-                  </div>
+                  <img
+                    src={promo.image}
+                    alt={promo.title}
+                    loading="lazy"
+                    className="absolute inset-0 w-full h-full object-cover"
+                    draggable={false}
+                  />
                 </motion.div>
               );
             })}

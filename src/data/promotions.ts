@@ -2,193 +2,93 @@
 //  PROMOÇÕES DO MÊS — edite aqui para atualizar o site
 // ============================================================
 //
-//  Como funcionar:
-//  - Altere o array `promotions` com as promoções ativas do mês.
+//  Como funciona:
+//  - Cada promoção é a ARTE PRONTA (imagem) que você criou.
+//  - Coloque a imagem da campanha na pasta `public/` e referencie
+//    aqui em `image` com o caminho começando por "/".
+//    Ex: imagem em public/arraia-combo-amigas.jpeg → image: "/arraia-combo-amigas.jpeg"
+//  - `title` é usado no texto do WhatsApp e na acessibilidade (alt).
 //  - Para tirar o bloco do site em meses sem promoção: deixe o array vazio []
-//  - validUntil: use o formato "DD/MM/AAAA".
-//  - installments: número de parcelas (ex: 10 → "10x de R$75,00")
-//  - Se for à vista (sem parcelamento), use installments: 1
-//  - procedure: use \n para quebrar linha no nome (ex: "Virilha\n+ Perianal")
-//  - campaignTag: nome da campanha exibido no card (ex: "Combo Eu & Você", "Amor Próprio")
-//  - campaignSubtitle: frase pequena abaixo do nome da campanha
-//  - comboBonus: descrição do bônus que o parceiro/amiga ganha (só para combos)
-//  - bgImage: caminho para a imagem de fundo do card (opcional)
+//  - A ordem do array é a ordem que aparece no carrossel.
 // ============================================================
 
 export type Promotion = {
   id: string;
-  /** Categoria exibida no badge — ex: "Depilação a Laser Feminina" */
-  category: string;
-  /** Número de sessões incluídas */
-  sessions: number;
-  /** Nome do procedimento/área — use \n para quebrar linha */
-  procedure: string;
-  /** Número de parcelas (use 1 para à vista) */
-  installments: number;
-  /** Valor de cada parcela */
-  installmentPrice: number;
-  /** Data limite no formato "DD/MM/AAAA" */
-  validUntil: string;
-  /** Observação opcional no rodapé do card */
-  note?: string;
-  /** Nome da campanha exibido no card (ex: "Combo Eu & Você", "Amor Próprio") */
-  campaignTag?: string;
-  /** Frase pequena exibida abaixo do nome da campanha */
-  campaignSubtitle?: string;
-  /** Descrição do bônus que o parceiro/amiga ganha */
-  comboBonus?: string;
-  /** Caminho da imagem de fundo do card */
-  bgImage?: string;
+  /** Caminho da arte na pasta public — ex: "/arraia-combo-amigas.jpeg" */
+  image: string;
+  /** Título usado na mensagem do WhatsApp e no alt da imagem */
+  title: string;
 };
-
-import depilacaoLaser from "@/assets/services/depilacao-laser.jpg";
-import drenagemGestante from "@/assets/services/drenagem-gestantes.jpg";
-import drenagemLinfatica from "@/assets/services/drenagem-linfatica.jpg";
-import posOperatorio from "@/assets/services/pos-operatorio.jpg";
-import heroBg from "@/assets/hero-bg.jpg";
 
 export const promotions: Promotion[] = [
   {
-    id: "combo-eu-voce-virilha",
-    campaignTag: "Eu & Você",
-    campaignSubtitle: "JUNTOS NA VIDA E LIVRE DOS PELINHOS INDESEJADOS",
-    category: "Depilação à Laser",
-    sessions: 10,
-    procedure: "Virilha\nCompleta",
-    installments: 10,
-    installmentPrice: 99.99,
-    validUntil: "30/06/2026",
-    comboBonus: "seu amor GANHA 10 sessões de Tórax ou Barba Simples!",
-    bgImage: heroBg,
+    id: "combo-amigas",
+    image: "/arraia-combo-amigas.jpeg",
+    title: "Combo das Amigas — Virilha Completa + Perianal + Axilas (10x R$159,99)",
   },
   {
-    id: "combo-eu-voce-virilha-barba",
-    campaignTag: "Eu & Você",
-    campaignSubtitle: "JUNTOS NA VIDA E LIVRE DOS PELINHOS INDESEJADOS",
-    category: "Depilação à Laser",
-    sessions: 10,
-    procedure: "Virilha\nCompleta",
-    installments: 10,
-    installmentPrice: 99.99,
-    validUntil: "30/06/2026",
-    comboBonus: "seu amor GANHA 10 sessões de Barba Simples!",
-    bgImage: heroBg,
+    id: "fem-vpac-coxa",
+    image: "/arraia-fem-vpac-coxa.jpeg",
+    title: "Laser Feminina — Virilha + Perianal + Axilas + Canela + Coxa (10x R$199,99)",
   },
   {
-    id: "combo-eu-voce-axilas",
-    campaignTag: "Eu & Você",
-    campaignSubtitle: "JUNTOS NA VIDA E LIVRE DOS PELINHOS INDESEJADOS",
-    category: "Depilação à Laser",
-    sessions: 10,
-    procedure: "Axilas",
-    installments: 1,
-    installmentPrice: 199.99,
-    validUntil: "30/06/2026",
-    comboBonus: "seu amor GANHA 10 sessões de Depilação à Laser nas Axilas!",
-    bgImage: heroBg,
+    id: "fem-vpac",
+    image: "/arraia-fem-vpac.jpeg",
+    title: "Laser Feminina — Virilha + Perianal + Axilas + Canela (10x R$149,99)",
   },
   {
-    id: "combo-amigas-virilha-perianal-axilas",
-    campaignTag: "Combo das Amigas",
-    campaignSubtitle: "AMIGA QUE É AMIGA DIVIDEM O MELHOR COMBO",
-    category: "Depilação à Laser",
-    sessions: 10,
-    procedure: "Virilha Completa\n+ Perianal + Axilas",
-    installments: 10,
-    installmentPrice: 159.99,
-    validUntil: "30/06/2026",
-    comboBonus: "sua amiga GANHA 10 sessões nas mesmas áreas!",
-    bgImage: depilacaoLaser,
+    id: "fem-vpa",
+    image: "/arraia-fem-vpa.jpeg",
+    title: "Laser Feminina — Virilha + Perianal + Axilas (10x R$99,99)",
   },
   {
-    id: "amor-proprio-max-pos-parto",
-    campaignTag: "Amor Próprio",
-    category: "Tratamento Corporal",
-    sessions: 10,
-    procedure: "Max\nPós Parto",
-    installments: 10,
-    installmentPrice: 299.99,
-    validUntil: "30/06/2026",
-    bgImage: posOperatorio,
+    id: "fem-axilas",
+    image: "/arraia-fem-axilas.jpeg",
+    title: "Laser Feminina — Axilas (R$149,99 à vista)",
   },
   {
-    id: "amor-proprio-drenagem-gestante",
-    campaignTag: "Amor Próprio",
-    category: "Tratamento Corporal",
-    sessions: 10,
-    procedure: "Drenagem Linfática\npara Gestante",
-    installments: 1,
-    installmentPrice: 550.0,
-    validUntil: "30/06/2026",
-    note: "Parcelável em até 3x no Cartão de Crédito.",
-    bgImage: drenagemGestante,
+    id: "masc-torax-abdomen",
+    image: "/arraia-masc-torax-abdomen.jpeg",
+    title: "Laser Masculina — Tórax ou Abdômen (10x R$75,00)",
   },
   {
-    id: "amor-proprio-drenagem-metodo-mavi",
-    campaignTag: "Amor Próprio",
-    category: "Tratamento Corporal",
-    sessions: 10,
-    procedure: "Drenagem Linfática\nMétodo Mavi",
-    installments: 1,
-    installmentPrice: 799.99,
-    validUntil: "30/06/2026",
-    note: "Parcelável em até 6x no Cartão de Crédito.",
-    bgImage: drenagemLinfatica,
+    id: "masc-axilas",
+    image: "/arraia-masc-axilas.jpeg",
+    title: "Laser Masculina — Axilas (R$149,99 à vista)",
   },
   {
-    id: "amor-proprio-costas-masculina",
-    campaignTag: "Amor Próprio",
-    category: "Depilação à Laser Masculina",
-    sessions: 10,
-    procedure: "Costas",
-    installments: 10,
-    installmentPrice: 149.99,
-    validUntil: "30/06/2026",
-    bgImage: depilacaoLaser,
+    id: "masc-pescoco",
+    image: "/arraia-masc-pescoco.jpeg",
+    title: "Laser Masculina — Pescoço (10x R$45,00)",
   },
   {
-    id: "amor-proprio-torax-masculina",
-    campaignTag: "Amor Próprio",
-    category: "Depilação à Laser Masculina",
-    sessions: 10,
-    procedure: "Tórax",
-    installments: 12,
-    installmentPrice: 99.99,
-    validUntil: "30/06/2026",
-    bgImage: depilacaoLaser,
+    id: "power-redux",
+    image: "/arraia-power-redux.jpeg",
+    title: "Power Redux — 10 sessões (de R$4.500 por R$3.000)",
   },
   {
-    id: "amor-proprio-buco-feminina",
-    campaignTag: "Amor Próprio",
-    category: "Depilação à Laser Feminina",
-    sessions: 10,
-    procedure: "Buço",
-    installments: 1,
-    installmentPrice: 99.99,
-    validUntil: "30/06/2026",
-    bgImage: depilacaoLaser,
+    id: "max-pos-parto",
+    image: "/arraia-max-pos-parto.jpeg",
+    title: "Max Pós Parto — 10 sessões (10x R$299,99)",
   },
   {
-    id: "amor-proprio-canela-feminina",
-    campaignTag: "Amor Próprio",
-    category: "Depilação à Laser Feminina",
-    sessions: 10,
-    procedure: "Canela",
-    installments: 12,
-    installmentPrice: 99.99,
-    validUntil: "30/06/2026",
-    comboBonus: "fechando esta PROMO você GANHA 10 sessões de Depilação à Laser na Casa!",
-    bgImage: depilacaoLaser,
+    id: "drenagem-gestante",
+    image: "/arraia-drenagem-gestante.jpeg",
+    title: "Drenagem Linfática para Gestante — 07 sessões (R$550,00)",
   },
   {
-    id: "amor-proprio-virilha-perianal-feminina",
-    campaignTag: "Amor Próprio",
-    category: "Depilação à Laser Feminina",
-    sessions: 10,
-    procedure: "Virilha Completa\ncom Perianal",
-    installments: 10,
-    installmentPrice: 79.99,
-    validUntil: "30/06/2026",
-    bgImage: depilacaoLaser,
+    id: "drenagem-metodo-mavi",
+    image: "/arraia-drenagem-metodo-mavi.jpeg",
+    title: "Drenagem Linfática Método Mavi — sessão avulsa (R$150,00)",
+  },
+  {
+    id: "limpeza-pele",
+    image: "/arraia-limpeza-pele.jpeg",
+    title: "Limpeza de Pele Profunda (R$150,00 à vista)",
+  },
+  {
+    id: "massagem-relaxante",
+    image: "/arraia-massagem-relaxante.jpeg",
+    title: "Massagem Relaxante — sessão avulsa (R$120,00)",
   },
 ];
