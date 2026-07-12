@@ -52,6 +52,28 @@ function confirmadaEm(iso: string): string {
   }
 }
 
+// Conta, em ordem cronológica, quantas vezes cada item (área/procedimento)
+// já apareceu — para o acompanhamento de protocolo (ex.: "Axilas — 5ª sessão").
+// Contado por ficha, pois cada ficha é um procedimento diferente da cliente.
+function calcularOrdinais(sessoes: SessaoAtendimento[]): Map<string, Map<string, number>> {
+  const contagem = new Map<string, number>(); // chave: "fichaId::item"
+  const porSessao = new Map<string, Map<string, number>>(); // sessaoId -> item -> nº
+  const ordenadas = [...sessoes].sort((a, b) =>
+    `${a.data}T${a.created_at}`.localeCompare(`${b.data}T${b.created_at}`),
+  );
+  for (const s of ordenadas) {
+    const porItem = new Map<string, number>();
+    for (const item of s.areas) {
+      const chave = `${s.ficha_id}::${item}`;
+      const n = (contagem.get(chave) ?? 0) + 1;
+      contagem.set(chave, n);
+      porItem.set(item, n);
+    }
+    porSessao.set(s.id, porItem);
+  }
+  return porSessao;
+}
+
 // Histórico de sessões: o "caderninho" digital da cliente. A Marina registra
 // data + itens realizados + observação; a cliente confirma pelo link (vale
 // como assinatura). Aceita várias fichas: a cliente escolhe o procedimento.
@@ -152,6 +174,17 @@ export function HistoricoSessoes({
 
   const podeSalvar = fichaId && (itens.length > 0 || observacao.trim());
 
+  // Nº de sessões já registradas de cada item, para mostrar nos botões do
+  // formulário ("Axilas · seria a 5ª sessão") e no histórico já salvo.
+  const ordinaisPorSessao = useMemo(() => calcularOrdinais(sessoes ?? []), [sessoes]);
+  const contagemDoProcedimento = useMemo(() => {
+    const m = new Map<string, number>();
+    (sessoes ?? [])
+      .filter((s) => s.ficha_id === fichaId)
+      .forEach((s) => s.areas.forEach((a) => m.set(a, (m.get(a) ?? 0) + 1)));
+    return m;
+  }, [sessoes, fichaId]);
+
   return (
     <div className="rounded-2xl border border-border bg-card p-5 sm:p-6">
       <div className="flex items-center justify-between gap-3 mb-1">
@@ -227,6 +260,7 @@ export function HistoricoSessoes({
               <div className="flex flex-wrap gap-2">
                 {opcoes.map((a) => {
                   const sel = itens.includes(a);
+                  const proximaOrdinal = (contagemDoProcedimento.get(a) ?? 0) + 1;
                   return (
                     <button
                       key={a}
@@ -240,6 +274,7 @@ export function HistoricoSessoes({
                       ].join(" ")}
                     >
                       {a}
+                      <span className="ml-1.5 text-xs opacity-60">· {proximaOrdinal}ª</span>
                     </button>
                   );
                 })}
@@ -296,6 +331,7 @@ export function HistoricoSessoes({
       <div className="space-y-3">
         {(sessoes ?? []).map((s) => {
           const tipo = tipoPorFicha.get(s.ficha_id);
+          const ordinaisDaSessao = ordinaisPorSessao.get(s.id);
           return (
             <div key={s.id} className="rounded-xl border border-border bg-background p-4">
               <div className="flex items-start justify-between gap-3">
@@ -316,6 +352,9 @@ export function HistoricoSessoes({
                           className="rounded-full bg-secondary/60 px-2.5 py-0.5 text-xs text-foreground/70"
                         >
                           {a}
+                          {ordinaisDaSessao?.has(a) && (
+                            <span className="text-foreground/50"> · {ordinaisDaSessao.get(a)}ª sessão</span>
+                          )}
                         </span>
                       ))}
                     </div>
