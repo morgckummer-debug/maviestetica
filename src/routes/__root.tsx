@@ -187,6 +187,8 @@ function RootComponent() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   // O painel da Marina não mostra a navbar/rodapé do site público.
   const semNavbar = pathname.startsWith("/painel");
+  // Nas fichas de avaliação escondemos o rodapé para o formulário ficar limpo.
+  const semRodape = semNavbar || pathname.startsWith("/avaliacao");
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -196,7 +198,7 @@ function RootComponent() {
           {/* Required: nested routes render here. */}
           <Outlet />
         </main>
-        {!semNavbar && <Footer />}
+        {!semRodape && <Footer />}
       </div>
     </QueryClientProvider>
   );
