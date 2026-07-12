@@ -83,6 +83,33 @@ function YesNo({
 const inputBase =
   "w-full rounded-xl border border-border bg-background px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring";
 
+// (31)93998-3485 — aceita fixo (10 dígitos) e celular (11 dígitos)
+function mascaraTelefone(v: string): string {
+  const d = v.replace(/\D/g, "").slice(0, 11);
+  const p = d.length;
+  if (p === 0) return "";
+  if (p <= 2) return `(${d}`;
+  if (p <= 6) return `(${d.slice(0, 2)})${d.slice(2)}`;
+  if (p <= 10) return `(${d.slice(0, 2)})${d.slice(2, 6)}-${d.slice(6)}`;
+  return `(${d.slice(0, 2)})${d.slice(2, 7)}-${d.slice(7)}`;
+}
+
+// 254.654.325-86
+function mascaraCpf(v: string): string {
+  const d = v.replace(/\D/g, "").slice(0, 11);
+  let out = d.slice(0, 3);
+  if (d.length > 3) out += `.${d.slice(3, 6)}`;
+  if (d.length > 6) out += `.${d.slice(6, 9)}`;
+  if (d.length > 9) out += `-${d.slice(9, 11)}`;
+  return out;
+}
+
+function aplicarMascara(mascara: "telefone" | "cpf" | undefined, v: string): string {
+  if (mascara === "telefone") return mascaraTelefone(v);
+  if (mascara === "cpf") return mascaraCpf(v);
+  return v;
+}
+
 function CampoView({
   campo,
   respostas,
@@ -110,10 +137,16 @@ function CampoView({
           <input
             type={campo.inputMode === "date" ? "date" : "text"}
             inputMode={
-              campo.inputMode === "tel" ? "tel" : campo.inputMode === "email" ? "email" : undefined
+              campo.inputMode === "tel"
+                ? "tel"
+                : campo.inputMode === "email"
+                  ? "email"
+                  : campo.inputMode === "numeric"
+                    ? "numeric"
+                    : undefined
             }
             value={(respostas[campo.id] as string) ?? ""}
-            onChange={(e) => set(campo.id, e.target.value)}
+            onChange={(e) => set(campo.id, aplicarMascara(campo.mascara, e.target.value))}
             placeholder={campo.placeholder}
             className={inputBase}
           />

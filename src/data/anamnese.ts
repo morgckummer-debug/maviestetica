@@ -10,7 +10,9 @@ export type CampoTexto = {
   placeholder?: string;
   obrigatorio?: boolean;
   multiline?: boolean;
-  inputMode?: "text" | "tel" | "email" | "date";
+  inputMode?: "text" | "tel" | "email" | "date" | "numeric";
+  // Formata o texto enquanto digita (ex.: celular e CPF)
+  mascara?: "telefone" | "cpf";
   ajuda?: string;
 };
 
@@ -110,8 +112,9 @@ const ETAPA_DADOS: Etapa = {
       tipo: "texto",
       id: "whatsapp",
       label: "WhatsApp",
-      placeholder: "(31) 9....-....",
+      placeholder: "(31)93998-3485",
       inputMode: "tel",
+      mascara: "telefone",
       obrigatorio: true,
     },
     {
@@ -121,7 +124,14 @@ const ETAPA_DADOS: Etapa = {
       placeholder: "voce@email.com",
       inputMode: "email",
     },
-    { tipo: "texto", id: "cpf", label: "CPF (opcional)", placeholder: "000.000.000-00" },
+    {
+      tipo: "texto",
+      id: "cpf",
+      label: "CPF (opcional)",
+      placeholder: "254.654.325-86",
+      inputMode: "numeric",
+      mascara: "cpf",
+    },
     { tipo: "texto", id: "rg", label: "RG (opcional)", placeholder: "MG-00.000.000" },
     {
       tipo: "texto",
@@ -554,7 +564,14 @@ const ETAPA_DADOS_DEPILACAO: Etapa = {
   descricao: "Para a Marina te receber com cuidado e segurança.",
   campos: [
     { tipo: "texto", id: "nome", label: "Nome completo", placeholder: "Seu nome", obrigatorio: true },
-    { tipo: "texto", id: "cpf", label: "CPF", placeholder: "000.000.000-00" },
+    {
+      tipo: "texto",
+      id: "cpf",
+      label: "CPF",
+      placeholder: "254.654.325-86",
+      inputMode: "numeric",
+      mascara: "cpf",
+    },
     { tipo: "texto", id: "nascimento", label: "Data de nascimento", inputMode: "date" },
     { tipo: "selecao", id: "sexo", label: "Sexo", opcoes: ["Feminino", "Masculino"] },
     { tipo: "texto", id: "endereco", label: "Endereço", placeholder: "Rua, número, bairro" },
@@ -563,8 +580,9 @@ const ETAPA_DADOS_DEPILACAO: Etapa = {
       tipo: "texto",
       id: "whatsapp",
       label: "Celular",
-      placeholder: "(31) 9....-....",
+      placeholder: "(31)93998-3485",
       inputMode: "tel",
+      mascara: "telefone",
       obrigatorio: true,
     },
   ],
