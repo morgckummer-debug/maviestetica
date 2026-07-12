@@ -271,7 +271,7 @@ function DetalheFicha() {
 
       {/* Medidas + relatório (preenchidos pela Marina) */}
       <div className="rounded-2xl border border-border bg-card p-5 sm:p-6">
-        <h3 className="font-display text-2xl text-primary mb-1">Medidas e relatório</h3>
+        <h3 className="font-display text-2xl text-primary mb-1">Medidas e avaliação</h3>
         <p className="text-sm text-muted-foreground mb-5">Preenchido no atendimento.</p>
 
         {camposMedidas.length > 0 && (
@@ -292,7 +292,7 @@ function DetalheFicha() {
         )}
 
         <div className="mb-5">
-          <label className="block text-sm font-medium mb-2">Relatório</label>
+          <label className="block text-sm font-medium mb-2">Minha avaliação</label>
           <textarea
             value={relatorio}
             onChange={(e) => setRelatorio(e.target.value)}
