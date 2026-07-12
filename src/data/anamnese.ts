@@ -141,7 +141,6 @@ const ETAPA_DADOS: Etapa = {
       inputMode: "numeric",
       mascara: "cpf",
     },
-    { tipo: "texto", id: "rg", label: "RG (opcional)", placeholder: "MG-00.000.000" },
     {
       tipo: "texto",
       id: "endereco",
