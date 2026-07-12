@@ -338,7 +338,7 @@ const CORPORAL: DefinicaoFicha = {
 const FACIAL: DefinicaoFicha = {
   tipo: "facial",
   nome: "Anamnese Facial",
-  emoji: "✨",
+  emoji: "💧",
   camposMedidas: [],
   avaliacao: [
     {
