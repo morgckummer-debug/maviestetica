@@ -188,7 +188,7 @@ function DetalheFicha() {
           return (
             <div key={etapa.titulo} className="rounded-2xl border border-border bg-card p-5">
               <h3 className="font-medium text-primary mb-3">{etapa.titulo}</h3>
-              <dl className="grid sm:grid-cols-2 gap-x-8">
+              <dl className="grid md:grid-cols-2 gap-x-8">
                 {linhas.map((l) => (
                   <div
                     key={l.id}

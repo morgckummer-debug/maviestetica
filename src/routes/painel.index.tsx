@@ -85,13 +85,13 @@ function EnviarFicha() {
         <input
           readOnly
           value={link}
-          className="flex-1 rounded-full border border-border bg-background px-4 py-2.5 text-sm text-muted-foreground"
+          className="min-w-0 flex-1 rounded-full border border-border bg-background px-4 py-2.5 text-sm text-muted-foreground"
         />
-        <div className="flex gap-2">
+        <div className="grid grid-cols-2 gap-2 sm:flex">
           <button
             type="button"
             onClick={copiar}
-            className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-4 py-2.5 text-sm font-medium text-foreground/80 hover:border-primary/40 transition-colors"
+            className="inline-flex items-center justify-center gap-1.5 rounded-full border border-border bg-card px-4 py-2.5 text-sm font-medium text-foreground/80 hover:border-primary/40 transition-colors"
           >
             {copiado ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
             {copiado ? "Copiado" : "Copiar"}
@@ -100,7 +100,7 @@ function EnviarFicha() {
             href={whatsapp}
             target="_blank"
             rel="noreferrer"
-            className="inline-flex items-center gap-1.5 rounded-full bg-primary text-primary-foreground px-4 py-2.5 text-sm font-medium hover:bg-primary/90 transition-colors"
+            className="inline-flex items-center justify-center gap-1.5 rounded-full bg-primary text-primary-foreground px-4 py-2.5 text-sm font-medium hover:bg-primary/90 transition-colors"
           >
             <MessageCircle className="h-4 w-4" />
             WhatsApp
