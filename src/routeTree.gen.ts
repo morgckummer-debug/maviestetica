@@ -20,6 +20,7 @@ import { Route as ServicosSlugRouteImport } from './routes/servicos.$slug'
 import { Route as ResultadosPowerReduxRouteImport } from './routes/resultados.power-redux'
 import { Route as PainelIdRouteImport } from './routes/painel.$id'
 import { Route as AvaliacaoTipoRouteImport } from './routes/avaliacao.$tipo'
+import { Route as ConfirmarTokenRouteImport } from './routes/confirmar.$token'
 
 const PowerReduxRoute = PowerReduxRouteImport.update({
   id: '/power-redux',
@@ -76,6 +77,11 @@ const AvaliacaoTipoRoute = AvaliacaoTipoRouteImport.update({
   path: '/avaliacao/$tipo',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ConfirmarTokenRoute = ConfirmarTokenRouteImport.update({
+  id: '/confirmar/$token',
+  path: '/confirmar/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -84,6 +90,7 @@ export interface FileRoutesByFullPath {
   '/painel': typeof PainelRouteWithChildren
   '/power-redux': typeof PowerReduxRoute
   '/avaliacao/$tipo': typeof AvaliacaoTipoRoute
+  '/confirmar/$token': typeof ConfirmarTokenRoute
   '/painel/$id': typeof PainelIdRoute
   '/resultados/power-redux': typeof ResultadosPowerReduxRoute
   '/servicos/$slug': typeof ServicosSlugRoute
@@ -96,6 +103,7 @@ export interface FileRoutesByTo {
   '/obrigado': typeof ObrigadoRoute
   '/power-redux': typeof PowerReduxRoute
   '/avaliacao/$tipo': typeof AvaliacaoTipoRoute
+  '/confirmar/$token': typeof ConfirmarTokenRoute
   '/painel/$id': typeof PainelIdRoute
   '/resultados/power-redux': typeof ResultadosPowerReduxRoute
   '/servicos/$slug': typeof ServicosSlugRoute
@@ -110,6 +118,7 @@ export interface FileRoutesById {
   '/painel': typeof PainelRouteWithChildren
   '/power-redux': typeof PowerReduxRoute
   '/avaliacao/$tipo': typeof AvaliacaoTipoRoute
+  '/confirmar/$token': typeof ConfirmarTokenRoute
   '/painel/$id': typeof PainelIdRoute
   '/resultados/power-redux': typeof ResultadosPowerReduxRoute
   '/servicos/$slug': typeof ServicosSlugRoute
@@ -125,6 +134,7 @@ export interface FileRouteTypes {
     | '/painel'
     | '/power-redux'
     | '/avaliacao/$tipo'
+    | '/confirmar/$token'
     | '/painel/$id'
     | '/resultados/power-redux'
     | '/servicos/$slug'
@@ -137,6 +147,7 @@ export interface FileRouteTypes {
     | '/obrigado'
     | '/power-redux'
     | '/avaliacao/$tipo'
+    | '/confirmar/$token'
     | '/painel/$id'
     | '/resultados/power-redux'
     | '/servicos/$slug'
@@ -150,6 +161,7 @@ export interface FileRouteTypes {
     | '/painel'
     | '/power-redux'
     | '/avaliacao/$tipo'
+    | '/confirmar/$token'
     | '/painel/$id'
     | '/resultados/power-redux'
     | '/servicos/$slug'
@@ -164,6 +176,7 @@ export interface RootRouteChildren {
   PainelRoute: typeof PainelRouteWithChildren
   PowerReduxRoute: typeof PowerReduxRoute
   AvaliacaoTipoRoute: typeof AvaliacaoTipoRoute
+  ConfirmarTokenRoute: typeof ConfirmarTokenRoute
   ResultadosPowerReduxRoute: typeof ResultadosPowerReduxRoute
   ServicosSlugRoute: typeof ServicosSlugRoute
   AvaliacaoIndexRoute: typeof AvaliacaoIndexRoute
@@ -248,6 +261,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AvaliacaoTipoRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/confirmar/$token': {
+      id: '/confirmar/$token'
+      path: '/confirmar/$token'
+      fullPath: '/confirmar/$token'
+      preLoaderRoute: typeof ConfirmarTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -271,6 +291,7 @@ const rootRouteChildren: RootRouteChildren = {
   PainelRoute: PainelRouteWithChildren,
   PowerReduxRoute: PowerReduxRoute,
   AvaliacaoTipoRoute: AvaliacaoTipoRoute,
+  ConfirmarTokenRoute: ConfirmarTokenRoute,
   ResultadosPowerReduxRoute: ResultadosPowerReduxRoute,
   ServicosSlugRoute: ServicosSlugRoute,
   AvaliacaoIndexRoute: AvaliacaoIndexRoute,
