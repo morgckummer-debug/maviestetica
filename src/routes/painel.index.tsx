@@ -13,25 +13,12 @@ import {
   MessageCircle,
 } from "lucide-react";
 import { listarFichas, type Ficha } from "@/lib/painel";
-import { TIPOS, FICHAS, nomeTipo, nomeCurto, type Tipo } from "@/data/anamnese";
+import { agruparClientes, digitos, type Cliente } from "@/lib/clientes";
+import { TIPOS, FICHAS, nomeCurto, type Tipo } from "@/data/anamnese";
 
 export const Route = createFileRoute("/painel/")({
   component: ListaFichas,
 });
-
-function formatarData(iso: string): string {
-  try {
-    return new Date(iso).toLocaleString("pt-BR", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  } catch {
-    return iso;
-  }
-}
 
 function EnviarFicha() {
   const [origin, setOrigin] = useState("");
@@ -124,22 +111,24 @@ function ListaFichas() {
       .catch((e) => setErro(e instanceof Error ? e.message : "Erro ao carregar."));
   }, []);
 
-  const filtradas = useMemo(() => {
-    if (!fichas) return [];
+  // Agrupa as fichas por pessoa (mesma cliente = mesmo WhatsApp/CPF).
+  const clientes = useMemo(() => (fichas ? agruparClientes(fichas) : []), [fichas]);
+
+  const filtrados = useMemo(() => {
     const q = busca.trim().toLowerCase();
     const qDigitos = q.replace(/\D/g, ""); // só números (para CPF/telefone)
-    return fichas.filter((f) => {
-      if (filtroTipo !== "todas" && f.tipo !== filtroTipo) return false;
+    return clientes.filter((c) => {
+      if (filtroTipo !== "todas" && !c.tipos.includes(filtroTipo)) return false;
       if (!q) return true;
-      if (f.nome.toLowerCase().includes(q)) return true;
+      if (c.nome.toLowerCase().includes(q)) return true;
       if (qDigitos) {
-        const cpf = String(f.respostas?.cpf ?? "").replace(/\D/g, "");
-        const tel = (f.telefone ?? "").replace(/\D/g, "");
-        if (cpf.includes(qDigitos) || tel.includes(qDigitos)) return true;
+        if (digitos(c.telefone).includes(qDigitos)) return true;
+        if (c.fichas.some((f) => digitos(f.respostas?.cpf as string).includes(qDigitos)))
+          return true;
       }
       return false;
     });
-  }, [fichas, busca, filtroTipo]);
+  }, [clientes, busca, filtroTipo]);
 
   return (
     <div>
@@ -157,12 +146,12 @@ function ListaFichas() {
       <EnviarFicha />
 
       <div className="mb-4">
-        <h2 className="font-display text-3xl text-primary">Fichas dos pacientes</h2>
+        <h2 className="font-display text-3xl text-primary">Clientes</h2>
         <p className="text-sm text-muted-foreground mt-1">
           {fichas
             ? busca || filtroTipo !== "todas"
-              ? `${filtradas.length} de ${fichas.length} ficha(s)`
-              : `${fichas.length} ficha(s) registrada(s)`
+              ? `${filtrados.length} de ${clientes.length} cliente(s)`
+              : `${clientes.length} cliente(s) · ${fichas.length} ficha(s)`
             : "Carregando..."}
         </p>
       </div>
@@ -197,50 +186,49 @@ function ListaFichas() {
         </div>
       )}
 
-      {fichas && filtradas.length === 0 && (
+      {fichas && filtrados.length === 0 && (
         <div className="flex flex-col items-center justify-center py-16 text-center text-muted-foreground">
           <Inbox className="h-10 w-10 mb-3 opacity-50" />
           <p>
             {busca || filtroTipo !== "todas"
-              ? "Nenhuma ficha encontrada."
-              : "Ainda não há fichas registradas."}
+              ? "Nenhuma cliente encontrada."
+              : "Ainda não há clientes registradas."}
           </p>
         </div>
       )}
 
       <div className="space-y-3">
-        {filtradas.map((f) => {
-          const masculino = f.respostas?.sexo === "Masculino";
-          return (
+        {filtrados.map((c: Cliente) => (
           <Link
-            key={f.id}
-            to="/painel/$id"
-            params={{ id: f.id }}
+            key={c.id}
+            to="/painel/cliente/$id"
+            params={{ id: c.id }}
             className={[
               "flex items-center justify-between gap-4 rounded-2xl border bg-card px-5 py-4 transition-colors",
-              masculino
+              c.algumMasculino
                 ? "border-sky-400/60 hover:border-sky-500"
                 : "border-border hover:border-primary/40",
             ].join(" ")}
           >
             <div className="min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="font-medium text-foreground truncate">{f.nome}</span>
-                <span className="text-xs rounded-full bg-lavender-soft px-2 py-0.5 text-primary">
-                  {FICHAS[f.tipo]?.emoji ?? ""} {nomeTipo(f.tipo)}
-                </span>
-                {f.arquivada && (
-                  <span className="text-xs rounded-full bg-muted px-2 py-0.5 text-muted-foreground">
-                    arquivada
+                <span className="font-medium text-foreground truncate">{c.nome}</span>
+                {c.tipos.map((t) => (
+                  <span
+                    key={t}
+                    className="text-xs rounded-full bg-lavender-soft px-2 py-0.5 text-primary"
+                  >
+                    {FICHAS[t]?.emoji ?? ""} {nomeCurto(t)}
                   </span>
-                )}
+                ))}
               </div>
               <p className="text-sm text-muted-foreground truncate">
-                {f.telefone || "sem telefone"} · {formatarData(f.created_at)}
+                {c.telefone || "sem telefone"}
+                {c.fichas.length > 1 ? ` · ${c.fichas.length} fichas` : ""}
               </p>
             </div>
             <div className="flex items-center gap-2 shrink-0">
-              {f.autoriza_foto ? (
+              {c.autorizaFoto ? (
                 <span title="Autorizou uso de imagem">
                   <Camera className="h-4 w-4 text-lavender" />
                 </span>
@@ -249,16 +237,15 @@ function ListaFichas() {
                   <CameraOff className="h-4 w-4 text-muted-foreground/60" />
                 </span>
               )}
-              {f.alertas.length > 0 && (
+              {c.alertas > 0 && (
                 <span className="inline-flex items-center gap-1 rounded-full bg-rose/15 text-rose px-2.5 py-1 text-xs font-medium">
                   <AlertTriangle className="h-3.5 w-3.5" />
-                  {f.alertas.length}
+                  {c.alertas}
                 </span>
               )}
             </div>
           </Link>
-          );
-        })}
+        ))}
       </div>
     </div>
   );

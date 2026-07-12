@@ -195,6 +195,18 @@ export async function listarSessoes(fichaId: string): Promise<SessaoAtendimento[
   return (await res.json()) as SessaoAtendimento[];
 }
 
+// Sessões de várias fichas de uma vez (histórico unificado da cliente,
+// que pode ter mais de um procedimento/ficha).
+export async function listarSessoesDeFichas(fichaIds: string[]): Promise<SessaoAtendimento[]> {
+  if (fichaIds.length === 0) return [];
+  const lista = fichaIds.map((id) => encodeURIComponent(id)).join(",");
+  const res = await apiRest(
+    `sessoes?ficha_id=in.(${lista})&select=*&order=data.desc,created_at.desc`,
+  );
+  if (!res.ok) throw new Error("Não foi possível carregar as sessões.");
+  return (await res.json()) as SessaoAtendimento[];
+}
+
 export async function criarSessao(
   fichaId: string,
   dados: { data: string; areas: string[]; observacao: string },
