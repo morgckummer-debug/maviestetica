@@ -781,15 +781,9 @@ const LASER: DefinicaoFicha = {
       ],
     },
     {
-      titulo: "Procedimento",
-      descricao: "Marque o que se aplica — pode escolher mais de um.",
+      titulo: "Áreas",
+      descricao: "Marque as áreas que deseja depilar — pode escolher mais de uma.",
       campos: [
-        {
-          tipo: "multi",
-          id: "metodos",
-          label: "Método(s) desejado(s)",
-          opcoes: ["Cera quente", "Laser", "Luz pulsada", "Linha"],
-        },
         {
           tipo: "multi",
           id: "areas",
