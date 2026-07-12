@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { createFileRoute, Link, useParams } from "@tanstack/react-router";
+import { createFileRoute, Link, useParams, useNavigate } from "@tanstack/react-router";
 import {
   ArrowLeft,
   AlertTriangle,
@@ -8,9 +8,10 @@ import {
   CameraOff,
   Check,
   ChevronRight,
+  Trash2,
 } from "lucide-react";
 import { FICHAS, nomeTipo, nomeCurto } from "@/data/anamnese";
-import { listarFichas, type Ficha } from "@/lib/painel";
+import { listarFichas, excluirFicha, type Ficha } from "@/lib/painel";
 import { clientePorFichaId, type Cliente } from "@/lib/clientes";
 import { mascaraTelefone } from "@/lib/mascaras";
 import { HistoricoSessoes, type Procedimento } from "@/components/HistoricoSessoes";
@@ -33,8 +34,11 @@ function formatarData(iso: string): string {
 
 function PaginaCliente() {
   const { id } = useParams({ from: "/painel/cliente/$id" });
+  const navigate = useNavigate();
   const [fichas, setFichas] = useState<Ficha[] | null>(null);
   const [erro, setErro] = useState<string | null>(null);
+  const [erroExcluir, setErroExcluir] = useState<string | null>(null);
+  const [excluindoId, setExcluindoId] = useState<string | null>(null);
 
   useEffect(() => {
     listarFichas()
@@ -46,6 +50,25 @@ function PaginaCliente() {
     () => (fichas ? clientePorFichaId(fichas, id) : null),
     [fichas, id],
   );
+
+  const excluirUmaFicha = async (f: Ficha) => {
+    if (!window.confirm(`Excluir a ficha de ${nomeTipo(f.tipo)} desta cliente? Essa ação não pode ser desfeita.`))
+      return;
+    setExcluindoId(f.id);
+    setErroExcluir(null);
+    try {
+      await excluirFicha(f.id);
+      setFichas((prev) => (prev ?? []).filter((x) => x.id !== f.id));
+      // Era a última ficha dessa cliente: não há mais o que mostrar aqui.
+      if (cliente && cliente.fichas.length === 1) {
+        navigate({ to: "/painel" });
+      }
+    } catch (e) {
+      setErroExcluir(e instanceof Error ? e.message : "Erro ao excluir ficha.");
+    } finally {
+      setExcluindoId(null);
+    }
+  };
 
   // Alertas de todas as fichas, sem repetir.
   const alertas = useMemo(() => {
@@ -142,15 +165,14 @@ function PaginaCliente() {
         <p className="text-sm text-muted-foreground mb-4">
           Abra a ficha para ver a anamnese completa e a avaliação.
         </p>
+        {erroExcluir && <p className="text-sm text-destructive mb-4">{erroExcluir}</p>}
         <div className="space-y-3">
           {cliente.fichas.map((f) => (
-            <Link
+            <div
               key={f.id}
-              to="/painel/$id"
-              params={{ id: f.id }}
-              className={`flex items-center justify-between gap-4 rounded-2xl border ${bordaCard} bg-card px-5 py-4 hover:border-primary/40 transition-colors`}
+              className={`flex items-center justify-between gap-4 rounded-2xl border ${bordaCard} bg-card px-5 py-4 transition-colors hover:border-primary/40`}
             >
-              <div className="min-w-0">
+              <Link to="/painel/$id" params={{ id: f.id }} className="min-w-0 flex-1">
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="text-xs rounded-full bg-lavender-soft px-2 py-0.5 text-primary">
                     {FICHAS[f.tipo]?.emoji ?? ""} {nomeCurto(f.tipo)}
@@ -170,7 +192,7 @@ function PaginaCliente() {
                 <p className="text-sm text-muted-foreground mt-1">
                   enviada em {formatarData(f.created_at)}
                 </p>
-              </div>
+              </Link>
               <div className="flex items-center gap-3 shrink-0">
                 <span
                   className={`inline-flex items-center gap-1 text-xs ${
@@ -185,9 +207,24 @@ function PaginaCliente() {
                 ) : (
                   <CameraOff className="h-4 w-4 text-muted-foreground/60" />
                 )}
-                <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                <button
+                  type="button"
+                  onClick={() => excluirUmaFicha(f)}
+                  disabled={excluindoId === f.id}
+                  title="Excluir ficha"
+                  className="text-muted-foreground/50 hover:text-destructive transition-colors disabled:opacity-40"
+                >
+                  {excluindoId === f.id ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Trash2 className="h-4 w-4" />
+                  )}
+                </button>
+                <Link to="/painel/$id" params={{ id: f.id }} aria-label="Abrir ficha">
+                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                </Link>
               </div>
-            </Link>
+            </div>
           ))}
         </div>
       </div>
