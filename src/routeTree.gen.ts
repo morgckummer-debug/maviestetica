@@ -10,15 +10,24 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as PowerReduxRouteImport } from './routes/power-redux'
+import { Route as PainelRouteImport } from './routes/painel'
 import { Route as ObrigadoRouteImport } from './routes/obrigado'
 import { Route as DrenagemLinfaticaRouteImport } from './routes/drenagem-linfatica'
+import { Route as AvaliacaoRouteImport } from './routes/avaliacao'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as PainelIndexRouteImport } from './routes/painel.index'
 import { Route as ServicosSlugRouteImport } from './routes/servicos.$slug'
 import { Route as ResultadosPowerReduxRouteImport } from './routes/resultados.power-redux'
+import { Route as PainelIdRouteImport } from './routes/painel.$id'
 
 const PowerReduxRoute = PowerReduxRouteImport.update({
   id: '/power-redux',
   path: '/power-redux',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PainelRoute = PainelRouteImport.update({
+  id: '/painel',
+  path: '/painel',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ObrigadoRoute = ObrigadoRouteImport.update({
@@ -31,10 +40,20 @@ const DrenagemLinfaticaRoute = DrenagemLinfaticaRouteImport.update({
   path: '/drenagem-linfatica',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AvaliacaoRoute = AvaliacaoRouteImport.update({
+  id: '/avaliacao',
+  path: '/avaliacao',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const PainelIndexRoute = PainelIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => PainelRoute,
 } as any)
 const ServicosSlugRoute = ServicosSlugRouteImport.update({
   id: '/servicos/$slug',
@@ -46,63 +65,92 @@ const ResultadosPowerReduxRoute = ResultadosPowerReduxRouteImport.update({
   path: '/resultados/power-redux',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PainelIdRoute = PainelIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => PainelRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/avaliacao': typeof AvaliacaoRoute
   '/drenagem-linfatica': typeof DrenagemLinfaticaRoute
   '/obrigado': typeof ObrigadoRoute
+  '/painel': typeof PainelRouteWithChildren
   '/power-redux': typeof PowerReduxRoute
+  '/painel/$id': typeof PainelIdRoute
   '/resultados/power-redux': typeof ResultadosPowerReduxRoute
   '/servicos/$slug': typeof ServicosSlugRoute
+  '/painel/': typeof PainelIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/avaliacao': typeof AvaliacaoRoute
   '/drenagem-linfatica': typeof DrenagemLinfaticaRoute
   '/obrigado': typeof ObrigadoRoute
   '/power-redux': typeof PowerReduxRoute
+  '/painel/$id': typeof PainelIdRoute
   '/resultados/power-redux': typeof ResultadosPowerReduxRoute
   '/servicos/$slug': typeof ServicosSlugRoute
+  '/painel': typeof PainelIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/avaliacao': typeof AvaliacaoRoute
   '/drenagem-linfatica': typeof DrenagemLinfaticaRoute
   '/obrigado': typeof ObrigadoRoute
+  '/painel': typeof PainelRouteWithChildren
   '/power-redux': typeof PowerReduxRoute
+  '/painel/$id': typeof PainelIdRoute
   '/resultados/power-redux': typeof ResultadosPowerReduxRoute
   '/servicos/$slug': typeof ServicosSlugRoute
+  '/painel/': typeof PainelIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/avaliacao'
     | '/drenagem-linfatica'
     | '/obrigado'
+    | '/painel'
     | '/power-redux'
+    | '/painel/$id'
     | '/resultados/power-redux'
     | '/servicos/$slug'
+    | '/painel/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/avaliacao'
     | '/drenagem-linfatica'
     | '/obrigado'
     | '/power-redux'
+    | '/painel/$id'
     | '/resultados/power-redux'
     | '/servicos/$slug'
+    | '/painel'
   id:
     | '__root__'
     | '/'
+    | '/avaliacao'
     | '/drenagem-linfatica'
     | '/obrigado'
+    | '/painel'
     | '/power-redux'
+    | '/painel/$id'
     | '/resultados/power-redux'
     | '/servicos/$slug'
+    | '/painel/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AvaliacaoRoute: typeof AvaliacaoRoute
   DrenagemLinfaticaRoute: typeof DrenagemLinfaticaRoute
   ObrigadoRoute: typeof ObrigadoRoute
+  PainelRoute: typeof PainelRouteWithChildren
   PowerReduxRoute: typeof PowerReduxRoute
   ResultadosPowerReduxRoute: typeof ResultadosPowerReduxRoute
   ServicosSlugRoute: typeof ServicosSlugRoute
@@ -115,6 +163,13 @@ declare module '@tanstack/react-router' {
       path: '/power-redux'
       fullPath: '/power-redux'
       preLoaderRoute: typeof PowerReduxRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/painel': {
+      id: '/painel'
+      path: '/painel'
+      fullPath: '/painel'
+      preLoaderRoute: typeof PainelRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/obrigado': {
@@ -131,12 +186,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DrenagemLinfaticaRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/avaliacao': {
+      id: '/avaliacao'
+      path: '/avaliacao'
+      fullPath: '/avaliacao'
+      preLoaderRoute: typeof AvaliacaoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/painel/': {
+      id: '/painel/'
+      path: '/'
+      fullPath: '/painel/'
+      preLoaderRoute: typeof PainelIndexRouteImport
+      parentRoute: typeof PainelRoute
     }
     '/servicos/$slug': {
       id: '/servicos/$slug'
@@ -152,13 +221,35 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ResultadosPowerReduxRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/painel/$id': {
+      id: '/painel/$id'
+      path: '/$id'
+      fullPath: '/painel/$id'
+      preLoaderRoute: typeof PainelIdRouteImport
+      parentRoute: typeof PainelRoute
+    }
   }
 }
 
+interface PainelRouteChildren {
+  PainelIdRoute: typeof PainelIdRoute
+  PainelIndexRoute: typeof PainelIndexRoute
+}
+
+const PainelRouteChildren: PainelRouteChildren = {
+  PainelIdRoute: PainelIdRoute,
+  PainelIndexRoute: PainelIndexRoute,
+}
+
+const PainelRouteWithChildren =
+  PainelRoute._addFileChildren(PainelRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AvaliacaoRoute: AvaliacaoRoute,
   DrenagemLinfaticaRoute: DrenagemLinfaticaRoute,
   ObrigadoRoute: ObrigadoRoute,
+  PainelRoute: PainelRouteWithChildren,
   PowerReduxRoute: PowerReduxRoute,
   ResultadosPowerReduxRoute: ResultadosPowerReduxRoute,
   ServicosSlugRoute: ServicosSlugRoute,
@@ -166,13 +257,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

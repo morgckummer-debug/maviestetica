@@ -1,19 +1,25 @@
 -- ============================================================
--- MAVI — Fichas de avaliação dos pacientes
+-- MAVI — Fichas de anamnese dos pacientes
 -- Rode este script no Supabase: Dashboard > SQL Editor > New query
 -- ============================================================
 
 create table if not exists public.fichas (
-  id          uuid primary key default gen_random_uuid(),
-  created_at  timestamptz not null default now(),
-  nome        text not null,
-  telefone    text,
-  -- Todas as respostas do formulário ficam aqui (formato flexível).
+  id            uuid primary key default gen_random_uuid(),
+  created_at    timestamptz not null default now(),
+  nome          text not null,
+  telefone      text,
+  -- Todas as respostas da anamnese ficam aqui (formato flexível).
   -- Mudar/adicionar perguntas NÃO exige alterar o banco.
-  respostas   jsonb not null default '{}'::jsonb,
-  -- Alertas de segurança calculados no envio (gestante, isotretinoína, etc.)
-  alertas     text[] not null default '{}',
-  arquivada   boolean not null default false
+  respostas     jsonb not null default '{}'::jsonb,
+  -- Alertas de segurança calculados no envio (gestante, próteses, etc.)
+  alertas       text[] not null default '{}',
+  -- Consentimentos
+  termo_aceito  boolean not null default false,
+  autoriza_foto boolean not null default false,
+  -- Preenchido pela Marina no painel (durante o atendimento)
+  medidas       jsonb not null default '{}'::jsonb,
+  relatorio     text,
+  arquivada     boolean not null default false
 );
 
 -- Buscas mais recentes primeiro / por nome
@@ -36,7 +42,7 @@ create policy "authenticated pode ler fichas"
   to authenticated
   using (true);
 
--- Marina pode atualizar (ex.: arquivar uma ficha)
+-- Marina pode atualizar (medidas, relatório, arquivar)
 drop policy if exists "authenticated pode atualizar fichas" on public.fichas;
 create policy "authenticated pode atualizar fichas"
   on public.fichas for update

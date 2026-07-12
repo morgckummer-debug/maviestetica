@@ -1,8 +1,17 @@
 import { useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { motion, AnimatePresence } from "motion/react";
-import { ArrowLeft, ArrowRight, AlertTriangle, Sparkles } from "lucide-react";
-import { WHATSAPP_BASE_URL, SITE_URL, services } from "@/data/services";
+import { ArrowLeft, ArrowRight, AlertTriangle, Sparkles, Loader2 } from "lucide-react";
+import { SITE_URL } from "@/data/services";
+import {
+  ETAPAS,
+  TERMO_TEXTO,
+  AUTORIZACAO_FOTO_TEXTO,
+  calcularAlertas,
+  type Campo,
+  type Respostas,
+} from "@/data/anamnese";
+import { salvarFicha } from "@/lib/api/fichas.functions";
 
 export const Route = createFileRoute("/avaliacao")({
   head: () => ({
@@ -11,7 +20,7 @@ export const Route = createFileRoute("/avaliacao")({
       {
         name: "description",
         content:
-          "Responda antes do seu atendimento na MAVI. Leva menos de 3 minutos e ajuda a gente a te receber com mais cuidado e segurança.",
+          "Responda antes do seu atendimento na MAVI. Leva poucos minutos e ajuda a gente a te receber com mais cuidado e segurança.",
       },
       { name: "robots", content: "noindex, nofollow" },
     ],
@@ -20,55 +29,8 @@ export const Route = createFileRoute("/avaliacao")({
   component: Avaliacao,
 });
 
-type FormState = {
-  nome: string;
-  telefone: string;
-  procedimentos: string[];
-  objetivo: string;
-  temCirurgia: boolean | null;
-  cirurgias: string;
-  condicoes: string[];
-  gravidez: boolean | null;
-  temAlergia: boolean | null;
-  alergias: string;
-  usaMedicamento: boolean | null;
-  medicamentos: string;
-  isotretinoina: boolean | null;
-  anticoagulante: boolean | null;
-  exposicaoSolar: boolean | null;
-  observacoes: string;
-};
-
-const initialState: FormState = {
-  nome: "",
-  telefone: "",
-  procedimentos: [],
-  objetivo: "",
-  temCirurgia: null,
-  cirurgias: "",
-  condicoes: [],
-  gravidez: null,
-  temAlergia: null,
-  alergias: "",
-  usaMedicamento: null,
-  medicamentos: "",
-  isotretinoina: null,
-  anticoagulante: null,
-  exposicaoSolar: null,
-  observacoes: "",
-};
-
-const CONDICOES = [
-  "Diabetes",
-  "Doença de tireoide",
-  "Doença autoimune",
-  "Doença de pele (psoríase, vitiligo, dermatite)",
-  "Herpes recorrente",
-  "Histórico de câncer",
-  "Marca-passo ou metal implantado",
-];
-
-const STEP_LABELS = ["Seus dados", "O que você busca", "Sua saúde", "Medicamentos", "Revisão"];
+const TOTAL_ETAPAS = ETAPAS.length + 1; // + termo
+const STEP_LABELS = [...ETAPAS.map((e) => e.titulo), "Termo"];
 
 function Chip({
   label,
@@ -86,7 +48,7 @@ function Chip({
       type="button"
       onClick={onClick}
       className={[
-        "rounded-full border px-4 py-2.5 text-sm transition-colors text-left",
+        "rounded-full border px-4 py-2 text-sm transition-colors",
         selected
           ? alert
             ? "bg-rose/15 border-rose text-rose"
@@ -104,88 +66,150 @@ function YesNo({
   onChange,
   alertOnYes,
 }: {
-  value: boolean | null;
+  value: boolean | null | undefined;
   onChange: (v: boolean) => void;
   alertOnYes?: boolean;
 }) {
   return (
-    <div className="flex gap-3">
-      <Chip label="Sim" selected={value === true} onClick={() => onChange(true)} alert={alertOnYes} />
+    <div className="flex gap-2">
+      <Chip
+        label="Sim"
+        selected={value === true}
+        onClick={() => onChange(true)}
+        alert={alertOnYes}
+      />
       <Chip label="Não" selected={value === false} onClick={() => onChange(false)} />
+    </div>
+  );
+}
+
+const inputBase =
+  "w-full rounded-xl border border-border bg-background px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring";
+
+function CampoView({
+  campo,
+  respostas,
+  set,
+  compacto,
+}: {
+  campo: Campo;
+  respostas: Respostas;
+  set: (id: string, v: string | boolean | null) => void;
+  compacto?: boolean;
+}) {
+  if (campo.tipo === "texto") {
+    return (
+      <div>
+        <label className="block text-sm font-medium mb-2">{campo.label}</label>
+        {campo.multiline ? (
+          <textarea
+            value={(respostas[campo.id] as string) ?? ""}
+            onChange={(e) => set(campo.id, e.target.value)}
+            placeholder={campo.placeholder}
+            rows={3}
+            className={inputBase}
+          />
+        ) : (
+          <input
+            type={campo.inputMode === "date" ? "date" : "text"}
+            inputMode={
+              campo.inputMode === "tel" ? "tel" : campo.inputMode === "email" ? "email" : undefined
+            }
+            value={(respostas[campo.id] as string) ?? ""}
+            onChange={(e) => set(campo.id, e.target.value)}
+            placeholder={campo.placeholder}
+            className={inputBase}
+          />
+        )}
+      </div>
+    );
+  }
+
+  // simnao
+  const valor = respostas[campo.id] as boolean | null | undefined;
+  return (
+    <div className={compacto ? "flex items-center justify-between gap-3" : ""}>
+      <label className={compacto ? "text-sm font-medium" : "block text-sm font-medium mb-2"}>
+        {campo.label}
+      </label>
+      <YesNo
+        value={valor}
+        onChange={(v) => set(campo.id, v)}
+        alertOnYes={Boolean(campo.alertaSeSim)}
+      />
+      {!compacto && campo.especifique && valor === true && (
+        <textarea
+          value={(respostas[`${campo.id}__detalhe`] as string) ?? ""}
+          onChange={(e) => set(`${campo.id}__detalhe`, e.target.value)}
+          placeholder={campo.especifiquePlaceholder ?? "Especifique"}
+          rows={2}
+          className={`${inputBase} mt-3`}
+        />
+      )}
     </div>
   );
 }
 
 function Avaliacao() {
   const [step, setStep] = useState(0);
-  const [form, setForm] = useState<FormState>(initialState);
+  const [respostas, setRespostas] = useState<Respostas>({});
+  const [termoAceito, setTermoAceito] = useState(false);
+  const [autorizaFoto, setAutorizaFoto] = useState(false);
+  const [enviando, setEnviando] = useState(false);
+  const [erro, setErro] = useState<string | null>(null);
   const navigate = useNavigate();
 
-  const set = <K extends keyof FormState>(key: K, value: FormState[K]) =>
-    setForm((f) => ({ ...f, [key]: value }));
+  const set = (id: string, v: string | boolean | null) => setRespostas((r) => ({ ...r, [id]: v }));
 
-  const toggleFromList = (key: "procedimentos" | "condicoes", value: string) => {
-    setForm((f) => {
-      const list = f[key];
-      const next = list.includes(value) ? list.filter((v) => v !== value) : [...list, value];
-      return { ...f, [key]: next };
+  const alertas = calcularAlertas(respostas);
+  const naTermo = step === ETAPAS.length;
+
+  const podeAvancar = (() => {
+    if (naTermo) return termoAceito && !enviando;
+    const etapa = ETAPAS[step];
+    return etapa.campos.every((c) => {
+      if (c.tipo === "texto" && c.obrigatorio) {
+        return String(respostas[c.id] ?? "").trim().length > 0;
+      }
+      return true;
     });
+  })();
+
+  const enviar = async () => {
+    setErro(null);
+    setEnviando(true);
+    try {
+      await salvarFicha({
+        data: {
+          nome: String(respostas.nome ?? "").trim(),
+          telefone: String(respostas.whatsapp ?? "").trim(),
+          respostas,
+          alertas,
+          termo_aceito: termoAceito,
+          autoriza_foto: autorizaFoto,
+        },
+      });
+      navigate({ to: "/obrigado" });
+    } catch (e) {
+      setErro(
+        e instanceof Error ? e.message : "Não foi possível enviar. Tente novamente em instantes.",
+      );
+      setEnviando(false);
+    }
   };
-
-  const flags: string[] = [];
-  if (form.gravidez === true) flags.push("Gestante ou amamentando — confirmar contraindicação do procedimento.");
-  if (form.isotretinoina === true) flags.push("Uso recente de isotretinoína — avaliar antes de limpeza de pele/peeling.");
-  if (form.anticoagulante === true) flags.push("Uso de anticoagulante — atenção redobrada em procedimentos com extração.");
-  if (form.exposicaoSolar === true) flags.push("Exposição solar recente na área — reavaliar segurança da depilação a laser.");
-  if (form.condicoes.includes("Marca-passo ou metal implantado"))
-    flags.push("Marca-passo ou metal implantado — contraindicação possível para Power Redux (radiofrequência).");
-
-  const buildMessage = () => {
-    const lines = [
-      `Olá! Preenchi minha ficha de avaliação antes da consulta 🌸`,
-      ``,
-      `${form.nome || "—"}`,
-      `${form.telefone || "—"}`,
-      ``,
-      `*Procedimento de interesse*`,
-      form.procedimentos.join(", ") || "—",
-      `Queixa principal: ${form.objetivo || "—"}`,
-      ``,
-      `*Saúde*`,
-      `Cirurgias prévias: ${form.temCirurgia ? form.cirurgias || "sim, sem detalhe" : "não"}`,
-      `Condições: ${form.condicoes.join(", ") || "nenhuma informada"}`,
-      `Gestante/amamentando: ${form.gravidez === true ? "sim" : form.gravidez === false ? "não" : "—"}`,
-      `Alergias: ${form.temAlergia ? form.alergias || "sim, sem detalhe" : "não"}`,
-      ``,
-      `*Medicamentos*`,
-      `Em uso: ${form.usaMedicamento ? form.medicamentos || "sim, sem detalhe" : "não"}`,
-      `Isotretinoína (6 meses): ${form.isotretinoina === true ? "sim" : form.isotretinoina === false ? "não" : "—"}`,
-      `Anticoagulante/AAS: ${form.anticoagulante === true ? "sim" : form.anticoagulante === false ? "não" : "—"}`,
-      `Sol/bronzeador recente: ${form.exposicaoSolar === true ? "sim" : form.exposicaoSolar === false ? "não" : "—"}`,
-      ``,
-      `Observações: ${form.observacoes || "—"}`,
-    ];
-    return lines.join("\n");
-  };
-
-  const handleFinish = () => {
-    const text = encodeURIComponent(buildMessage());
-    window.open(`${WHATSAPP_BASE_URL}?text=${text}`, "_blank", "noreferrer");
-    navigate({ to: "/obrigado" });
-  };
-
-  const canAdvance = step !== 0 || form.nome.trim().length > 0;
 
   return (
     <section className="min-h-[80vh] py-14 lg:py-20">
       <div className="mx-auto max-w-2xl px-6">
         <div className="text-center mb-10">
-          <p className="text-xs tracking-[0.3em] uppercase text-muted-foreground mb-4">Antes do seu atendimento</p>
+          <p className="text-xs tracking-[0.3em] uppercase text-muted-foreground mb-4">
+            Antes do seu atendimento
+          </p>
           <h1 className="font-display text-4xl lg:text-5xl text-primary leading-tight">
-            Ficha de <em className="italic font-normal">avaliação</em>
+            Ficha de <em className="italic font-normal">anamnese</em>
           </h1>
           <p className="mt-4 text-muted-foreground max-w-md mx-auto leading-relaxed">
-            Leva menos de 3 minutos. Isso nos ajuda a te receber com mais cuidado e segurança.
+            Leva poucos minutos. Isso nos ajuda a te receber com mais cuidado e segurança.
           </p>
         </div>
 
@@ -201,10 +225,10 @@ function Avaliacao() {
           ))}
         </div>
         <p className="text-xs uppercase tracking-widest text-muted-foreground mb-8">
-          Etapa {step + 1} de {STEP_LABELS.length} — {STEP_LABELS[step]}
+          Etapa {step + 1} de {TOTAL_ETAPAS} — {STEP_LABELS[step]}
         </p>
 
-        <div className="relative bg-card border border-border rounded-[2rem] p-8 lg:p-10 min-h-[420px] flex flex-col">
+        <div className="relative bg-card border border-border rounded-[2rem] p-6 sm:p-8 lg:p-10 min-h-[420px] flex flex-col">
           <AnimatePresence mode="wait">
             <motion.div
               key={step}
@@ -214,158 +238,62 @@ function Avaliacao() {
               transition={{ duration: 0.25 }}
               className="flex-1"
             >
-              {step === 0 && (
-                <div className="space-y-6">
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Nome completo</label>
-                    <input
-                      value={form.nome}
-                      onChange={(e) => set("nome", e.target.value)}
-                      placeholder="Seu nome"
-                      className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-2">WhatsApp para contato</label>
-                    <input
-                      value={form.telefone}
-                      onChange={(e) => set("telefone", e.target.value)}
-                      placeholder="(31) 9....-...."
-                      className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                    />
-                  </div>
-                </div>
-              )}
-
-              {step === 1 && (
-                <div className="space-y-6">
-                  <div>
-                    <label className="block text-sm font-medium mb-3">O que você veio buscar? (pode marcar mais de uma)</label>
-                    <div className="flex flex-wrap gap-2.5">
-                      {services.map((s) => (
-                        <Chip
-                          key={s.slug}
-                          label={s.name}
-                          selected={form.procedimentos.includes(s.name)}
-                          onClick={() => toggleFromList("procedimentos", s.name)}
-                        />
+              {!naTermo && (
+                <div>
+                  {ETAPAS[step].descricao && (
+                    <p className="text-sm text-muted-foreground mb-6">{ETAPAS[step].descricao}</p>
+                  )}
+                  {ETAPAS[step].layout === "grid" ? (
+                    <div className="grid sm:grid-cols-2 gap-x-8 gap-y-4">
+                      {ETAPAS[step].campos.map((c) => (
+                        <div key={c.id} className="border-b border-border/50 pb-3">
+                          <CampoView campo={c} respostas={respostas} set={set} compacto />
+                        </div>
                       ))}
                     </div>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-2">
-                      Conte sobre sua queixa principal
-                      <span className="block text-xs font-normal text-muted-foreground mt-0.5">
-                        O que te incomoda, há quanto tempo, o que espera do resultado
-                      </span>
-                    </label>
-                    <textarea
-                      value={form.objetivo}
-                      onChange={(e) => set("objetivo", e.target.value)}
-                      rows={3}
-                      className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                    />
-                  </div>
-                </div>
-              )}
-
-              {step === 2 && (
-                <div className="space-y-6">
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Já fez alguma cirurgia?</label>
-                    <YesNo value={form.temCirurgia} onChange={(v) => set("temCirurgia", v)} />
-                    {form.temCirurgia && (
-                      <textarea
-                        value={form.cirurgias}
-                        onChange={(e) => set("cirurgias", e.target.value)}
-                        placeholder="Qual(is) e quando?"
-                        rows={2}
-                        className="w-full mt-3 rounded-xl border border-border bg-background px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                      />
-                    )}
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-3">Você tem alguma destas condições?</label>
-                    <div className="flex flex-wrap gap-2.5">
-                      {CONDICOES.map((c) => (
-                        <Chip
-                          key={c}
-                          label={c}
-                          selected={form.condicoes.includes(c)}
-                          onClick={() => toggleFromList("condicoes", c)}
-                          alert
-                        />
+                  ) : (
+                    <div className="space-y-6">
+                      {ETAPAS[step].campos.map((c) => (
+                        <CampoView key={c.id} campo={c} respostas={respostas} set={set} />
                       ))}
                     </div>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Está grávida ou amamentando?</label>
-                    <YesNo value={form.gravidez} onChange={(v) => set("gravidez", v)} alertOnYes />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Alguma alergia (produtos, látex, medicamentos)?</label>
-                    <YesNo value={form.temAlergia} onChange={(v) => set("temAlergia", v)} />
-                    {form.temAlergia && (
-                      <textarea
-                        value={form.alergias}
-                        onChange={(e) => set("alergias", e.target.value)}
-                        placeholder="Quais?"
-                        rows={2}
-                        className="w-full mt-3 rounded-xl border border-border bg-background px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                      />
-                    )}
-                  </div>
+                  )}
                 </div>
               )}
 
-              {step === 3 && (
-                <div className="space-y-6">
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Usa algum medicamento contínuo no momento?</label>
-                    <YesNo value={form.usaMedicamento} onChange={(v) => set("usaMedicamento", v)} />
-                    {form.usaMedicamento && (
-                      <textarea
-                        value={form.medicamentos}
-                        onChange={(e) => set("medicamentos", e.target.value)}
-                        placeholder="Quais medicamentos?"
-                        rows={2}
-                        className="w-full mt-3 rounded-xl border border-border bg-background px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                      />
-                    )}
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Usou isotretinoína (Roacutan) nos últimos 6 meses?</label>
-                    <YesNo value={form.isotretinoina} onChange={(v) => set("isotretinoina", v)} alertOnYes />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Usa anticoagulante ou AAS regularmente?</label>
-                    <YesNo value={form.anticoagulante} onChange={(v) => set("anticoagulante", v)} alertOnYes />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Tomou sol/bronzeador na área nos últimos 15 dias?</label>
-                    <YesNo value={form.exposicaoSolar} onChange={(v) => set("exposicaoSolar", v)} alertOnYes />
-                  </div>
-                </div>
-              )}
-
-              {step === 4 && (
+              {naTermo && (
                 <div className="space-y-5">
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Mais alguma coisa que a Marina precise saber?</label>
-                    <textarea
-                      value={form.observacoes}
-                      onChange={(e) => set("observacoes", e.target.value)}
-                      rows={2}
-                      placeholder="Fique à vontade..."
-                      className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                  <label className="flex gap-3 rounded-xl border border-border bg-background px-4 py-4 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={termoAceito}
+                      onChange={(e) => setTermoAceito(e.target.checked)}
+                      className="mt-1 h-4 w-4 shrink-0 accent-[var(--primary)]"
                     />
-                  </div>
+                    <span className="text-sm text-foreground/80 leading-relaxed">
+                      <strong className="text-foreground">Termo de responsabilidade.</strong>{" "}
+                      {TERMO_TEXTO}
+                    </span>
+                  </label>
 
-                  {flags.length > 0 && (
+                  <label className="flex gap-3 rounded-xl border border-border bg-background px-4 py-4 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={autorizaFoto}
+                      onChange={(e) => setAutorizaFoto(e.target.checked)}
+                      className="mt-1 h-4 w-4 shrink-0 accent-[var(--primary)]"
+                    />
+                    <span className="text-sm text-foreground/80 leading-relaxed">
+                      <strong className="text-foreground">Autorização de imagem (opcional).</strong>{" "}
+                      {AUTORIZACAO_FOTO_TEXTO}
+                    </span>
+                  </label>
+
+                  {alertas.length > 0 && (
                     <div className="flex gap-3 rounded-xl border border-rose/40 bg-rose/10 px-4 py-3.5 text-sm text-rose">
                       <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
                       <ul className="space-y-1">
-                        {flags.map((f, i) => (
+                        {alertas.map((f, i) => (
                           <li key={i}>{f}</li>
                         ))}
                       </ul>
@@ -374,8 +302,14 @@ function Avaliacao() {
 
                   <div className="flex gap-3 rounded-xl border border-lavender/40 bg-lavender-soft/50 px-4 py-3.5 text-sm text-primary">
                     <Sparkles className="h-4 w-4 mt-0.5 shrink-0" />
-                    <p>Ao confirmar, vamos abrir o WhatsApp com sua ficha já preenchida pronta pra enviar.</p>
+                    <p>Ao enviar, sua ficha fica salva com segurança para a Marina te atender.</p>
                   </div>
+
+                  {erro && (
+                    <div className="rounded-xl border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+                      {erro}
+                    </div>
+                  )}
                 </div>
               )}
             </motion.div>
@@ -386,16 +320,17 @@ function Avaliacao() {
               <button
                 type="button"
                 onClick={() => setStep((s) => s - 1)}
-                className="inline-flex items-center gap-2 rounded-full border border-border px-5 py-3 text-sm font-medium text-foreground/70 hover:border-primary/40 transition-colors"
+                disabled={enviando}
+                className="inline-flex items-center gap-2 rounded-full border border-border px-5 py-3 text-sm font-medium text-foreground/70 hover:border-primary/40 transition-colors disabled:opacity-40"
               >
                 <ArrowLeft className="h-4 w-4" />
                 Voltar
               </button>
             )}
-            {step < STEP_LABELS.length - 1 ? (
+            {!naTermo ? (
               <button
                 type="button"
-                disabled={!canAdvance}
+                disabled={!podeAvancar}
                 onClick={() => setStep((s) => s + 1)}
                 className="ml-auto inline-flex items-center gap-2 rounded-full bg-primary text-primary-foreground px-6 py-3 text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-40"
               >
@@ -405,11 +340,21 @@ function Avaliacao() {
             ) : (
               <button
                 type="button"
-                onClick={handleFinish}
-                className="ml-auto inline-flex items-center gap-2 rounded-full bg-rose text-accent-foreground px-6 py-3 text-sm font-medium hover:opacity-90 transition-opacity"
+                disabled={!podeAvancar}
+                onClick={enviar}
+                className="ml-auto inline-flex items-center gap-2 rounded-full bg-rose text-accent-foreground px-6 py-3 text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-40"
               >
-                Enviar para a Marina
-                <ArrowRight className="h-4 w-4" />
+                {enviando ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Enviando...
+                  </>
+                ) : (
+                  <>
+                    Enviar ficha
+                    <ArrowRight className="h-4 w-4" />
+                  </>
+                )}
               </button>
             )}
           </div>
