@@ -46,7 +46,7 @@ function Chip({
       type="button"
       onClick={onClick}
       className={[
-        "rounded-full border px-4 py-2 text-sm transition-colors",
+        "rounded-full border px-4 py-2 text-sm transition-colors max-w-full break-words",
         selected
           ? alert
             ? "bg-rose/15 border-rose text-rose"
@@ -275,7 +275,7 @@ function FichaPage() {
   };
 
   return (
-    <section className="min-h-[80vh] py-14 lg:py-20">
+    <section className="min-h-[80vh] py-14 lg:py-20 overflow-x-hidden">
       <div className="mx-auto max-w-2xl px-6">
         <div className="text-center mb-10">
           <p className="text-xs tracking-[0.3em] uppercase text-muted-foreground mb-4">
@@ -311,9 +311,9 @@ function FichaPage() {
           <AnimatePresence mode="wait">
             <motion.div
               key={step}
-              initial={{ opacity: 0, x: 16 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -16 }}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
               transition={{ duration: 0.25 }}
               className="flex-1"
             >
