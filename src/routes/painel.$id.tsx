@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { ArrowLeft, AlertTriangle, Loader2, Camera, Check, Archive } from "lucide-react";
 import { getFicha, nomeTipo, type Campo } from "@/data/anamnese";
@@ -28,6 +28,28 @@ function valorResposta(v: string | boolean | null | undefined): string | null {
   if (v === false) return "Não";
   if (typeof v === "string" && v.trim()) return v.trim();
   return null;
+}
+
+// Classificação do IMC (OMS).
+function classificarImc(imc: number): string {
+  if (imc < 18.5) return "Abaixo do peso";
+  if (imc < 25) return "Peso normal";
+  if (imc < 30) return "Sobrepeso";
+  if (imc < 35) return "Obesidade I";
+  if (imc < 40) return "Obesidade II";
+  return "Obesidade III";
+}
+
+// IMC a partir da altura e peso digitados. Aceita altura em metros (1.70) ou
+// centímetros (170), e vírgula ou ponto como decimal.
+function calcularImc(alturaRaw?: string, pesoRaw?: string): { valor: number; classe: string } | null {
+  const altura = parseFloat(String(alturaRaw ?? "").replace(",", "."));
+  const peso = parseFloat(String(pesoRaw ?? "").replace(",", "."));
+  if (!altura || !peso || altura <= 0 || peso <= 0) return null;
+  const metros = altura > 3 ? altura / 100 : altura;
+  const valor = peso / (metros * metros);
+  if (!isFinite(valor) || valor <= 0 || valor > 200) return null;
+  return { valor, classe: classificarImc(valor) };
 }
 
 // Formata o valor exibido conforme o campo (celular, CPF, data de nascimento).
@@ -118,6 +140,7 @@ function DetalheFicha() {
   const etapas = def?.etapas ?? [];
   const camposMedidas = def?.camposMedidas ?? [];
   const avaliacao = def?.avaliacao ?? [];
+  const imc = calcularImc(medidas.altura, medidas.peso);
 
   const setMedida = (id: string, v: string) => setMedidas((prev) => ({ ...prev, [id]: v }));
   const toggleAchado = (id: string, op: string) => {
@@ -288,18 +311,42 @@ function DetalheFicha() {
 
         {camposMedidas.length > 0 && (
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-6">
-            {camposMedidas.map((m) => (
-              <div key={m.id}>
-                <label className="block text-xs font-medium text-muted-foreground mb-1.5">
-                  {m.label}
-                </label>
-                <input
-                  value={medidas[m.id] ?? ""}
-                  onChange={(e) => setMedidas((prev) => ({ ...prev, [m.id]: e.target.value }))}
-                  className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                />
-              </div>
-            ))}
+            {camposMedidas.map((m) => {
+              const campoInput = (
+                <div key={m.id}>
+                  <label className="block text-xs font-medium text-muted-foreground mb-1.5">
+                    {m.label}
+                  </label>
+                  <input
+                    value={medidas[m.id] ?? ""}
+                    onChange={(e) => setMedidas((prev) => ({ ...prev, [m.id]: e.target.value }))}
+                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                  />
+                </div>
+              );
+              if (m.id !== "peso") return campoInput;
+              // IMC calculado automaticamente, ao lado do peso (só no painel).
+              return (
+                <Fragment key={m.id}>
+                  {campoInput}
+                  <div>
+                    <label className="block text-xs font-medium text-muted-foreground mb-1.5">
+                      IMC
+                    </label>
+                    <div className="w-full rounded-lg border border-border bg-secondary/40 px-3 py-2 text-sm">
+                      {imc ? (
+                        <span>
+                          {imc.valor.toFixed(1)}
+                          <span className="text-muted-foreground"> · {imc.classe}</span>
+                        </span>
+                      ) : (
+                        <span className="text-muted-foreground">altura e peso</span>
+                      )}
+                    </div>
+                  </div>
+                </Fragment>
+              );
+            })}
           </div>
         )}
 
