@@ -30,6 +30,8 @@ function valorResposta(v: string | boolean | null | undefined): string | null {
   return null;
 }
 
+type NivelImc = "normal" | "sobrepeso" | "obesidade";
+
 // Classificação do IMC (OMS).
 function classificarImc(imc: number): string {
   if (imc < 18.5) return "Abaixo do peso";
@@ -40,16 +42,25 @@ function classificarImc(imc: number): string {
   return "Obesidade III";
 }
 
+function nivelImc(imc: number): NivelImc {
+  if (imc < 25) return "normal";
+  if (imc < 30) return "sobrepeso";
+  return "obesidade";
+}
+
 // IMC a partir da altura e peso digitados. Aceita altura em metros (1.70) ou
 // centímetros (170), e vírgula ou ponto como decimal.
-function calcularImc(alturaRaw?: string, pesoRaw?: string): { valor: number; classe: string } | null {
+function calcularImc(
+  alturaRaw?: string,
+  pesoRaw?: string,
+): { valor: number; classe: string; nivel: NivelImc } | null {
   const altura = parseFloat(String(alturaRaw ?? "").replace(",", "."));
   const peso = parseFloat(String(pesoRaw ?? "").replace(",", "."));
   if (!altura || !peso || altura <= 0 || peso <= 0) return null;
   const metros = altura > 3 ? altura / 100 : altura;
   const valor = peso / (metros * metros);
   if (!isFinite(valor) || valor <= 0 || valor > 200) return null;
-  return { valor, classe: classificarImc(valor) };
+  return { valor, classe: classificarImc(valor), nivel: nivelImc(valor) };
 }
 
 // Formata o valor exibido conforme o campo (celular, CPF, data de nascimento).
@@ -333,11 +344,20 @@ function DetalheFicha() {
                     <label className="block text-xs font-medium text-muted-foreground mb-1.5">
                       IMC
                     </label>
-                    <div className="w-full rounded-lg border border-border bg-secondary/40 px-3 py-2 text-sm">
+                    <div
+                      className={[
+                        "w-full rounded-lg border px-3 py-2 text-sm",
+                        imc?.nivel === "obesidade"
+                          ? "border-destructive/40 bg-destructive/10 text-destructive"
+                          : imc?.nivel === "sobrepeso"
+                            ? "border-amber-500/40 bg-amber-500/10 text-amber-600 dark:text-amber-500"
+                            : "border-border bg-secondary/40",
+                      ].join(" ")}
+                    >
                       {imc ? (
-                        <span>
+                        <span className="font-medium">
                           {imc.valor.toFixed(1)}
-                          <span className="text-muted-foreground"> · {imc.classe}</span>
+                          <span className="font-normal"> · {imc.classe}</span>
                         </span>
                       ) : (
                         <span className="text-muted-foreground">altura e peso</span>
