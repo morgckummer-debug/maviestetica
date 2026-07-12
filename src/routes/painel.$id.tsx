@@ -1,6 +1,15 @@
 import { Fragment, useEffect, useState } from "react";
 import { createFileRoute, Link, useParams, useNavigate } from "@tanstack/react-router";
-import { ArrowLeft, AlertTriangle, Loader2, Camera, Check, Archive, Trash2 } from "lucide-react";
+import {
+  ArrowLeft,
+  AlertTriangle,
+  Loader2,
+  Camera,
+  CameraOff,
+  Check,
+  Archive,
+  Trash2,
+} from "lucide-react";
 import { getFicha, nomeTipo, type Campo } from "@/data/anamnese";
 import { obterFicha, atualizarFicha, excluirFicha, type Ficha } from "@/lib/painel";
 import { mascaraTelefone, mascaraCpf, formatarDataBR } from "@/lib/mascaras";
@@ -268,10 +277,16 @@ function DetalheFicha() {
         </span>
         <span
           className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 ${
-            ficha.autoriza_foto ? "bg-lavender-soft text-primary" : "bg-muted text-muted-foreground"
+            ficha.autoriza_foto
+              ? "bg-lavender-soft text-primary"
+              : "bg-destructive/10 text-destructive"
           }`}
         >
-          <Camera className="h-3.5 w-3.5" />
+          {ficha.autoriza_foto ? (
+            <Camera className="h-3.5 w-3.5" />
+          ) : (
+            <CameraOff className="h-3.5 w-3.5" />
+          )}
           {ficha.autoriza_foto ? "Autorizou imagem" : "Não autorizou imagem"}
         </span>
       </div>
