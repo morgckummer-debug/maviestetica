@@ -5,6 +5,7 @@ import {
   AlertTriangle,
   Loader2,
   Camera,
+  CameraOff,
   Inbox,
   Send,
   Copy,
@@ -232,9 +233,13 @@ function ListaFichas() {
               </p>
             </div>
             <div className="flex items-center gap-2 shrink-0">
-              {f.autoriza_foto && (
+              {f.autoriza_foto ? (
                 <span title="Autorizou uso de imagem">
                   <Camera className="h-4 w-4 text-lavender" />
+                </span>
+              ) : (
+                <span title="Não autorizou uso de imagem">
+                  <CameraOff className="h-4 w-4 text-muted-foreground/60" />
                 </span>
               )}
               {f.alertas.length > 0 && (
