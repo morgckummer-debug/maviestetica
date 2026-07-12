@@ -27,6 +27,9 @@ export type Ficha = {
   medidas: Record<string, string>;
   relatorio: string | null;
   arquivada: boolean;
+  // Sessões compradas por item (ex.: "Axilas": 10), para a barra de
+  // progresso do pacote no histórico de sessões.
+  pacotes: Record<string, number>;
 };
 
 function agora(): number {
@@ -159,7 +162,7 @@ export async function obterFicha(id: string): Promise<Ficha | null> {
 
 export async function atualizarFicha(
   id: string,
-  patch: Partial<Pick<Ficha, "medidas" | "relatorio" | "arquivada">>,
+  patch: Partial<Pick<Ficha, "medidas" | "relatorio" | "arquivada" | "pacotes">>,
 ): Promise<void> {
   const res = await apiRest(`fichas?id=eq.${encodeURIComponent(id)}`, {
     method: "PATCH",
