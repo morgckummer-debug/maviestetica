@@ -31,6 +31,16 @@ function hojeISO(): string {
   return new Date(d.getTime() - off).toISOString().slice(0, 10);
 }
 
+// Número em formato internacional para o link do WhatsApp abrir direto na
+// conversa da cliente (sem pedir pra escolher o contato). Números salvos
+// aqui são sempre nacionais (DDD + número, 10 ou 11 dígitos) — prefixamos
+// o código do Brasil (55), igual ao resto do site (ver data/services.ts).
+function numeroWhatsapp(telefone: string | null | undefined): string {
+  const d = String(telefone ?? "").replace(/\D/g, "");
+  if (d.length === 10 || d.length === 11) return `55${d}`;
+  return d;
+}
+
 function dataBR(iso: string): string {
   const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso.trim());
   if (m) return `${m[3]}/${m[2]}/${m[1]}`;
@@ -126,9 +136,11 @@ function agruparPorItem(
 export function HistoricoSessoes({
   fichas,
   nomeCliente,
+  telefoneCliente,
 }: {
   fichas: Procedimento[];
   nomeCliente: string;
+  telefoneCliente?: string | null;
 }) {
   const [sessoes, setSessoes] = useState<SessaoAtendimento[] | null>(null);
   const [erro, setErro] = useState<string | null>(null);
@@ -262,7 +274,8 @@ export function HistoricoSessoes({
   const whatsappDe = (token: string, data: string) => {
     const primeiro = nomeCliente.trim().split(" ")[0] || "";
     const msg = `Oi ${primeiro}! Confirme seu atendimento na MAVI do dia ${dataBR(data)}, é rapidinho: ${linkDe(token)}`;
-    return `https://wa.me/?text=${encodeURIComponent(msg)}`;
+    const numero = numeroWhatsapp(telefoneCliente);
+    return `https://wa.me/${numero}?text=${encodeURIComponent(msg)}`;
   };
 
   const podeSalvar = fichaId && (itens.length > 0 || observacao.trim());

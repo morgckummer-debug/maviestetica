@@ -160,7 +160,11 @@ function PaginaCliente() {
       )}
 
       {/* Histórico de sessões unificado (o caderninho digital) */}
-      <HistoricoSessoes fichas={procedimentos} nomeCliente={cliente.nome} />
+      <HistoricoSessoes
+        fichas={procedimentos}
+        nomeCliente={cliente.nome}
+        telefoneCliente={cliente.telefone}
+      />
 
       {/* Fichas da cliente — cada uma abre a ficha completa (anamnese/medidas) */}
       <div className="mt-8">
