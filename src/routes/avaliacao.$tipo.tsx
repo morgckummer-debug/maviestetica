@@ -122,6 +122,54 @@ function CampoView({
     );
   }
 
+  if (campo.tipo === "selecao") {
+    const val = (respostas[campo.id] as string) ?? "";
+    return (
+      <div>
+        <label className="block text-sm font-medium mb-2">{campo.label}</label>
+        <div className="flex flex-wrap gap-2">
+          {campo.opcoes.map((op) => (
+            <Chip
+              key={op}
+              label={op}
+              selected={val === op}
+              onClick={() => set(campo.id, val === op ? null : op)}
+            />
+          ))}
+        </div>
+        {campo.especifique && val && (
+          <textarea
+            value={(respostas[`${campo.id}__detalhe`] as string) ?? ""}
+            onChange={(e) => set(`${campo.id}__detalhe`, e.target.value)}
+            placeholder={campo.especifiquePlaceholder ?? "Especifique"}
+            rows={2}
+            className={`${inputBase} mt-3`}
+          />
+        )}
+      </div>
+    );
+  }
+
+  if (campo.tipo === "multi") {
+    const atual = String(respostas[campo.id] ?? "")
+      .split(", ")
+      .filter(Boolean);
+    const toggle = (op: string) => {
+      const novo = atual.includes(op) ? atual.filter((x) => x !== op) : [...atual, op];
+      set(campo.id, novo.join(", "));
+    };
+    return (
+      <div>
+        <label className="block text-sm font-medium mb-2">{campo.label}</label>
+        <div className="flex flex-wrap gap-2">
+          {campo.opcoes.map((op) => (
+            <Chip key={op} label={op} selected={atual.includes(op)} onClick={() => toggle(op)} />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   // simnao
   const valor = respostas[campo.id] as boolean | null | undefined;
   return (
@@ -186,6 +234,9 @@ function FichaPage() {
     if (naTermo) return termoAceito && !enviando;
     return etapas[step].campos.every((c) => {
       if (c.tipo === "texto" && c.obrigatorio) {
+        return String(respostas[c.id] ?? "").trim().length > 0;
+      }
+      if (c.tipo === "selecao" && c.obrigatorio) {
         return String(respostas[c.id] ?? "").trim().length > 0;
       }
       return true;

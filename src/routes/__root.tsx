@@ -185,8 +185,9 @@ function RootShell({ children }: { children: ReactNode }) {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  // O painel da Marina não mostra a navbar/rodapé do site público.
-  const semNavbar = pathname.startsWith("/painel");
+  // O painel da Marina e as fichas de avaliação ficam sem a navbar/rodapé do
+  // site público — telas limpas, focadas na tarefa.
+  const semNavbar = pathname.startsWith("/painel") || pathname.startsWith("/avaliacao");
 
   return (
     <QueryClientProvider client={queryClient}>
