@@ -79,7 +79,10 @@ function PaginaCliente() {
   }, [cliente]);
 
   const procedimentos: Procedimento[] = useMemo(
-    () => (cliente ? cliente.fichas.map((f) => ({ id: f.id, tipo: f.tipo, nome: f.nome })) : []),
+    () =>
+      cliente
+        ? cliente.fichas.map((f) => ({ id: f.id, tipo: f.tipo, nome: f.nome, pacotes: f.pacotes ?? {} }))
+        : [],
     [cliente],
   );
 
