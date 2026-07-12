@@ -185,10 +185,9 @@ function RootShell({ children }: { children: ReactNode }) {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  // O painel da Marina não mostra a navbar/rodapé do site público.
-  const semNavbar = pathname.startsWith("/painel");
-  // Nas fichas de avaliação escondemos o rodapé para o formulário ficar limpo.
-  const semRodape = semNavbar || pathname.startsWith("/avaliacao");
+  // O painel da Marina e as fichas de avaliação ficam sem a navbar/rodapé do
+  // site público — telas limpas, focadas na tarefa.
+  const semNavbar = pathname.startsWith("/painel") || pathname.startsWith("/avaliacao");
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -198,7 +197,7 @@ function RootComponent() {
           {/* Required: nested routes render here. */}
           <Outlet />
         </main>
-        {!semRodape && <Footer />}
+        {!semNavbar && <Footer />}
       </div>
     </QueryClientProvider>
   );

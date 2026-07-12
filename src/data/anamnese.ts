@@ -25,7 +25,28 @@ export type CampoSimNao = {
   alertaSeSim?: string;
 };
 
-export type Campo = CampoTexto | CampoSimNao;
+// Escolha única (ex.: Sexo, Tipo de pele). Guarda a opção escolhida como texto.
+export type CampoSelecao = {
+  tipo: "selecao";
+  id: string;
+  label: string;
+  opcoes: string[];
+  obrigatorio?: boolean;
+  // Mostra um campo de texto depois de escolher
+  especifique?: boolean;
+  especifiquePlaceholder?: string;
+};
+
+// Escolha múltipla (ex.: métodos/áreas da depilação). Guarda as opções
+// escolhidas juntas num texto separado por ", ".
+export type CampoMulti = {
+  tipo: "multi";
+  id: string;
+  label: string;
+  opcoes: string[];
+};
+
+export type Campo = CampoTexto | CampoSimNao | CampoSelecao | CampoMulti;
 
 export type Etapa = {
   titulo: string;
@@ -298,14 +319,204 @@ const FACIAL: DefinicaoFicha = {
   etapas: [ETAPA_DADOS],
 };
 
-// ---------- DEPILAÇÃO A LASER (aguardando o papel da Mavi) ----------
+// ---------- DEPILAÇÃO (transcrita do papel da Mavi) ----------
+// Dados pessoais próprios da ficha de depilação (inclui Sexo, como no papel).
+const ETAPA_DADOS_DEPILACAO: Etapa = {
+  titulo: "Seus dados",
+  descricao: "Para a Marina te receber com cuidado e segurança.",
+  campos: [
+    { tipo: "texto", id: "nome", label: "Nome completo", placeholder: "Seu nome", obrigatorio: true },
+    { tipo: "texto", id: "cpf", label: "CPF", placeholder: "000.000.000-00" },
+    { tipo: "texto", id: "nascimento", label: "Data de nascimento", inputMode: "date" },
+    { tipo: "selecao", id: "sexo", label: "Sexo", opcoes: ["Feminino", "Masculino"] },
+    { tipo: "texto", id: "endereco", label: "Endereço", placeholder: "Rua, número, bairro" },
+    { tipo: "texto", id: "cidade", label: "Cidade", placeholder: "Sete Lagoas" },
+    {
+      tipo: "texto",
+      id: "whatsapp",
+      label: "Celular",
+      placeholder: "(31) 9....-....",
+      inputMode: "tel",
+      obrigatorio: true,
+    },
+  ],
+};
+
 const LASER: DefinicaoFicha = {
   tipo: "laser",
-  nome: "Depilação a Laser",
+  nome: "Anamnese Depilação",
   emoji: "🔆",
-  emConstrucao: true,
   camposMedidas: [],
-  etapas: [ETAPA_DADOS],
+  etapas: [
+    ETAPA_DADOS_DEPILACAO,
+    {
+      titulo: "Sobre sua pele",
+      campos: [
+        {
+          tipo: "simnao",
+          id: "jaFezDepilacao",
+          label: "Já fez depilação antes?",
+          especifique: true,
+          especifiquePlaceholder: "Qual método e há quanto tempo?",
+        },
+        {
+          tipo: "simnao",
+          id: "problemasPele",
+          label: "Problemas de pele?",
+          especifique: true,
+          especifiquePlaceholder: "Quais?",
+        },
+        {
+          tipo: "selecao",
+          id: "tipoPele",
+          label: "Tipo de pele",
+          opcoes: ["Oleosa", "Normal", "Seca"],
+          especifique: true,
+          especifiquePlaceholder: "Observações (opcional)",
+        },
+        {
+          tipo: "simnao",
+          id: "foliculite",
+          label: "Foliculite?",
+          especifique: true,
+          especifiquePlaceholder: "Em qual região?",
+        },
+        {
+          tipo: "simnao",
+          id: "temNodulos",
+          label: "Tem nódulos?",
+          especifique: true,
+          especifiquePlaceholder: "Onde?",
+        },
+        {
+          tipo: "simnao",
+          id: "tratamentoDermatologico",
+          label: "Está em tratamento dermatológico?",
+          especifique: true,
+          especifiquePlaceholder: "Qual? (ex.: uso de ácidos, isotretinoína/Roacutan...)",
+          alertaSeSim:
+            "Tratamento dermatológico — confirmar uso de ácidos/isotretinoína antes de laser ou cera.",
+        },
+      ],
+    },
+    {
+      titulo: "Sua saúde",
+      campos: [
+        {
+          tipo: "simnao",
+          id: "diabetes",
+          label: "Diabetes?",
+          especifique: true,
+          especifiquePlaceholder: "Controlada? Desde quando?",
+          alertaSeSim: "Diabetes — atenção redobrada com a cicatrização da pele.",
+        },
+        {
+          tipo: "simnao",
+          id: "alteracoesCardiacas",
+          label: "Alterações cardíacas?",
+          alertaSeSim: "Alterações cardíacas — avaliar segurança antes do procedimento.",
+        },
+        {
+          tipo: "simnao",
+          id: "marcapasso",
+          label: "Portador de marcapasso?",
+          alertaSeSim: "Marcapasso — contraindicação para laser/luz pulsada.",
+        },
+        { tipo: "simnao", id: "fumante", label: "Fumante?" },
+        {
+          tipo: "simnao",
+          id: "gestante",
+          label: "Gestante?",
+          alertaSeSim: "Gestante — contraindicação para depilação a laser/luz pulsada.",
+        },
+        {
+          tipo: "simnao",
+          id: "amamentando",
+          label: "Está amamentando?",
+          especifique: true,
+          especifiquePlaceholder: "Há quantas semanas?",
+        },
+        {
+          tipo: "simnao",
+          id: "estaMenstruada",
+          label: "Está no período menstrual?",
+          especifique: true,
+          especifiquePlaceholder: "Data da menstruação",
+        },
+        {
+          tipo: "simnao",
+          id: "alergiaTipo",
+          label: "Ocorreu alergia de algum tipo?",
+          especifique: true,
+          especifiquePlaceholder: "A quê?",
+        },
+        {
+          tipo: "simnao",
+          id: "cirurgiaRecente",
+          label: "Realizou alguma cirurgia recente?",
+          especifique: true,
+          especifiquePlaceholder: "Qual e quando?",
+          alertaSeSim: "Cirurgia recente — confirmar liberação médica e tempo de recuperação.",
+        },
+        {
+          tipo: "simnao",
+          id: "usoMedicamento",
+          label: "Faz uso de algum medicamento?",
+          especifique: true,
+          especifiquePlaceholder: "Quais?",
+        },
+        {
+          tipo: "simnao",
+          id: "alergiaCosmeticos",
+          label: "Alergia a cosméticos ou medicamentos?",
+          especifique: true,
+          especifiquePlaceholder: "A quê?",
+        },
+        {
+          tipo: "simnao",
+          id: "tumorLesao",
+          label: "Tumor ou lesão pré-cancerígena?",
+          especifique: true,
+          especifiquePlaceholder: "Especifique",
+          alertaSeSim:
+            "Tumor ou lesão pré-cancerígena — avaliação médica necessária antes do procedimento.",
+        },
+        {
+          tipo: "simnao",
+          id: "outroProblema",
+          label: "Algum outro problema a ser informado?",
+          especifique: true,
+          especifiquePlaceholder: "Descreva",
+        },
+      ],
+    },
+    {
+      titulo: "Procedimento",
+      descricao: "Marque o que se aplica — pode escolher mais de um.",
+      campos: [
+        {
+          tipo: "multi",
+          id: "metodos",
+          label: "Método(s) desejado(s)",
+          opcoes: ["Cera quente", "Laser", "Luz pulsada", "Linha"],
+        },
+        {
+          tipo: "multi",
+          id: "areas",
+          label: "Área(s) a depilar",
+          opcoes: [
+            "Axilas",
+            "Seios e/ou abdômen",
+            "Braço/antebraço",
+            "Virilha",
+            "Coxa e/ou canela",
+            "Glúteos e extras",
+            "Linha alba",
+          ],
+        },
+      ],
+    },
+  ],
 };
 
 export const FICHAS: Record<Tipo, DefinicaoFicha> = {

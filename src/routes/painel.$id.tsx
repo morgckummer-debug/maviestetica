@@ -175,7 +175,10 @@ function DetalheFicha() {
             .map((c) => {
               const val = valorResposta(r[c.id]);
               if (val === null) return null;
-              const detalhe = c.tipo === "simnao" ? valorResposta(r[`${c.id}__detalhe`]) : null;
+              const detalhe =
+                c.tipo === "simnao" || c.tipo === "selecao"
+                  ? valorResposta(r[`${c.id}__detalhe`])
+                  : null;
               return { id: c.id, label: c.label, val, detalhe };
             })
             .filter(
