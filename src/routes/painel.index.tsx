@@ -12,7 +12,7 @@ import {
   MessageCircle,
 } from "lucide-react";
 import { listarFichas, type Ficha } from "@/lib/painel";
-import { TIPOS, FICHAS, nomeTipo, type Tipo } from "@/data/anamnese";
+import { TIPOS, FICHAS, nomeTipo, nomeCurto, type Tipo } from "@/data/anamnese";
 
 export const Route = createFileRoute("/painel/")({
   component: ListaFichas,
@@ -75,7 +75,7 @@ function EnviarFicha() {
                 : "bg-card border-border text-foreground/70 hover:border-primary/40",
             ].join(" ")}
           >
-            {FICHAS[t].emoji} {FICHAS[t].nome}
+            {FICHAS[t].emoji} {nomeCurto(t)}
             {FICHAS[t].emConstrucao ? " (em breve)" : ""}
           </button>
         ))}
@@ -179,7 +179,7 @@ function ListaFichas() {
                 : "bg-card border-border text-foreground/60 hover:border-primary/40",
             ].join(" ")}
           >
-            {t === "todas" ? "Todas" : `${FICHAS[t].emoji} ${FICHAS[t].nome}`}
+            {t === "todas" ? "Todas" : `${FICHAS[t].emoji} ${nomeCurto(t)}`}
           </button>
         ))}
       </div>
