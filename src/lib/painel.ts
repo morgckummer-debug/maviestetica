@@ -172,7 +172,15 @@ export async function atualizarFicha(
 export async function excluirFicha(id: string): Promise<void> {
   const res = await apiRest(`fichas?id=eq.${encodeURIComponent(id)}`, {
     method: "DELETE",
-    headers: { Prefer: "return=minimal" },
+    headers: { Prefer: "return=representation" },
   });
   if (!res.ok) throw new Error("Não foi possível excluir a ficha.");
+  // Se o banco não tem a policy de DELETE, ele responde OK mas não apaga
+  // nada. Detectamos isso pela lista vazia de linhas retornadas.
+  const apagadas = (await res.json().catch(() => [])) as unknown[];
+  if (!Array.isArray(apagadas) || apagadas.length === 0) {
+    throw new Error(
+      "Exclusão bloqueada pelo banco. Rode a migração 0004_delete.sql no Supabase (SQL Editor).",
+    );
+  }
 }
