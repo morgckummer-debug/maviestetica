@@ -9,10 +9,16 @@ import {
   Check,
   Archive,
   Trash2,
+  Pencil,
+  X,
 } from "lucide-react";
 import { getFicha, nomeTipo, type Campo } from "@/data/anamnese";
 import { obterFicha, atualizarFicha, excluirFicha, type Ficha } from "@/lib/painel";
-import { mascaraTelefone, mascaraCpf, formatarDataBR } from "@/lib/mascaras";
+import { mascaraTelefone, mascaraCpf, formatarDataBR, aplicarMascara } from "@/lib/mascaras";
+
+// Etapa de dados pessoais (nome, telefone, endereço...) — é a única que a
+// Marina pode editar depois, para atualizar celular/endereço da cliente.
+const TITULO_DADOS_PESSOAIS = "Seus dados";
 
 export const Route = createFileRoute("/painel/$id")({
   component: DetalheFicha,
@@ -95,6 +101,11 @@ function DetalheFicha() {
   const [confirmandoExclusao, setConfirmandoExclusao] = useState(false);
   const [excluindo, setExcluindo] = useState(false);
 
+  const [editandoDados, setEditandoDados] = useState(false);
+  const [dadosForm, setDadosForm] = useState<Record<string, string>>({});
+  const [salvandoDados, setSalvandoDados] = useState(false);
+  const [erroDados, setErroDados] = useState<string | null>(null);
+
   useEffect(() => {
     obterFicha(id)
       .then((f) => {
@@ -132,6 +143,50 @@ function DetalheFicha() {
       setFicha({ ...ficha, arquivada: novo });
     } catch (e) {
       setErro(e instanceof Error ? e.message : "Erro ao arquivar.");
+    }
+  };
+
+  const camposDadosPessoais = (): Campo[] => {
+    if (!ficha) return [];
+    const etapa = getFicha(ficha.tipo)?.etapas.find((e) => e.titulo === TITULO_DADOS_PESSOAIS);
+    return etapa?.campos ?? [];
+  };
+
+  const iniciarEdicaoDados = () => {
+    if (!ficha) return;
+    const inicial: Record<string, string> = {};
+    for (const c of camposDadosPessoais()) {
+      inicial[c.id] = String(ficha.respostas?.[c.id] ?? "");
+    }
+    setDadosForm(inicial);
+    setErroDados(null);
+    setEditandoDados(true);
+  };
+
+  const salvarDados = async () => {
+    if (!ficha) return;
+    setSalvandoDados(true);
+    setErroDados(null);
+    try {
+      const respostas = { ...ficha.respostas };
+      for (const c of camposDadosPessoais()) {
+        respostas[c.id] = dadosForm[c.id]?.trim() || null;
+      }
+      // A coluna "telefone" (usada no topo da ficha e para agrupar as
+      // fichas da mesma cliente) espelha o campo "whatsapp" das respostas.
+      const telefone = respostas.whatsapp ? String(respostas.whatsapp) : null;
+      await atualizarFicha(id, { respostas, telefone });
+      setFicha({
+        ...ficha,
+        respostas,
+        telefone,
+        nome: respostas.nome ? String(respostas.nome) : ficha.nome,
+      });
+      setEditandoDados(false);
+    } catch (e) {
+      setErroDados(e instanceof Error ? e.message : "Erro ao salvar os dados.");
+    } finally {
+      setSalvandoDados(false);
     }
   };
 
@@ -325,25 +380,122 @@ function DetalheFicha() {
 
           if (linhas.length === 0) return null;
 
+          const ehDadosPessoais = etapa.titulo === TITULO_DADOS_PESSOAIS;
+          const editandoEsta = ehDadosPessoais && editandoDados;
+          const podeSalvarDados = etapa.campos.every(
+            (c) => !("obrigatorio" in c && c.obrigatorio) || String(dadosForm[c.id] ?? "").trim(),
+          );
+
           return (
             <div key={etapa.titulo} className={`rounded-2xl border ${bordaCard} bg-card p-5`}>
-              <h3 className="font-medium text-primary mb-3">{etapa.titulo}</h3>
-              <dl className="grid md:grid-cols-2 gap-x-8">
-                {linhas.map((l) => (
-                  <div
-                    key={l.id}
-                    className="flex justify-between gap-4 py-1.5 text-sm border-b border-border/50"
+              <div className="flex items-center justify-between gap-3 mb-3">
+                <h3 className="font-medium text-primary">{etapa.titulo}</h3>
+                {ehDadosPessoais && !editandoDados && (
+                  <button
+                    type="button"
+                    onClick={iniciarEdicaoDados}
+                    className="inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:opacity-80 transition-opacity"
                   >
-                    <dt className="text-muted-foreground">{l.label}</dt>
-                    <dd className="text-right text-foreground font-medium shrink-0">
-                      {l.val}
-                      {l.detalhe && (
-                        <span className="block text-muted-foreground font-normal">{l.detalhe}</span>
-                      )}
-                    </dd>
+                    <Pencil className="h-3.5 w-3.5" />
+                    Editar dados
+                  </button>
+                )}
+              </div>
+
+              {editandoEsta ? (
+                <div>
+                  <div className="grid sm:grid-cols-2 gap-4 mb-4">
+                    {etapa.campos.map((c) => (
+                      <div key={c.id}>
+                        <label className="block text-xs font-medium text-muted-foreground mb-1.5">
+                          {c.label}
+                        </label>
+                        {c.tipo === "selecao" ? (
+                          <div className="flex flex-wrap gap-2">
+                            {c.opcoes.map((op) => (
+                              <button
+                                key={op}
+                                type="button"
+                                onClick={() => setDadosForm((prev) => ({ ...prev, [c.id]: op }))}
+                                className={[
+                                  "rounded-full border px-3 py-1.5 text-sm transition-colors",
+                                  dadosForm[c.id] === op
+                                    ? "bg-lavender-soft border-lavender text-primary font-medium"
+                                    : "bg-card border-border text-foreground/70 hover:border-primary/40",
+                                ].join(" ")}
+                              >
+                                {op}
+                              </button>
+                            ))}
+                          </div>
+                        ) : c.tipo === "texto" ? (
+                          <input
+                            type={c.inputMode === "date" ? "date" : "text"}
+                            inputMode={
+                              c.inputMode === "tel" || c.inputMode === "email" || c.inputMode === "numeric"
+                                ? c.inputMode
+                                : undefined
+                            }
+                            value={dadosForm[c.id] ?? ""}
+                            onChange={(e) =>
+                              setDadosForm((prev) => ({
+                                ...prev,
+                                [c.id]: aplicarMascara(c.mascara, e.target.value),
+                              }))
+                            }
+                            placeholder={c.placeholder}
+                            className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                          />
+                        ) : null}
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </dl>
+
+                  {erroDados && <p className="text-sm text-destructive mb-3">{erroDados}</p>}
+
+                  <div className="flex items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={salvarDados}
+                      disabled={salvandoDados || !podeSalvarDados}
+                      className="inline-flex items-center gap-2 rounded-full bg-primary text-primary-foreground px-5 py-2 text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-40"
+                    >
+                      {salvandoDados ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Check className="h-4 w-4" />
+                      )}
+                      Salvar
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setEditandoDados(false)}
+                      disabled={salvandoDados}
+                      className="inline-flex items-center gap-1.5 rounded-full border border-border px-5 py-2 text-sm font-medium text-foreground/70 hover:border-primary/40 transition-colors disabled:opacity-40"
+                    >
+                      <X className="h-4 w-4" />
+                      Cancelar
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <dl className="grid md:grid-cols-2 gap-x-8">
+                  {linhas.map((l) => (
+                    <div
+                      key={l.id}
+                      className="flex justify-between gap-4 py-1.5 text-sm border-b border-border/50"
+                    >
+                      <dt className="text-muted-foreground">{l.label}</dt>
+                      <dd className="text-right text-foreground font-medium shrink-0">
+                        {l.val}
+                        {l.detalhe && (
+                          <span className="block text-muted-foreground font-normal">{l.detalhe}</span>
+                        )}
+                      </dd>
+                    </div>
+                  ))}
+                </dl>
+              )}
             </div>
           );
         })}
