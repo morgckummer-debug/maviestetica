@@ -1,7 +1,11 @@
 // Agrupa as fichas por PESSOA. Uma mesma cliente pode ter mais de uma ficha
-// (ex.: depilação a laser + limpeza de pele). Identificamos que é a mesma
-// pessoa pelo WhatsApp (obrigatório em toda ficha) e reforçamos pelo CPF
-// quando ela preencheu. Assim a Marina não fica trocando de ficha.
+// (ex.: depilação a laser + limpeza de pele). NUNCA agrupamos só por
+// telefone ou só por CPF: telefone é comum ser compartilhado (mãe e filha
+// usando o mesmo WhatsApp da família) e CPF é campo de texto livre sem
+// validação, fácil de digitar errado ou repetir por engano. Por isso só
+// consideramos a mesma pessoa quando o NOME bate (normalizado) E pelo
+// menos um dos dois (telefone OU CPF) também bate — assim nunca escondemos
+// uma cliente atrás do cartão de outra pessoa.
 
 import type { Ficha } from "./painel";
 import type { Tipo } from "@/data/anamnese";
@@ -9,6 +13,16 @@ import type { Tipo } from "@/data/anamnese";
 // Só os dígitos (para comparar telefone/CPF sem depender da máscara).
 export function digitos(v: string | null | undefined): string {
   return String(v ?? "").replace(/\D/g, "");
+}
+
+// Nome normalizado para comparar sem depender de acentos/maiúsculas/espaços.
+function normalizarNome(v: string): string {
+  return v
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, " ");
 }
 
 export type Cliente = {
@@ -45,7 +59,10 @@ function paraCliente(fichas: Ficha[]): Cliente {
   };
 }
 
-// Une (union-find) qualquer par de fichas que compartilhe telefone OU CPF.
+// Une (union-find) fichas do MESMO NOME que também compartilhem telefone
+// OU CPF. Nome sozinho não basta (duas clientes podem ter nome parecido),
+// e telefone/CPF sozinhos também não (ver motivo acima) — precisa das duas
+// coisas juntas.
 export function agruparClientes(fichas: Ficha[]): Cliente[] {
   const n = fichas.length;
   const pai = Array.from({ length: n }, (_, i) => i);
@@ -60,20 +77,26 @@ export function agruparClientes(fichas: Ficha[]): Cliente[] {
     pai[achar(a)] = achar(b);
   };
 
-  const porTelefone = new Map<string, number>();
-  const porCpf = new Map<string, number>();
+  // Chave = nome normalizado + telefone (ou + CPF). Só une fichas cujo
+  // nome E identificador coincidem exatamente.
+  const porNomeTelefone = new Map<string, number>();
+  const porNomeCpf = new Map<string, number>();
   fichas.forEach((f, i) => {
+    const nome = normalizarNome(f.nome);
+    if (!nome) return;
     const tel = digitos(f.telefone);
     const cpf = cpfDaFicha(f);
     if (tel) {
-      const j = porTelefone.get(tel);
+      const chave = `${nome}::${tel}`;
+      const j = porNomeTelefone.get(chave);
       if (j !== undefined) unir(i, j);
-      else porTelefone.set(tel, i);
+      else porNomeTelefone.set(chave, i);
     }
     if (cpf) {
-      const j = porCpf.get(cpf);
+      const chave = `${nome}::${cpf}`;
+      const j = porNomeCpf.get(chave);
       if (j !== undefined) unir(i, j);
-      else porCpf.set(cpf, i);
+      else porNomeCpf.set(chave, i);
     }
   });
 
