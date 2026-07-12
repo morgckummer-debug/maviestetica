@@ -8,6 +8,7 @@ import {
   TERMO_TEXTO,
   AUTORIZACAO_FOTO_TEXTO,
   calcularAlertas,
+  campoVisivel,
   type Campo,
   type Respostas,
 } from "@/data/anamnese";
@@ -240,6 +241,7 @@ function FichaPage() {
   const podeAvancar = (() => {
     if (naTermo) return termoAceito && !enviando;
     return etapas[step].campos.every((c) => {
+      if (!campoVisivel(c, respostas)) return true;
       if (c.tipo === "texto" && c.obrigatorio) {
         return String(respostas[c.id] ?? "").trim().length > 0;
       }
@@ -324,17 +326,21 @@ function FichaPage() {
                   )}
                   {etapas[step].layout === "grid" ? (
                     <div className="grid sm:grid-cols-2 gap-x-8 gap-y-4">
-                      {etapas[step].campos.map((c) => (
-                        <div key={c.id} className="border-b border-border/50 pb-3">
-                          <CampoView campo={c} respostas={respostas} set={set} compacto />
-                        </div>
-                      ))}
+                      {etapas[step].campos
+                        .filter((c) => campoVisivel(c, respostas))
+                        .map((c) => (
+                          <div key={c.id} className="border-b border-border/50 pb-3">
+                            <CampoView campo={c} respostas={respostas} set={set} compacto />
+                          </div>
+                        ))}
                     </div>
                   ) : (
                     <div className="space-y-6">
-                      {etapas[step].campos.map((c) => (
-                        <CampoView key={c.id} campo={c} respostas={respostas} set={set} />
-                      ))}
+                      {etapas[step].campos
+                        .filter((c) => campoVisivel(c, respostas))
+                        .map((c) => (
+                          <CampoView key={c.id} campo={c} respostas={respostas} set={set} />
+                        ))}
                     </div>
                   )}
                 </div>

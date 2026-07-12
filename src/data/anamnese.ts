@@ -3,6 +3,10 @@
 // As respostas são salvas no Supabase no campo `respostas` (JSONB), indexadas
 // pelo `id` de cada campo, então mudar perguntas não exige alterar o banco.
 
+// Esconde o campo quando outro campo tiver determinado valor.
+// Ex.: perguntas de menstruação com { campo: "sexo", valor: "Masculino" }.
+export type CondicaoCampo = { campo: string; valor: string };
+
 export type CampoTexto = {
   tipo: "texto";
   id: string;
@@ -13,6 +17,7 @@ export type CampoTexto = {
   inputMode?: "text" | "tel" | "email" | "date" | "numeric";
   // Formata o texto enquanto digita (ex.: celular e CPF)
   mascara?: "telefone" | "cpf";
+  ocultarSe?: CondicaoCampo;
   ajuda?: string;
 };
 
@@ -25,6 +30,7 @@ export type CampoSimNao = {
   especifiquePlaceholder?: string;
   // Se marcado "Sim", gera um alerta de segurança para a Marina
   alertaSeSim?: string;
+  ocultarSe?: CondicaoCampo;
 };
 
 // Escolha única (ex.: Sexo, Tipo de pele). Guarda a opção escolhida como texto.
@@ -37,6 +43,7 @@ export type CampoSelecao = {
   // Mostra um campo de texto depois de escolher
   especifique?: boolean;
   especifiquePlaceholder?: string;
+  ocultarSe?: CondicaoCampo;
 };
 
 // Escolha múltipla (ex.: métodos/áreas da depilação). Guarda as opções
@@ -46,6 +53,7 @@ export type CampoMulti = {
   id: string;
   label: string;
   opcoes: string[];
+  ocultarSe?: CondicaoCampo;
 };
 
 export type Campo = CampoTexto | CampoSimNao | CampoSelecao | CampoMulti;
@@ -108,6 +116,7 @@ const ETAPA_DADOS: Etapa = {
       obrigatorio: true,
     },
     { tipo: "texto", id: "nascimento", label: "Data de nascimento", inputMode: "date" },
+    { tipo: "selecao", id: "sexo", label: "Gênero", opcoes: ["Feminino", "Masculino"] },
     {
       tipo: "texto",
       id: "whatsapp",
@@ -149,6 +158,10 @@ const ETAPA_DADOS: Etapa = {
     },
   ],
 };
+
+// Perguntas que não se aplicam a pacientes do sexo masculino
+// (menstruação, gravidez, menopausa, amamentação).
+const OCULTAR_SE_MASCULINO: CondicaoCampo = { campo: "sexo", valor: "Masculino" };
 
 // ---------- CORPORAL (transcrita do papel da Mavi) ----------
 const CORPORAL: DefinicaoFicha = {
@@ -281,14 +294,30 @@ const CORPORAL: DefinicaoFicha = {
       descricao: "Só marcar Sim ou Não.",
       layout: "grid",
       campos: [
-        { tipo: "simnao", id: "cicloMenstrualRegular", label: "Ciclo menstrual regular?" },
-        { tipo: "simnao", id: "estaMenstruada", label: "Está menstruada?" },
-        { tipo: "simnao", id: "menopausa", label: "Já está na menopausa?" },
+        {
+          tipo: "simnao",
+          id: "cicloMenstrualRegular",
+          label: "Ciclo menstrual regular?",
+          ocultarSe: OCULTAR_SE_MASCULINO,
+        },
+        {
+          tipo: "simnao",
+          id: "estaMenstruada",
+          label: "Está menstruada?",
+          ocultarSe: OCULTAR_SE_MASCULINO,
+        },
+        {
+          tipo: "simnao",
+          id: "menopausa",
+          label: "Já está na menopausa?",
+          ocultarSe: OCULTAR_SE_MASCULINO,
+        },
         {
           tipo: "simnao",
           id: "estaGravida",
           label: "Está grávida?",
           alertaSeSim: "Gestante — confirmar contraindicação do procedimento.",
+          ocultarSe: OCULTAR_SE_MASCULINO,
         },
         { tipo: "simnao", id: "disturbioHormonal", label: "Distúrbio hormonal?" },
         { tipo: "simnao", id: "fumante", label: "Fumante?" },
@@ -500,6 +529,7 @@ const FACIAL: DefinicaoFicha = {
           label: "Ciclo menstrual regular?",
           especifique: true,
           especifiquePlaceholder: "Observações",
+          ocultarSe: OCULTAR_SE_MASCULINO,
         },
         {
           tipo: "simnao",
@@ -524,13 +554,24 @@ const FACIAL: DefinicaoFicha = {
       layout: "grid",
       campos: [
         { tipo: "simnao", id: "fumante", label: "Fumante?" },
-        { tipo: "simnao", id: "estaMenstruada", label: "Está menstruada?" },
-        { tipo: "simnao", id: "menopausa", label: "Já está na menopausa?" },
+        {
+          tipo: "simnao",
+          id: "estaMenstruada",
+          label: "Está menstruada?",
+          ocultarSe: OCULTAR_SE_MASCULINO,
+        },
+        {
+          tipo: "simnao",
+          id: "menopausa",
+          label: "Já está na menopausa?",
+          ocultarSe: OCULTAR_SE_MASCULINO,
+        },
         {
           tipo: "simnao",
           id: "estaGravida",
           label: "Está grávida?",
           alertaSeSim: "Gestante — confirmar contraindicação do procedimento.",
+          ocultarSe: OCULTAR_SE_MASCULINO,
         },
         {
           tipo: "simnao",
@@ -573,7 +614,7 @@ const ETAPA_DADOS_DEPILACAO: Etapa = {
       mascara: "cpf",
     },
     { tipo: "texto", id: "nascimento", label: "Data de nascimento", inputMode: "date" },
-    { tipo: "selecao", id: "sexo", label: "Sexo", opcoes: ["Feminino", "Masculino"] },
+    { tipo: "selecao", id: "sexo", label: "Gênero", opcoes: ["Feminino", "Masculino"] },
     { tipo: "texto", id: "endereco", label: "Endereço", placeholder: "Rua, número, bairro" },
     { tipo: "texto", id: "cidade", label: "Cidade", placeholder: "Sete Lagoas" },
     {
@@ -674,6 +715,7 @@ const LASER: DefinicaoFicha = {
           id: "gestante",
           label: "Gestante?",
           alertaSeSim: "Gestante — contraindicação para depilação a laser/luz pulsada.",
+          ocultarSe: OCULTAR_SE_MASCULINO,
         },
         {
           tipo: "simnao",
@@ -681,6 +723,7 @@ const LASER: DefinicaoFicha = {
           label: "Está amamentando?",
           especifique: true,
           especifiquePlaceholder: "Há quantas semanas?",
+          ocultarSe: OCULTAR_SE_MASCULINO,
         },
         {
           tipo: "simnao",
@@ -688,6 +731,7 @@ const LASER: DefinicaoFicha = {
           label: "Está no período menstrual?",
           especifique: true,
           especifiquePlaceholder: "Data da menstruação",
+          ocultarSe: OCULTAR_SE_MASCULINO,
         },
         {
           tipo: "simnao",
@@ -791,6 +835,13 @@ export function nomeCurto(tipo: string): string {
 }
 
 export type Respostas = Record<string, string | boolean | null>;
+
+// Um campo com `ocultarSe` só aparece quando a condição NÃO bate.
+// Ex.: perguntas de menstruação somem quando gênero = "Masculino".
+export function campoVisivel(campo: Campo, respostas: Respostas): boolean {
+  if (!campo.ocultarSe) return true;
+  return respostas[campo.ocultarSe.campo] !== campo.ocultarSe.valor;
+}
 
 // Calcula os alertas de segurança a partir das respostas de uma ficha
 export function calcularAlertas(tipo: string, respostas: Respostas): string[] {
