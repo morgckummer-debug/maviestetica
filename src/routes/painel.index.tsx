@@ -69,7 +69,7 @@ function EnviarFicha() {
             type="button"
             onClick={() => setTipo(t)}
             className={[
-              "rounded-full border px-4 py-2 text-sm transition-colors",
+              "rounded-full border px-3 py-1.5 text-xs transition-colors",
               tipo === t
                 ? "bg-primary border-primary text-primary-foreground font-medium"
                 : "bg-card border-border text-foreground/70 hover:border-primary/40",
