@@ -188,11 +188,14 @@ function DetalheFicha() {
           return (
             <div key={etapa.titulo} className="rounded-2xl border border-border bg-card p-5">
               <h3 className="font-medium text-primary mb-3">{etapa.titulo}</h3>
-              <dl className="divide-y divide-border/60">
+              <dl className="grid sm:grid-cols-2 gap-x-8">
                 {linhas.map((l) => (
-                  <div key={l.id} className="flex justify-between gap-4 py-2 text-sm">
+                  <div
+                    key={l.id}
+                    className="flex justify-between gap-4 py-1.5 text-sm border-b border-border/50"
+                  >
                     <dt className="text-muted-foreground">{l.label}</dt>
-                    <dd className="text-right text-foreground font-medium">
+                    <dd className="text-right text-foreground font-medium shrink-0">
                       {l.val}
                       {l.detalhe && (
                         <span className="block text-muted-foreground font-normal">{l.detalhe}</span>
