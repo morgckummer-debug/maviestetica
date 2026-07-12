@@ -21,6 +21,7 @@ import { Route as ResultadosPowerReduxRouteImport } from './routes/resultados.po
 import { Route as PainelIdRouteImport } from './routes/painel.$id'
 import { Route as AvaliacaoTipoRouteImport } from './routes/avaliacao.$tipo'
 import { Route as ConfirmarTokenRouteImport } from './routes/confirmar.$token'
+import { Route as PainelClienteIdRouteImport } from './routes/painel.cliente.$id'
 
 const PowerReduxRoute = PowerReduxRouteImport.update({
   id: '/power-redux',
@@ -82,6 +83,11 @@ const ConfirmarTokenRoute = ConfirmarTokenRouteImport.update({
   path: '/confirmar/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PainelClienteIdRoute = PainelClienteIdRouteImport.update({
+  id: '/cliente/$id',
+  path: '/cliente/$id',
+  getParentRoute: () => PainelRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -96,6 +102,7 @@ export interface FileRoutesByFullPath {
   '/servicos/$slug': typeof ServicosSlugRoute
   '/avaliacao/': typeof AvaliacaoIndexRoute
   '/painel/': typeof PainelIndexRoute
+  '/painel/cliente/$id': typeof PainelClienteIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -109,6 +116,7 @@ export interface FileRoutesByTo {
   '/servicos/$slug': typeof ServicosSlugRoute
   '/avaliacao': typeof AvaliacaoIndexRoute
   '/painel': typeof PainelIndexRoute
+  '/painel/cliente/$id': typeof PainelClienteIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -124,6 +132,7 @@ export interface FileRoutesById {
   '/servicos/$slug': typeof ServicosSlugRoute
   '/avaliacao/': typeof AvaliacaoIndexRoute
   '/painel/': typeof PainelIndexRoute
+  '/painel/cliente/$id': typeof PainelClienteIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -140,6 +149,7 @@ export interface FileRouteTypes {
     | '/servicos/$slug'
     | '/avaliacao/'
     | '/painel/'
+    | '/painel/cliente/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -153,6 +163,7 @@ export interface FileRouteTypes {
     | '/servicos/$slug'
     | '/avaliacao'
     | '/painel'
+    | '/painel/cliente/$id'
   id:
     | '__root__'
     | '/'
@@ -167,6 +178,7 @@ export interface FileRouteTypes {
     | '/servicos/$slug'
     | '/avaliacao/'
     | '/painel/'
+    | '/painel/cliente/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -268,16 +280,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ConfirmarTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/painel/cliente/$id': {
+      id: '/painel/cliente/$id'
+      path: '/cliente/$id'
+      fullPath: '/painel/cliente/$id'
+      preLoaderRoute: typeof PainelClienteIdRouteImport
+      parentRoute: typeof PainelRoute
+    }
   }
 }
 
 interface PainelRouteChildren {
   PainelIdRoute: typeof PainelIdRoute
+  PainelClienteIdRoute: typeof PainelClienteIdRoute
   PainelIndexRoute: typeof PainelIndexRoute
 }
 
 const PainelRouteChildren: PainelRouteChildren = {
   PainelIdRoute: PainelIdRoute,
+  PainelClienteIdRoute: PainelClienteIdRoute,
   PainelIndexRoute: PainelIndexRoute,
 }
 

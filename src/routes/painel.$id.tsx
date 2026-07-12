@@ -7,25 +7,11 @@ import {
   Camera,
   CameraOff,
   Check,
-  CheckCircle2,
-  Clock,
-  Copy,
-  MessageCircle,
-  Plus,
   Archive,
   Trash2,
 } from "lucide-react";
-import { getFicha, nomeTipo, AREAS_DEPILACAO, type Campo } from "@/data/anamnese";
-import {
-  obterFicha,
-  atualizarFicha,
-  excluirFicha,
-  listarSessoes,
-  criarSessao,
-  excluirSessao,
-  type Ficha,
-  type SessaoAtendimento,
-} from "@/lib/painel";
+import { getFicha, nomeTipo, type Campo } from "@/data/anamnese";
+import { obterFicha, atualizarFicha, excluirFicha, type Ficha } from "@/lib/painel";
 import { mascaraTelefone, mascaraCpf, formatarDataBR } from "@/lib/mascaras";
 
 export const Route = createFileRoute("/painel/$id")({
@@ -93,297 +79,6 @@ function formatarValorCampo(campo: Campo, val: string): string {
   if (campo.mascara === "cpf") return mascaraCpf(val);
   if (campo.inputMode === "date") return formatarDataBR(val);
   return val;
-}
-
-// Data de hoje em "YYYY-MM-DD" no fuso local (para o <input type="date">).
-function hojeISO(): string {
-  const d = new Date();
-  const off = d.getTimezoneOffset() * 60000;
-  return new Date(d.getTime() - off).toISOString().slice(0, 10);
-}
-
-function dataBR(iso: string): string {
-  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso.trim());
-  if (m) return `${m[3]}/${m[2]}/${m[1]}`;
-  return iso;
-}
-
-function confirmadaEm(iso: string): string {
-  try {
-    return new Date(iso).toLocaleString("pt-BR", {
-      day: "2-digit",
-      month: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  } catch {
-    return iso;
-  }
-}
-
-// Histórico de sessões: o "caderninho" digital da cliente. A Marina registra
-// data + áreas + observação; a cliente confirma pelo link (vale como assinatura).
-function HistoricoSessoes({ fichaId, nome }: { fichaId: string; nome: string }) {
-  const [sessoes, setSessoes] = useState<SessaoAtendimento[] | null>(null);
-  const [erro, setErro] = useState<string | null>(null);
-  const [origin, setOrigin] = useState("");
-
-  const [abrindo, setAbrindo] = useState(false);
-  const [data, setData] = useState(hojeISO());
-  const [areas, setAreas] = useState<string[]>([]);
-  const [observacao, setObservacao] = useState("");
-  const [salvando, setSalvando] = useState(false);
-
-  const [copiadoId, setCopiadoId] = useState<string | null>(null);
-
-  useEffect(() => {
-    setOrigin(window.location.origin);
-    listarSessoes(fichaId)
-      .then(setSessoes)
-      .catch((e) => setErro(e instanceof Error ? e.message : "Erro ao carregar sessões."));
-  }, [fichaId]);
-
-  const toggleArea = (a: string) =>
-    setAreas((prev) => (prev.includes(a) ? prev.filter((x) => x !== a) : [...prev, a]));
-
-  const registrar = async () => {
-    setSalvando(true);
-    setErro(null);
-    try {
-      const nova = await criarSessao(fichaId, { data, areas, observacao });
-      setSessoes((prev) => [nova, ...(prev ?? [])]);
-      setAbrindo(false);
-      setAreas([]);
-      setObservacao("");
-      setData(hojeISO());
-    } catch (e) {
-      setErro(e instanceof Error ? e.message : "Erro ao registrar sessão.");
-    } finally {
-      setSalvando(false);
-    }
-  };
-
-  const remover = async (s: SessaoAtendimento) => {
-    if (!window.confirm(`Excluir a sessão de ${dataBR(s.data)}?`)) return;
-    try {
-      await excluirSessao(s.id);
-      setSessoes((prev) => (prev ?? []).filter((x) => x.id !== s.id));
-    } catch (e) {
-      setErro(e instanceof Error ? e.message : "Erro ao excluir sessão.");
-    }
-  };
-
-  const linkDe = (s: SessaoAtendimento) => `${origin}/confirmar/${s.token}`;
-
-  const copiar = async (s: SessaoAtendimento) => {
-    try {
-      await navigator.clipboard.writeText(linkDe(s));
-      setCopiadoId(s.id);
-      setTimeout(() => setCopiadoId((c) => (c === s.id ? null : c)), 2000);
-    } catch {
-      /* ignore */
-    }
-  };
-
-  const whatsappDe = (s: SessaoAtendimento) => {
-    const primeiro = nome.trim().split(" ")[0] || "";
-    const msg = `Oi ${primeiro}! Confirme seu atendimento na MAVI do dia ${dataBR(s.data)}, é rapidinho: ${linkDe(s)}`;
-    return `https://wa.me/?text=${encodeURIComponent(msg)}`;
-  };
-
-  return (
-    <div className="rounded-2xl border border-border bg-card p-5 sm:p-6 mt-6">
-      <div className="flex items-center justify-between gap-3 mb-1">
-        <h3 className="font-display text-2xl text-primary">Histórico de sessões</h3>
-        {!abrindo && (
-          <button
-            type="button"
-            onClick={() => setAbrindo(true)}
-            className="inline-flex items-center gap-1.5 rounded-full bg-primary text-primary-foreground px-4 py-2 text-sm font-medium hover:bg-primary/90 transition-colors"
-          >
-            <Plus className="h-4 w-4" />
-            Registrar sessão
-          </button>
-        )}
-      </div>
-      <p className="text-sm text-muted-foreground mb-5">
-        O caderninho digital: registre o atendimento e envie o link para a cliente confirmar.
-      </p>
-
-      {erro && <p className="text-sm text-destructive mb-4">{erro}</p>}
-
-      {/* Formulário de nova sessão */}
-      {abrindo && (
-        <div className="rounded-xl border border-lavender/50 bg-lavender-soft/30 p-4 sm:p-5 mb-6">
-          <div className="mb-4">
-            <label className="block text-xs font-medium text-muted-foreground mb-1.5">
-              Data do atendimento
-            </label>
-            <input
-              type="date"
-              value={data}
-              onChange={(e) => setData(e.target.value)}
-              className="rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-            />
-          </div>
-
-          <div className="mb-4">
-            <label className="block text-xs font-medium text-muted-foreground mb-2">
-              Áreas realizadas
-            </label>
-            <div className="flex flex-wrap gap-2">
-              {AREAS_DEPILACAO.map((a) => {
-                const sel = areas.includes(a);
-                return (
-                  <button
-                    key={a}
-                    type="button"
-                    onClick={() => toggleArea(a)}
-                    className={[
-                      "rounded-full border px-3.5 py-1.5 text-sm transition-colors",
-                      sel
-                        ? "bg-lavender-soft border-lavender text-primary font-medium"
-                        : "bg-card border-border text-foreground/70 hover:border-primary/40",
-                    ].join(" ")}
-                  >
-                    {a}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          <div className="mb-4">
-            <label className="block text-xs font-medium text-muted-foreground mb-1.5">
-              Observação
-            </label>
-            <textarea
-              value={observacao}
-              onChange={(e) => setObservacao(e.target.value)}
-              rows={2}
-              placeholder="O que foi realizado, observações..."
-              className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-            />
-          </div>
-
-          <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={registrar}
-              disabled={salvando || (areas.length === 0 && !observacao.trim())}
-              className="inline-flex items-center gap-2 rounded-full bg-primary text-primary-foreground px-5 py-2.5 text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-40"
-            >
-              {salvando ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
-              Salvar sessão
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setAbrindo(false);
-                setAreas([]);
-                setObservacao("");
-              }}
-              disabled={salvando}
-              className="rounded-full border border-border px-5 py-2.5 text-sm font-medium text-foreground/70 hover:border-primary/40 transition-colors disabled:opacity-40"
-            >
-              Cancelar
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Lista de sessões */}
-      {sessoes === null && !erro && (
-        <div className="flex justify-center py-6">
-          <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-        </div>
-      )}
-
-      {sessoes && sessoes.length === 0 && !abrindo && (
-        <p className="text-sm text-muted-foreground py-2">Nenhuma sessão registrada ainda.</p>
-      )}
-
-      <div className="space-y-3">
-        {(sessoes ?? []).map((s) => (
-          <div key={s.id} className="rounded-xl border border-border bg-background p-4">
-            <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0">
-                <p className="font-medium text-foreground">{dataBR(s.data)}</p>
-                {s.areas.length > 0 && (
-                  <div className="flex flex-wrap gap-1.5 mt-2">
-                    {s.areas.map((a) => (
-                      <span
-                        key={a}
-                        className="rounded-full bg-lavender-soft px-2.5 py-0.5 text-xs text-primary"
-                      >
-                        {a}
-                      </span>
-                    ))}
-                  </div>
-                )}
-                {s.observacao && (
-                  <p className="text-sm text-muted-foreground mt-2 leading-relaxed">{s.observacao}</p>
-                )}
-              </div>
-              <button
-                type="button"
-                onClick={() => remover(s)}
-                title="Excluir sessão"
-                className="shrink-0 text-muted-foreground/60 hover:text-destructive transition-colors"
-              >
-                <Trash2 className="h-4 w-4" />
-              </button>
-            </div>
-
-            {/* Status de confirmação */}
-            <div className="mt-3 pt-3 border-t border-border/60">
-              {s.confirmado ? (
-                <span className="inline-flex items-center gap-1.5 text-sm text-primary font-medium">
-                  <CheckCircle2 className="h-4 w-4" />
-                  Confirmado pela cliente
-                  {s.confirmado_em && (
-                    <span className="text-muted-foreground font-normal">
-                      · {confirmadaEm(s.confirmado_em)}
-                    </span>
-                  )}
-                </span>
-              ) : (
-                <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-                  <span className="inline-flex items-center gap-1.5 text-sm text-muted-foreground">
-                    <Clock className="h-4 w-4" />
-                    Aguardando confirmação
-                  </span>
-                  <div className="flex gap-2 sm:ml-auto">
-                    <button
-                      type="button"
-                      onClick={() => copiar(s)}
-                      className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3.5 py-1.5 text-xs font-medium text-foreground/80 hover:border-primary/40 transition-colors"
-                    >
-                      {copiadoId === s.id ? (
-                        <Check className="h-3.5 w-3.5" />
-                      ) : (
-                        <Copy className="h-3.5 w-3.5" />
-                      )}
-                      {copiadoId === s.id ? "Copiado" : "Copiar link"}
-                    </button>
-                    <a
-                      href={whatsappDe(s)}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="inline-flex items-center gap-1.5 rounded-full bg-primary text-primary-foreground px-3.5 py-1.5 text-xs font-medium hover:bg-primary/90 transition-colors"
-                    >
-                      <MessageCircle className="h-3.5 w-3.5" />
-                      WhatsApp
-                    </a>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
 }
 
 function DetalheFicha() {
@@ -497,13 +192,23 @@ function DetalheFicha() {
 
   return (
     <div>
-      <Link
-        to="/painel"
-        className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary mb-6"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        Todas as fichas
-      </Link>
+      <div className="flex items-center gap-4 mb-6">
+        <Link
+          to="/painel"
+          className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Todas as clientes
+        </Link>
+        {/* A página da cliente aceita o id de qualquer ficha do grupo. */}
+        <Link
+          to="/painel/cliente/$id"
+          params={{ id }}
+          className="text-sm text-primary underline underline-offset-4 hover:opacity-80"
+        >
+          Página da cliente · sessões
+        </Link>
+      </div>
 
       <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-6">
         <div>
@@ -780,9 +485,6 @@ function DetalheFicha() {
           )}
         </div>
       </div>
-
-      {/* Histórico de sessões — o "caderninho" digital com confirmação da cliente */}
-      <HistoricoSessoes fichaId={id} nome={ficha.nome} />
     </div>
   );
 }

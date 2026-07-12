@@ -822,6 +822,27 @@ export const AREAS_DEPILACAO: string[] = [
   "Rosto",
 ];
 
+// Botões de "o que foi feito" no registro de sessão, por tipo de ficha.
+// Baseados nos serviços reais da MAVI. A Marina sempre pode complementar
+// no campo de observação.
+export const OPCOES_SESSAO: Record<Tipo, string[]> = {
+  laser: AREAS_DEPILACAO,
+  facial: ["Limpeza de Pele", "Hidragloss"],
+  corporal: [
+    "Drenagem Linfática",
+    "Power Redux",
+    "Corrente Russa",
+    "Taping Pós-Parto",
+    "Pós-Operatório",
+    "Drenagem para Gestantes",
+  ],
+};
+
+// Rótulo do grupo de botões conforme o tipo (áreas x procedimentos).
+export function rotuloItensSessao(tipo: Tipo): string {
+  return tipo === "laser" ? "Áreas realizadas" : "Procedimentos realizados";
+}
+
 export const TIPOS: Tipo[] = ["corporal", "facial", "laser"];
 
 export function ehTipo(v: string): v is Tipo {
