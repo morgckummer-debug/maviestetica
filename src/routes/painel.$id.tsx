@@ -1,8 +1,8 @@
 import { Fragment, useEffect, useState } from "react";
-import { createFileRoute, Link, useParams } from "@tanstack/react-router";
-import { ArrowLeft, AlertTriangle, Loader2, Camera, Check, Archive } from "lucide-react";
+import { createFileRoute, Link, useParams, useNavigate } from "@tanstack/react-router";
+import { ArrowLeft, AlertTriangle, Loader2, Camera, Check, Archive, Trash2 } from "lucide-react";
 import { getFicha, nomeTipo, type Campo } from "@/data/anamnese";
-import { obterFicha, atualizarFicha, type Ficha } from "@/lib/painel";
+import { obterFicha, atualizarFicha, excluirFicha, type Ficha } from "@/lib/painel";
 import { mascaraTelefone, mascaraCpf, formatarDataBR } from "@/lib/mascaras";
 
 export const Route = createFileRoute("/painel/$id")({
@@ -74,6 +74,7 @@ function formatarValorCampo(campo: Campo, val: string): string {
 
 function DetalheFicha() {
   const { id } = useParams({ from: "/painel/$id" });
+  const navigate = useNavigate();
   const [ficha, setFicha] = useState<Ficha | null>(null);
   const [erro, setErro] = useState<string | null>(null);
   const [naoEncontrada, setNaoEncontrada] = useState(false);
@@ -82,6 +83,8 @@ function DetalheFicha() {
   const [relatorio, setRelatorio] = useState("");
   const [salvando, setSalvando] = useState(false);
   const [salvo, setSalvo] = useState(false);
+  const [confirmandoExclusao, setConfirmandoExclusao] = useState(false);
+  const [excluindo, setExcluindo] = useState(false);
 
   useEffect(() => {
     obterFicha(id)
@@ -120,6 +123,19 @@ function DetalheFicha() {
       setFicha({ ...ficha, arquivada: novo });
     } catch (e) {
       setErro(e instanceof Error ? e.message : "Erro ao arquivar.");
+    }
+  };
+
+  const excluir = async () => {
+    setExcluindo(true);
+    setErro(null);
+    try {
+      await excluirFicha(id);
+      navigate({ to: "/painel" });
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : "Erro ao excluir.");
+      setExcluindo(false);
+      setConfirmandoExclusao(false);
     }
   };
 
@@ -183,15 +199,52 @@ function DetalheFicha() {
             {formatarData(ficha.created_at)}
           </p>
         </div>
-        <button
-          type="button"
-          onClick={arquivar}
-          className="inline-flex items-center gap-1.5 rounded-full border border-border px-4 py-2 text-sm font-medium text-foreground/70 hover:border-primary/40 transition-colors"
-        >
-          <Archive className="h-4 w-4" />
-          {ficha.arquivada ? "Desarquivar" : "Arquivar"}
-        </button>
+        <div className="flex items-center gap-2 shrink-0">
+          <button
+            type="button"
+            onClick={arquivar}
+            className="inline-flex items-center gap-1.5 rounded-full border border-border px-4 py-2 text-sm font-medium text-foreground/70 hover:border-primary/40 transition-colors"
+          >
+            <Archive className="h-4 w-4" />
+            {ficha.arquivada ? "Desarquivar" : "Arquivar"}
+          </button>
+          <button
+            type="button"
+            onClick={() => setConfirmandoExclusao(true)}
+            className="inline-flex items-center gap-1.5 rounded-full border border-destructive/40 px-4 py-2 text-sm font-medium text-destructive hover:bg-destructive/10 transition-colors"
+          >
+            <Trash2 className="h-4 w-4" />
+            Excluir
+          </button>
+        </div>
       </div>
+
+      {confirmandoExclusao && (
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 rounded-xl border border-destructive/40 bg-destructive/10 px-4 py-3.5 mb-6">
+          <p className="text-sm text-destructive flex-1">
+            Excluir a ficha de <strong>{ficha.nome}</strong>? Essa ação não pode ser desfeita.
+          </p>
+          <div className="flex gap-2 shrink-0">
+            <button
+              type="button"
+              onClick={() => setConfirmandoExclusao(false)}
+              disabled={excluindo}
+              className="rounded-full border border-border bg-card px-4 py-2 text-sm font-medium text-foreground/70 hover:border-primary/40 transition-colors disabled:opacity-40"
+            >
+              Cancelar
+            </button>
+            <button
+              type="button"
+              onClick={excluir}
+              disabled={excluindo}
+              className="inline-flex items-center gap-1.5 rounded-full bg-destructive px-4 py-2 text-sm font-medium text-destructive-foreground hover:bg-destructive/90 transition-colors disabled:opacity-40"
+            >
+              {excluindo ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+              Excluir definitivamente
+            </button>
+          </div>
+        </div>
+      )}
 
       {ficha.alertas.length > 0 && (
         <div className="flex gap-3 rounded-xl border border-rose/40 bg-rose/10 px-4 py-3.5 text-sm text-rose mb-6">
