@@ -58,6 +58,18 @@ export type Etapa = {
 
 export type Tipo = "corporal" | "facial" | "laser";
 
+// Campos da avaliação clínica preenchida pela Marina no painel (não pela
+// paciente). Guardados junto das medidas — seleção como texto, múltipla como
+// texto separado por ", ".
+export type CampoAvaliacao =
+  | { tipo: "selecao"; id: string; label: string; opcoes: string[] }
+  | { tipo: "multi"; id: string; label: string; opcoes: string[] };
+
+export type GrupoAvaliacao = {
+  titulo: string;
+  campos: CampoAvaliacao[];
+};
+
 export type DefinicaoFicha = {
   tipo: Tipo;
   nome: string; // ex.: "Anamnese Corporal"
@@ -65,6 +77,8 @@ export type DefinicaoFicha = {
   etapas: Etapa[];
   // Medidas preenchidas pela Marina no painel (vazio = ficha sem medidas)
   camposMedidas: { id: string; label: string }[];
+  // Avaliação clínica preenchida pela Marina no painel (ex.: avaliação da pele)
+  avaliacao?: GrupoAvaliacao[];
   // true enquanto as perguntas ainda não foram transcritas do papel
   emConstrucao?: boolean;
 };
@@ -316,6 +330,65 @@ const FACIAL: DefinicaoFicha = {
   nome: "Anamnese Facial",
   emoji: "✨",
   camposMedidas: [],
+  avaliacao: [
+    {
+      titulo: "Avaliação da pele",
+      campos: [
+        { tipo: "selecao", id: "fototipo", label: "Fototipo", opcoes: ["1", "2", "3", "4", "5", "6"] },
+        { tipo: "selecao", id: "grauAcne", label: "Grau de acne", opcoes: ["I", "II", "III", "IV"] },
+        {
+          tipo: "selecao",
+          id: "espessura",
+          label: "Espessura",
+          opcoes: ["Espessa", "Fina", "Muito fina"],
+        },
+        { tipo: "selecao", id: "hidratacao", label: "Hidratação", opcoes: ["Desidratada", "Normal"] },
+        {
+          tipo: "selecao",
+          id: "oleosidade",
+          label: "Oleosidade",
+          opcoes: ["Normal", "Lipídica", "Alípica", "Seborréica"],
+        },
+        {
+          tipo: "multi",
+          id: "achados",
+          label: "Achados",
+          opcoes: [
+            "Acromia",
+            "Efélides",
+            "Cloasma",
+            "Hipocromia",
+            "Hipercromia",
+            "Hematoma",
+            "Nódulos",
+            "Pápulas",
+            "Comedão",
+            "Milium",
+            "Teleangectasias",
+            "Nevo melanocítico",
+            "Nevo vascular",
+            "Descamação",
+            "Escoriação",
+            "Bolha",
+            "Pústulas",
+            "Atrofia",
+            "Cicatriz",
+            "Quelóide",
+            "Hirsutismo",
+            "Hiperqueratose",
+            "Hipertricose",
+            "Papiloma",
+            "Xantelasma",
+            "Rugas",
+            "Eczemas",
+            "Psoríase",
+            "Ptose",
+            "Foliculite",
+          ],
+        },
+      ],
+    },
+  ],
   etapas: [
     ETAPA_DADOS,
     {

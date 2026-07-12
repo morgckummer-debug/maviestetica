@@ -107,6 +107,16 @@ function DetalheFicha() {
   const def = getFicha(ficha.tipo);
   const etapas = def?.etapas ?? [];
   const camposMedidas = def?.camposMedidas ?? [];
+  const avaliacao = def?.avaliacao ?? [];
+
+  const setMedida = (id: string, v: string) => setMedidas((prev) => ({ ...prev, [id]: v }));
+  const toggleAchado = (id: string, op: string) => {
+    const atual = String(medidas[id] ?? "")
+      .split(", ")
+      .filter(Boolean);
+    const novo = atual.includes(op) ? atual.filter((x) => x !== op) : [...atual, op];
+    setMedida(id, novo.join(", "));
+  };
 
   return (
     <div>
@@ -211,6 +221,53 @@ function DetalheFicha() {
           );
         })}
       </div>
+
+      {/* Avaliação clínica (preenchida pela Marina) */}
+      {avaliacao.map((grupo) => (
+        <div key={grupo.titulo} className="rounded-2xl border border-border bg-card p-5 sm:p-6 mb-6">
+          <h3 className="font-display text-2xl text-primary mb-1">{grupo.titulo}</h3>
+          <p className="text-sm text-muted-foreground mb-5">Preenchido no atendimento.</p>
+          <div className="space-y-5">
+            {grupo.campos.map((c) => {
+              const selecionados =
+                c.tipo === "multi"
+                  ? String(medidas[c.id] ?? "")
+                      .split(", ")
+                      .filter(Boolean)
+                  : [];
+              return (
+                <div key={c.id}>
+                  <label className="block text-sm font-medium mb-2">{c.label}</label>
+                  <div className="flex flex-wrap gap-2">
+                    {c.opcoes.map((op) => {
+                      const sel = c.tipo === "multi" ? selecionados.includes(op) : medidas[c.id] === op;
+                      return (
+                        <button
+                          key={op}
+                          type="button"
+                          onClick={() =>
+                            c.tipo === "multi"
+                              ? toggleAchado(c.id, op)
+                              : setMedida(c.id, medidas[c.id] === op ? "" : op)
+                          }
+                          className={[
+                            "rounded-full border px-3.5 py-1.5 text-sm transition-colors",
+                            sel
+                              ? "bg-lavender-soft border-lavender text-primary font-medium"
+                              : "bg-card border-border text-foreground/70 hover:border-primary/40",
+                          ].join(" ")}
+                        >
+                          {op}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      ))}
 
       {/* Medidas + relatório (preenchidos pela Marina) */}
       <div className="rounded-2xl border border-border bg-card p-5 sm:p-6">
