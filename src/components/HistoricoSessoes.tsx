@@ -1,14 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import {
-  Check,
-  CheckCircle2,
-  Clock,
-  Copy,
-  Loader2,
-  MessageCircle,
-  Plus,
-  Trash2,
-} from "lucide-react";
+import { Check, Copy, Loader2, MessageCircle, Plus, Trash2 } from "lucide-react";
 import {
   FICHAS,
   OPCOES_SESSAO,
@@ -52,26 +43,74 @@ function confirmadaEm(iso: string): string {
   }
 }
 
-// Conta, em ordem cronológica, quantas vezes cada item (área/procedimento)
-// já apareceu — para o acompanhamento de protocolo (ex.: "Axilas — 5ª sessão").
-// Contado por ficha, pois cada ficha é um procedimento diferente da cliente.
-function calcularOrdinais(sessoes: SessaoAtendimento[]): Map<string, Map<string, number>> {
-  const contagem = new Map<string, number>(); // chave: "fichaId::item"
-  const porSessao = new Map<string, Map<string, number>>(); // sessaoId -> item -> nº
+// Uma linha do histórico compacto: uma sessão dentro do grupo de um item
+// (ex.: a 2ª linha do grupo "Axilas").
+type LinhaSessao = {
+  sessaoId: string;
+  data: string;
+  ordinal: number;
+  confirmado: boolean;
+  confirmado_em: string | null;
+  token: string;
+};
+
+// Um grupo = um item (área/procedimento) de uma ficha, com suas sessões em
+// ordem cronológica. Ex.: "Axilas" agrupa todas as sessões de axila, cada
+// uma numerada (1ª, 2ª, 3ª...) — o "pacote" de sessões daquele item.
+type GrupoItem = {
+  chave: string;
+  fichaId: string;
+  tipo: Tipo;
+  item: string;
+  linhas: LinhaSessao[];
+  maisRecente: string;
+};
+
+// Agrupa as sessões por item (não por data), para o histórico compacto:
+// cada item vira uma lista curta de linhas coloridas por confirmação.
+// Sessões sem nenhum item (só observação) caem à parte, em "Outras sessões".
+function agruparPorItem(
+  sessoes: SessaoAtendimento[],
+  tipoPorFicha: Map<string, Tipo>,
+): { grupos: GrupoItem[]; semItem: SessaoAtendimento[] } {
+  const porChave = new Map<string, GrupoItem>();
+  const semItem: SessaoAtendimento[] = [];
   const ordenadas = [...sessoes].sort((a, b) =>
     `${a.data}T${a.created_at}`.localeCompare(`${b.data}T${b.created_at}`),
   );
   for (const s of ordenadas) {
-    const porItem = new Map<string, number>();
+    if (s.areas.length === 0) {
+      semItem.push(s);
+      continue;
+    }
     for (const item of s.areas) {
       const chave = `${s.ficha_id}::${item}`;
-      const n = (contagem.get(chave) ?? 0) + 1;
-      contagem.set(chave, n);
-      porItem.set(item, n);
+      let g = porChave.get(chave);
+      if (!g) {
+        g = {
+          chave,
+          fichaId: s.ficha_id,
+          tipo: tipoPorFicha.get(s.ficha_id) ?? "laser",
+          item,
+          linhas: [],
+          maisRecente: s.data,
+        };
+        porChave.set(chave, g);
+      }
+      g.linhas.push({
+        sessaoId: s.id,
+        data: s.data,
+        ordinal: g.linhas.length + 1,
+        confirmado: s.confirmado,
+        confirmado_em: s.confirmado_em,
+        token: s.token,
+      });
+      if (s.data > g.maisRecente) g.maisRecente = s.data;
     }
-    porSessao.set(s.id, porItem);
   }
-  return porSessao;
+  const grupos = [...porChave.values()].sort((a, b) => b.maisRecente.localeCompare(a.maisRecente));
+  semItem.sort((a, b) => b.data.localeCompare(a.data));
+  return { grupos, semItem };
 }
 
 // Histórico de sessões: o "caderninho" digital da cliente. A Marina registra
@@ -144,39 +183,47 @@ export function HistoricoSessoes({
     }
   };
 
-  const remover = async (s: SessaoAtendimento) => {
-    if (!window.confirm(`Excluir a sessão de ${dataBR(s.data)}?`)) return;
+  const remover = async (sessaoId: string) => {
+    const s = (sessoes ?? []).find((x) => x.id === sessaoId);
+    if (!s) return;
+    const detalhe = s.areas.length > 0 ? ` (${s.areas.join(", ")})` : "";
+    if (!window.confirm(`Excluir a sessão de ${dataBR(s.data)}${detalhe}?`)) return;
     try {
-      await excluirSessao(s.id);
-      setSessoes((prev) => (prev ?? []).filter((x) => x.id !== s.id));
+      await excluirSessao(sessaoId);
+      setSessoes((prev) => (prev ?? []).filter((x) => x.id !== sessaoId));
     } catch (e) {
       setErro(e instanceof Error ? e.message : "Erro ao excluir sessão.");
     }
   };
 
-  const linkDe = (s: SessaoAtendimento) => `${origin}/confirmar/${s.token}`;
+  const linkDe = (token: string) => `${origin}/confirmar/${token}`;
 
-  const copiar = async (s: SessaoAtendimento) => {
+  const copiar = async (sessaoId: string, token: string) => {
     try {
-      await navigator.clipboard.writeText(linkDe(s));
-      setCopiadoId(s.id);
-      setTimeout(() => setCopiadoId((c) => (c === s.id ? null : c)), 2000);
+      await navigator.clipboard.writeText(linkDe(token));
+      setCopiadoId(sessaoId);
+      setTimeout(() => setCopiadoId((c) => (c === sessaoId ? null : c)), 2000);
     } catch {
       /* ignore */
     }
   };
 
-  const whatsappDe = (s: SessaoAtendimento) => {
+  const whatsappDe = (token: string, data: string) => {
     const primeiro = nomeCliente.trim().split(" ")[0] || "";
-    const msg = `Oi ${primeiro}! Confirme seu atendimento na MAVI do dia ${dataBR(s.data)}, é rapidinho: ${linkDe(s)}`;
+    const msg = `Oi ${primeiro}! Confirme seu atendimento na MAVI do dia ${dataBR(data)}, é rapidinho: ${linkDe(token)}`;
     return `https://wa.me/?text=${encodeURIComponent(msg)}`;
   };
 
   const podeSalvar = fichaId && (itens.length > 0 || observacao.trim());
 
-  // Nº de sessões já registradas de cada item, para mostrar nos botões do
-  // formulário ("Axilas · seria a 5ª sessão") e no histórico já salvo.
-  const ordinaisPorSessao = useMemo(() => calcularOrdinais(sessoes ?? []), [sessoes]);
+  // Agrupado por item (área/procedimento), para o histórico compacto.
+  const { grupos, semItem } = useMemo(
+    () => agruparPorItem(sessoes ?? [], tipoPorFicha),
+    [sessoes, tipoPorFicha],
+  );
+
+  // Nº de sessões já registradas de cada item do procedimento escolhido no
+  // formulário, para mostrar "Axilas · seria a 5ª sessão" antes de salvar.
   const contagemDoProcedimento = useMemo(() => {
     const m = new Map<string, number>();
     (sessoes ?? [])
@@ -328,100 +375,138 @@ export function HistoricoSessoes({
         <p className="text-sm text-muted-foreground py-2">Nenhuma sessão registrada ainda.</p>
       )}
 
-      <div className="space-y-3">
-        {(sessoes ?? []).map((s) => {
-          const tipo = tipoPorFicha.get(s.ficha_id);
-          const ordinaisDaSessao = ordinaisPorSessao.get(s.id);
-          return (
-            <div key={s.id} className="rounded-xl border border-border bg-background p-4">
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <p className="font-medium text-foreground">{dataBR(s.data)}</p>
-                    {multi && tipo && (
-                      <span className="text-xs rounded-full bg-lavender-soft px-2 py-0.5 text-primary">
-                        {FICHAS[tipo]?.emoji ?? ""} {nomeCurto(tipo)}
-                      </span>
-                    )}
-                  </div>
-                  {s.areas.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5 mt-2">
-                      {s.areas.map((a) => (
-                        <span
-                          key={a}
-                          className="rounded-full bg-secondary/60 px-2.5 py-0.5 text-xs text-foreground/70"
-                        >
-                          {a}
-                          {ordinaisDaSessao?.has(a) && (
-                            <span className="text-foreground/50"> · {ordinaisDaSessao.get(a)}ª sessão</span>
-                          )}
-                        </span>
-                      ))}
-                    </div>
+      <div>
+        {grupos.map((g) => (
+          <div key={g.chave} className="mb-5 last:mb-0">
+            <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+              <h4 className="text-sm font-medium text-foreground">{g.item}</h4>
+              {multi && (
+                <span className="text-xs text-muted-foreground">
+                  {FICHAS[g.tipo]?.emoji ?? ""} {nomeCurto(g.tipo)}
+                </span>
+              )}
+              <span className="text-xs text-muted-foreground">
+                · {g.linhas.length} sessõe{g.linhas.length === 1 ? "" : "s"} registrada
+                {g.linhas.length === 1 ? "" : "s"}
+              </span>
+            </div>
+            <ul className="space-y-1">
+              {g.linhas.map((l) => (
+                <li key={l.sessaoId + g.item} className="flex items-center gap-2 text-sm">
+                  {l.confirmado && (
+                    <Check className="h-3.5 w-3.5 shrink-0 text-emerald-600 dark:text-emerald-500" />
                   )}
-                  {s.observacao && (
-                    <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
-                      {s.observacao}
-                    </p>
-                  )}
-                </div>
-                <button
-                  type="button"
-                  onClick={() => remover(s)}
-                  title="Excluir sessão"
-                  className="shrink-0 text-muted-foreground/60 hover:text-destructive transition-colors"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </button>
-              </div>
-
-              {/* Status de confirmação */}
-              <div className="mt-3 pt-3 border-t border-border/60">
-                {s.confirmado ? (
-                  <span className="inline-flex items-center gap-1.5 text-sm text-primary font-medium">
-                    <CheckCircle2 className="h-4 w-4" />
-                    Confirmado pela cliente
-                    {s.confirmado_em && (
-                      <span className="text-muted-foreground font-normal">
-                        · {confirmadaEm(s.confirmado_em)}
-                      </span>
-                    )}
+                  <span
+                    title={
+                      l.confirmado_em ? `Confirmado em ${confirmadaEm(l.confirmado_em)}` : undefined
+                    }
+                    className={
+                      l.confirmado
+                        ? "text-emerald-700 dark:text-emerald-400"
+                        : "text-amber-600 dark:text-amber-500"
+                    }
+                  >
+                    {dataBR(l.data)}: {l.ordinal}ª sessão (
+                    {l.confirmado ? "confirmado pelo cliente" : "aguardando confirmação"})
                   </span>
-                ) : (
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-                    <span className="inline-flex items-center gap-1.5 text-sm text-muted-foreground">
-                      <Clock className="h-4 w-4" />
-                      Aguardando confirmação
-                    </span>
-                    <div className="flex gap-2 sm:ml-auto">
+                  {!l.confirmado && (
+                    <span className="flex items-center gap-1.5 ml-auto shrink-0">
                       <button
                         type="button"
-                        onClick={() => copiar(s)}
-                        className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3.5 py-1.5 text-xs font-medium text-foreground/80 hover:border-primary/40 transition-colors"
+                        onClick={() => copiar(l.sessaoId, l.token)}
+                        title="Copiar link"
+                        className="text-muted-foreground/60 hover:text-primary transition-colors"
+                      >
+                        {copiadoId === l.sessaoId ? (
+                          <Check className="h-3.5 w-3.5" />
+                        ) : (
+                          <Copy className="h-3.5 w-3.5" />
+                        )}
+                      </button>
+                      <a
+                        href={whatsappDe(l.token, l.data)}
+                        target="_blank"
+                        rel="noreferrer"
+                        title="Enviar por WhatsApp"
+                        className="text-muted-foreground/60 hover:text-primary transition-colors"
+                      >
+                        <MessageCircle className="h-3.5 w-3.5" />
+                      </a>
+                    </span>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => remover(l.sessaoId)}
+                    title="Excluir sessão"
+                    className={`shrink-0 text-muted-foreground/40 hover:text-destructive transition-colors ${l.confirmado ? "ml-auto" : ""}`}
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+
+        {semItem.length > 0 && (
+          <div className="mb-5 last:mb-0">
+            <h4 className="text-sm font-medium text-foreground mb-1.5">Outras sessões</h4>
+            <ul className="space-y-1">
+              {semItem.map((s) => (
+                <li key={s.id} className="flex items-center gap-2 text-sm">
+                  {s.confirmado && (
+                    <Check className="h-3.5 w-3.5 shrink-0 text-emerald-600 dark:text-emerald-500" />
+                  )}
+                  <span
+                    title={s.confirmado_em ? `Confirmado em ${confirmadaEm(s.confirmado_em)}` : undefined}
+                    className={
+                      s.confirmado
+                        ? "text-emerald-700 dark:text-emerald-400"
+                        : "text-amber-600 dark:text-amber-500"
+                    }
+                  >
+                    {dataBR(s.data)}
+                    {s.observacao ? `: ${s.observacao}` : ""} (
+                    {s.confirmado ? "confirmado pelo cliente" : "aguardando confirmação"})
+                  </span>
+                  {!s.confirmado && (
+                    <span className="flex items-center gap-1.5 ml-auto shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => copiar(s.id, s.token)}
+                        title="Copiar link"
+                        className="text-muted-foreground/60 hover:text-primary transition-colors"
                       >
                         {copiadoId === s.id ? (
                           <Check className="h-3.5 w-3.5" />
                         ) : (
                           <Copy className="h-3.5 w-3.5" />
                         )}
-                        {copiadoId === s.id ? "Copiado" : "Copiar link"}
                       </button>
                       <a
-                        href={whatsappDe(s)}
+                        href={whatsappDe(s.token, s.data)}
                         target="_blank"
                         rel="noreferrer"
-                        className="inline-flex items-center gap-1.5 rounded-full bg-primary text-primary-foreground px-3.5 py-1.5 text-xs font-medium hover:bg-primary/90 transition-colors"
+                        title="Enviar por WhatsApp"
+                        className="text-muted-foreground/60 hover:text-primary transition-colors"
                       >
                         <MessageCircle className="h-3.5 w-3.5" />
-                        WhatsApp
                       </a>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          );
-        })}
+                    </span>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => remover(s.id)}
+                    title="Excluir sessão"
+                    className={`shrink-0 text-muted-foreground/40 hover:text-destructive transition-colors ${s.confirmado ? "ml-auto" : ""}`}
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </div>
     </div>
   );
