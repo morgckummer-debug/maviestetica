@@ -169,6 +169,69 @@ export async function atualizarFicha(
   if (!res.ok) throw new Error("Não foi possível salvar as alterações.");
 }
 
+// ------------------------------------------------------------
+// Sessões de atendimento (o "caderninho" digital de cada ficha).
+// A Marina registra data + áreas + observação; a cliente confirma
+// pelo link. Ver migração 0005_sessoes.sql.
+// ------------------------------------------------------------
+
+export type SessaoAtendimento = {
+  id: string;
+  ficha_id: string;
+  created_at: string;
+  data: string; // "YYYY-MM-DD"
+  areas: string[];
+  observacao: string | null;
+  token: string;
+  confirmado: boolean;
+  confirmado_em: string | null;
+};
+
+export async function listarSessoes(fichaId: string): Promise<SessaoAtendimento[]> {
+  const res = await apiRest(
+    `sessoes?ficha_id=eq.${encodeURIComponent(fichaId)}&select=*&order=data.desc,created_at.desc`,
+  );
+  if (!res.ok) throw new Error("Não foi possível carregar as sessões.");
+  return (await res.json()) as SessaoAtendimento[];
+}
+
+export async function criarSessao(
+  fichaId: string,
+  dados: { data: string; areas: string[]; observacao: string },
+): Promise<SessaoAtendimento> {
+  const res = await apiRest("sessoes", {
+    method: "POST",
+    headers: { Prefer: "return=representation" },
+    body: JSON.stringify({
+      ficha_id: fichaId,
+      data: dados.data,
+      areas: dados.areas,
+      observacao: dados.observacao.trim() || null,
+    }),
+  });
+  if (!res.ok) {
+    const detalhe = await res.text().catch(() => "");
+    if (/relation .*sessoes.* does not exist|does not exist/i.test(detalhe)) {
+      throw new Error("Rode a migração 0005_sessoes.sql no Supabase (SQL Editor) para ativar as sessões.");
+    }
+    throw new Error("Não foi possível registrar a sessão.");
+  }
+  const arr = (await res.json()) as SessaoAtendimento[];
+  return arr[0];
+}
+
+export async function excluirSessao(id: string): Promise<void> {
+  const res = await apiRest(`sessoes?id=eq.${encodeURIComponent(id)}`, {
+    method: "DELETE",
+    headers: { Prefer: "return=representation" },
+  });
+  if (!res.ok) throw new Error("Não foi possível excluir a sessão.");
+  const apagadas = (await res.json().catch(() => [])) as unknown[];
+  if (!Array.isArray(apagadas) || apagadas.length === 0) {
+    throw new Error("Exclusão bloqueada pelo banco. Rode a migração 0005_sessoes.sql no Supabase.");
+  }
+}
+
 export async function excluirFicha(id: string): Promise<void> {
   const res = await apiRest(`fichas?id=eq.${encodeURIComponent(id)}`, {
     method: "DELETE",

@@ -808,6 +808,20 @@ export const FICHAS: Record<Tipo, DefinicaoFicha> = {
   laser: LASER,
 };
 
+// Áreas de depilação, reaproveitadas no registro de sessões do painel
+// (mesma lista da ficha a laser, para a Marina marcar o que foi feito).
+export const AREAS_DEPILACAO: string[] = [
+  "Axilas",
+  "Seios e/ou abdômen",
+  "Braço/antebraço",
+  "Virilha",
+  "Coxa e/ou canela",
+  "Glúteos e extras",
+  "Linha alba",
+  "Buço",
+  "Rosto",
+];
+
 export const TIPOS: Tipo[] = ["corporal", "facial", "laser"];
 
 export function ehTipo(v: string): v is Tipo {
