@@ -209,12 +209,19 @@ function ListaFichas() {
       )}
 
       <div className="space-y-3">
-        {filtradas.map((f) => (
+        {filtradas.map((f) => {
+          const masculino = f.respostas?.sexo === "Masculino";
+          return (
           <Link
             key={f.id}
             to="/painel/$id"
             params={{ id: f.id }}
-            className="flex items-center justify-between gap-4 rounded-2xl border border-border bg-card px-5 py-4 hover:border-primary/40 transition-colors"
+            className={[
+              "flex items-center justify-between gap-4 rounded-2xl border bg-card px-5 py-4 transition-colors",
+              masculino
+                ? "border-sky-400/60 hover:border-sky-500"
+                : "border-border hover:border-primary/40",
+            ].join(" ")}
           >
             <div className="min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
@@ -250,7 +257,8 @@ function ListaFichas() {
               )}
             </div>
           </Link>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

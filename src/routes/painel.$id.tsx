@@ -177,6 +177,9 @@ function DetalheFicha() {
   const camposMedidas = def?.camposMedidas ?? [];
   const avaliacao = def?.avaliacao ?? [];
   const imc = calcularImc(medidas.altura, medidas.peso);
+  // Paciente masculino: bordas em azul para a Marina identificar de cara.
+  const masculino = r.sexo === "Masculino";
+  const bordaCard = masculino ? "border-sky-400/50" : "border-border";
 
   const setMedida = (id: string, v: string) => setMedidas((prev) => ({ ...prev, [id]: v }));
   const toggleAchado = (id: string, op: string) => {
@@ -212,7 +215,7 @@ function DetalheFicha() {
           <button
             type="button"
             onClick={arquivar}
-            className="inline-flex items-center gap-1.5 rounded-full border border-border px-4 py-2 text-sm font-medium text-foreground/70 hover:border-primary/40 transition-colors"
+            className={`inline-flex items-center gap-1.5 rounded-full border ${bordaCard} px-4 py-2 text-sm font-medium text-foreground/70 hover:border-primary/40 transition-colors`}
           >
             <Archive className="h-4 w-4" />
             {ficha.arquivada ? "Desarquivar" : "Arquivar"}
@@ -313,7 +316,7 @@ function DetalheFicha() {
           if (linhas.length === 0) return null;
 
           return (
-            <div key={etapa.titulo} className="rounded-2xl border border-border bg-card p-5">
+            <div key={etapa.titulo} className={`rounded-2xl border ${bordaCard} bg-card p-5`}>
               <h3 className="font-medium text-primary mb-3">{etapa.titulo}</h3>
               <dl className="grid md:grid-cols-2 gap-x-8">
                 {linhas.map((l) => (
@@ -338,7 +341,10 @@ function DetalheFicha() {
 
       {/* Avaliação clínica (preenchida pela Marina) */}
       {avaliacao.map((grupo) => (
-        <div key={grupo.titulo} className="rounded-2xl border border-border bg-card p-5 sm:p-6 mb-6">
+        <div
+          key={grupo.titulo}
+          className={`rounded-2xl border ${bordaCard} bg-card p-5 sm:p-6 mb-6`}
+        >
           <h3 className="font-display text-2xl text-primary mb-1">{grupo.titulo}</h3>
           <p className="text-sm text-muted-foreground mb-5">Preenchido no atendimento.</p>
           <div className="space-y-5">
@@ -384,7 +390,7 @@ function DetalheFicha() {
       ))}
 
       {/* Medidas + relatório (preenchidos pela Marina) */}
-      <div className="rounded-2xl border border-border bg-card p-5 sm:p-6">
+      <div className={`rounded-2xl border ${bordaCard} bg-card p-5 sm:p-6`}>
         <h3 className="font-display text-2xl text-primary mb-1">Medidas e avaliação</h3>
         <p className="text-sm text-muted-foreground mb-5">Preenchido no atendimento.</p>
 
