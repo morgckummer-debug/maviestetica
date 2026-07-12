@@ -126,33 +126,44 @@ function ListaFichas() {
   const filtradas = useMemo(() => {
     if (!fichas) return [];
     const q = busca.trim().toLowerCase();
+    const qDigitos = q.replace(/\D/g, ""); // só números (para CPF/telefone)
     return fichas.filter((f) => {
       if (filtroTipo !== "todas" && f.tipo !== filtroTipo) return false;
       if (!q) return true;
-      return f.nome.toLowerCase().includes(q) || (f.telefone ?? "").toLowerCase().includes(q);
+      if (f.nome.toLowerCase().includes(q)) return true;
+      if (qDigitos) {
+        const cpf = String(f.respostas?.cpf ?? "").replace(/\D/g, "");
+        const tel = (f.telefone ?? "").replace(/\D/g, "");
+        if (cpf.includes(qDigitos) || tel.includes(qDigitos)) return true;
+      }
+      return false;
     });
   }, [fichas, busca, filtroTipo]);
 
   return (
     <div>
+      {/* Busca principal — encontrar a cliente por nome ou CPF */}
+      <div className="relative mb-6">
+        <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+        <input
+          value={busca}
+          onChange={(e) => setBusca(e.target.value)}
+          placeholder="Buscar cliente por nome ou CPF"
+          className="w-full rounded-full border border-border bg-background pl-12 pr-4 py-3.5 text-base focus:outline-none focus:ring-2 focus:ring-ring"
+        />
+      </div>
+
       <EnviarFicha />
 
-      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-4">
-        <div>
-          <h2 className="font-display text-3xl text-primary">Fichas dos pacientes</h2>
-          <p className="text-sm text-muted-foreground mt-1">
-            {fichas ? `${fichas.length} ficha(s) registrada(s)` : "Carregando..."}
-          </p>
-        </div>
-        <div className="relative w-full sm:w-72">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <input
-            value={busca}
-            onChange={(e) => setBusca(e.target.value)}
-            placeholder="Buscar por nome ou telefone"
-            className="w-full rounded-full border border-border bg-background pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-          />
-        </div>
+      <div className="mb-4">
+        <h2 className="font-display text-3xl text-primary">Fichas dos pacientes</h2>
+        <p className="text-sm text-muted-foreground mt-1">
+          {fichas
+            ? busca || filtroTipo !== "todas"
+              ? `${filtradas.length} de ${fichas.length} ficha(s)`
+              : `${fichas.length} ficha(s) registrada(s)`
+            : "Carregando..."}
+        </p>
       </div>
 
       <div className="flex flex-wrap gap-2 mb-6">
