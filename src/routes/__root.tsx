@@ -4,6 +4,7 @@ import {
   Link,
   createRootRouteWithContext,
   useRouter,
+  useRouterState,
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
@@ -183,16 +184,19 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  // O painel da Marina não mostra a navbar/rodapé do site público.
+  const semNavbar = pathname.startsWith("/painel");
 
   return (
     <QueryClientProvider client={queryClient}>
       <div className="flex flex-col min-h-screen">
-        <Header />
+        {!semNavbar && <Header />}
         <main className="flex-1">
           {/* Required: nested routes render here. */}
           <Outlet />
         </main>
-        <Footer />
+        {!semNavbar && <Footer />}
       </div>
     </QueryClientProvider>
   );
