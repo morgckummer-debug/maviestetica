@@ -162,7 +162,7 @@ export async function obterFicha(id: string): Promise<Ficha | null> {
 
 export async function atualizarFicha(
   id: string,
-  patch: Partial<Pick<Ficha, "medidas" | "relatorio" | "arquivada" | "pacotes">>,
+  patch: Partial<Pick<Ficha, "medidas" | "relatorio" | "arquivada" | "pacotes" | "respostas" | "telefone">>,
 ): Promise<void> {
   const res = await apiRest(`fichas?id=eq.${encodeURIComponent(id)}`, {
     method: "PATCH",

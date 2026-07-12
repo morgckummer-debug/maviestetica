@@ -317,7 +317,7 @@ export function HistoricoSessoes({
         )}
       </div>
       <p className="text-sm text-muted-foreground mb-5">
-        O caderninho digital: registre o atendimento e envie o link para a cliente confirmar.
+        Registre o atendimento e envie o link para a cliente confirmar.
       </p>
 
       {erro && <p className="text-sm text-destructive mb-4">{erro}</p>}
