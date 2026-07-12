@@ -168,3 +168,11 @@ export async function atualizarFicha(
   });
   if (!res.ok) throw new Error("Não foi possível salvar as alterações.");
 }
+
+export async function excluirFicha(id: string): Promise<void> {
+  const res = await apiRest(`fichas?id=eq.${encodeURIComponent(id)}`, {
+    method: "DELETE",
+    headers: { Prefer: "return=minimal" },
+  });
+  if (!res.ok) throw new Error("Não foi possível excluir a ficha.");
+}
