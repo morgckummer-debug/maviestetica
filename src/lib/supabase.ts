@@ -8,7 +8,11 @@
 // SUPABASE_SERVICE_ROLE_KEY (sem prefixo VITE_), e é usada apenas
 // na função de servidor que grava as fichas.
 
-export const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string | undefined;
+// URL do projeto Supabase da Mavi (não é secreta). Pode ser sobrescrita
+// por VITE_SUPABASE_URL, mas já vem preenchida para facilitar.
+const URL_PADRAO = "https://jjkmgkorqzbroebhksca.supabase.co";
+
+export const SUPABASE_URL = (import.meta.env.VITE_SUPABASE_URL as string | undefined) || URL_PADRAO;
 export const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
 
 export function supabaseConfigurado(): boolean {

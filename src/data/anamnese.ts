@@ -1,8 +1,7 @@
-// Configuração da ficha de anamnese corporal da MAVI.
-// As perguntas ficam aqui — para mudar a ficha, edite só este arquivo.
-// As respostas são salvas no Supabase no campo `respostas` (JSONB),
-// indexadas pelo `id` de cada campo, então mudar perguntas não exige
-// alterar o banco.
+// Configuração das fichas de anamnese da MAVI (3 tipos: corporal, facial, laser).
+// As perguntas ficam aqui — para mudar/criar uma ficha, edite só este arquivo.
+// As respostas são salvas no Supabase no campo `respostas` (JSONB), indexadas
+// pelo `id` de cada campo, então mudar perguntas não exige alterar o banco.
 
 export type CampoTexto = {
   tipo: "texto";
@@ -36,6 +35,19 @@ export type Etapa = {
   campos: Campo[];
 };
 
+export type Tipo = "corporal" | "facial" | "laser";
+
+export type DefinicaoFicha = {
+  tipo: Tipo;
+  nome: string; // ex.: "Anamnese Corporal"
+  emoji: string;
+  etapas: Etapa[];
+  // Medidas preenchidas pela Marina no painel (vazio = ficha sem medidas)
+  camposMedidas: { id: string; label: string }[];
+  // true enquanto as perguntas ainda não foram transcritas do papel
+  emConstrucao?: boolean;
+};
+
 export const TERMO_TEXTO =
   "Declaro que as informações acima são verdadeiras, não cabendo ao profissional " +
   "qualquer responsabilidade por informações omitidas nesta avaliação. Comprometo-me " +
@@ -46,235 +58,284 @@ export const AUTORIZACAO_FOTO_TEXTO =
   "documentação e divulgação em redes sociais ou material publicitário. A autorização é " +
   "concedida gratuitamente, sem nada a ser reclamado a título de direitos.";
 
-export const ETAPAS: Etapa[] = [
-  {
-    titulo: "Seus dados",
-    descricao: "Para a Marina te receber com cuidado e segurança.",
-    campos: [
-      {
-        tipo: "texto",
-        id: "nome",
-        label: "Nome completo",
-        placeholder: "Seu nome",
-        obrigatorio: true,
-      },
-      { tipo: "texto", id: "nascimento", label: "Data de nascimento", inputMode: "date" },
-      {
-        tipo: "texto",
-        id: "whatsapp",
-        label: "WhatsApp",
-        placeholder: "(31) 9....-....",
-        inputMode: "tel",
-        obrigatorio: true,
-      },
-      {
-        tipo: "texto",
-        id: "email",
-        label: "E-mail",
-        placeholder: "voce@email.com",
-        inputMode: "email",
-      },
-      { tipo: "texto", id: "cpf", label: "CPF (opcional)", placeholder: "000.000.000-00" },
-      { tipo: "texto", id: "rg", label: "RG (opcional)", placeholder: "MG-00.000.000" },
-      {
-        tipo: "texto",
-        id: "endereco",
-        label: "Endereço (opcional)",
-        placeholder: "Rua, número, complemento",
-      },
-      { tipo: "texto", id: "cep", label: "CEP (opcional)", placeholder: "35700-000" },
-      { tipo: "texto", id: "cidade", label: "Cidade (opcional)", placeholder: "Sete Lagoas" },
-      {
-        tipo: "texto",
-        id: "comoConheceu",
-        label: "Como nos conheceu? (opcional)",
-        placeholder: "Instagram, indicação...",
-      },
-    ],
-  },
-  {
-    titulo: "Rotina e hábitos",
-    campos: [
-      {
-        tipo: "simnao",
-        id: "cuidadosPele",
-        label: "Faz cuidados diários com a pele?",
-        especifique: true,
-        especifiquePlaceholder: "Quais produtos/rotina?",
-      },
-      {
-        tipo: "texto",
-        id: "aguaFrequencia",
-        label: "Com que frequência bebe água?",
-        placeholder: "Pouco, médio, bastante...",
-      },
-      { tipo: "simnao", id: "alimentacaoBalanceada", label: "Tem alimentação balanceada?" },
-      {
-        tipo: "simnao",
-        id: "bebidaAlcoolica",
-        label: "Ingere bebida alcoólica?",
-        especifique: true,
-        especifiquePlaceholder: "Com que frequência?",
-      },
-      {
-        tipo: "simnao",
-        id: "atividadeFisica",
-        label: "Pratica atividade física?",
-        especifique: true,
-        especifiquePlaceholder: "Qual e com que frequência?",
-      },
-      { tipo: "simnao", id: "muitoTempoSentado", label: "Fica muito tempo sentado(a)?" },
-      { tipo: "simnao", id: "intestinoRegular", label: "Funcionamento intestinal é regular?" },
-    ],
-  },
-  {
-    titulo: "Sua saúde",
-    campos: [
-      {
-        tipo: "simnao",
-        id: "problemasPele",
-        label: "Tem problemas de pele?",
-        especifique: true,
-        especifiquePlaceholder: "Acne, melasma, dermatite...",
-      },
-      {
-        tipo: "simnao",
-        id: "medicamentoDiario",
-        label: "Usa medicamento de uso diário?",
-        especifique: true,
-        especifiquePlaceholder: "Quais?",
-      },
-      {
-        tipo: "simnao",
-        id: "emTratamentoMedico",
-        label: "Está em tratamento médico?",
-        especifique: true,
-        especifiquePlaceholder: "Qual?",
-      },
-      {
-        tipo: "simnao",
-        id: "possuiAlergia",
-        label: "Possui alguma alergia?",
-        especifique: true,
-        especifiquePlaceholder: "A quê? (produtos, látex, medicamentos...)",
-      },
-      {
-        tipo: "simnao",
-        id: "antecedentesOncologicos",
-        label: "Tem antecedentes oncológicos?",
-        especifique: true,
-        especifiquePlaceholder: "Qual e quando?",
-        alertaSeSim: "Antecedentes oncológicos — avaliar contraindicações antes do procedimento.",
-      },
-      {
-        tipo: "simnao",
-        id: "antecedentesCirurgicos",
-        label: "Tem antecedentes cirúrgicos?",
-        especifique: true,
-        especifiquePlaceholder: "Qual(is) cirurgia(s)?",
-      },
-      {
-        tipo: "simnao",
-        id: "cirurgiaRecente",
-        label: "Fez cirurgia recente?",
-        especifique: true,
-        especifiquePlaceholder: "Qual e quando?",
-        alertaSeSim: "Cirurgia recente — confirmar liberação médica e tempo de recuperação.",
-      },
-      {
-        tipo: "simnao",
-        id: "problemasOrtopedicos",
-        label: "Tem problemas ortopédicos?",
-        especifique: true,
-        especifiquePlaceholder: "Quais? (hérnia, lordose, escoliose...)",
-      },
-      {
-        tipo: "simnao",
-        id: "protesesMetalicas",
-        label: "Possui próteses metálicas ou metal implantado?",
-        alertaSeSim: "Prótese/metal implantado — contraindicação possível para radiofrequência.",
-      },
-    ],
-  },
-  {
-    titulo: "Condições de saúde",
-    descricao: "Só marcar Sim ou Não.",
-    layout: "grid",
-    campos: [
-      { tipo: "simnao", id: "cicloMenstrualRegular", label: "Ciclo menstrual regular?" },
-      { tipo: "simnao", id: "estaMenstruada", label: "Está menstruada?" },
-      {
-        tipo: "simnao",
-        id: "estaGravida",
-        label: "Está grávida?",
-        alertaSeSim: "Gestante — confirmar contraindicação do procedimento.",
-      },
-      { tipo: "simnao", id: "disturbioHormonal", label: "Distúrbio hormonal?" },
-      { tipo: "simnao", id: "fumante", label: "Fumante?" },
-      {
-        tipo: "simnao",
-        id: "diabetes",
-        label: "Diabetes?",
-        alertaSeSim: "Diabetes — atenção redobrada em procedimentos com extração/lesão de pele.",
-      },
-      { tipo: "simnao", id: "disturbioRenal", label: "Distúrbio renal?" },
-      {
-        tipo: "simnao",
-        id: "hiperHipotensao",
-        label: "Hiper / hipotensão?",
-        alertaSeSim: "Hiper/hipotensão — monitorar durante o atendimento.",
-      },
-      {
-        tipo: "simnao",
-        id: "problemasCardiacos",
-        label: "Problemas cardíacos?",
-        alertaSeSim: "Problemas cardíacos — avaliar segurança antes de procedimentos.",
-      },
-      {
-        tipo: "simnao",
-        id: "disturbioCirculatorio",
-        label: "Distúrbio circulatório?",
-        alertaSeSim: "Distúrbio circulatório — atenção em drenagem e procedimentos corporais.",
-      },
-      {
-        tipo: "simnao",
-        id: "varizesLesoes",
-        label: "Varizes ou lesões?",
-        alertaSeSim: "Varizes/lesões — evitar manipulação direta na área afetada.",
-      },
-      {
-        tipo: "simnao",
-        id: "epilepsiaConvulsoes",
-        label: "Epilepsia ou convulsões?",
-        alertaSeSim: "Epilepsia/convulsões — contraindicação possível para eletroterapia.",
-      },
-    ],
-  },
-];
+// Etapa de dados pessoais — comum às 3 fichas.
+const ETAPA_DADOS: Etapa = {
+  titulo: "Seus dados",
+  descricao: "Para a Marina te receber com cuidado e segurança.",
+  campos: [
+    {
+      tipo: "texto",
+      id: "nome",
+      label: "Nome completo",
+      placeholder: "Seu nome",
+      obrigatorio: true,
+    },
+    { tipo: "texto", id: "nascimento", label: "Data de nascimento", inputMode: "date" },
+    {
+      tipo: "texto",
+      id: "whatsapp",
+      label: "WhatsApp",
+      placeholder: "(31) 9....-....",
+      inputMode: "tel",
+      obrigatorio: true,
+    },
+    {
+      tipo: "texto",
+      id: "email",
+      label: "E-mail",
+      placeholder: "voce@email.com",
+      inputMode: "email",
+    },
+    { tipo: "texto", id: "cpf", label: "CPF (opcional)", placeholder: "000.000.000-00" },
+    { tipo: "texto", id: "rg", label: "RG (opcional)", placeholder: "MG-00.000.000" },
+    {
+      tipo: "texto",
+      id: "endereco",
+      label: "Endereço (opcional)",
+      placeholder: "Rua, número, complemento",
+    },
+    { tipo: "texto", id: "cep", label: "CEP (opcional)", placeholder: "35700-000" },
+    { tipo: "texto", id: "cidade", label: "Cidade (opcional)", placeholder: "Sete Lagoas" },
+    {
+      tipo: "texto",
+      id: "comoConheceu",
+      label: "Como nos conheceu? (opcional)",
+      placeholder: "Instagram, indicação...",
+    },
+  ],
+};
 
-// Campos que a Marina preenche no painel (medidas corporais)
-export const CAMPOS_MEDIDAS: { id: string; label: string }[] = [
-  { id: "altura", label: "Altura (m)" },
-  { id: "peso", label: "Peso (kg)" },
-  { id: "busto", label: "Busto" },
-  { id: "bracoDir", label: "Braço Dir." },
-  { id: "bracoEsq", label: "Braço Esq." },
-  { id: "abdomen", label: "Abdômen" },
-  { id: "cintura", label: "Cintura" },
-  { id: "quadril", label: "Quadril" },
-  { id: "culote", label: "Culote" },
-  { id: "coxaDir", label: "Coxa Dir." },
-  { id: "coxaEsq", label: "Coxa Esq." },
-  { id: "panturrilhaDir", label: "Panturrilha Dir." },
-  { id: "panturrilhaEsq", label: "Panturrilha Esq." },
-];
+// ---------- CORPORAL (transcrita do papel da Mavi) ----------
+const CORPORAL: DefinicaoFicha = {
+  tipo: "corporal",
+  nome: "Anamnese Corporal",
+  emoji: "🌿",
+  camposMedidas: [
+    { id: "altura", label: "Altura (m)" },
+    { id: "peso", label: "Peso (kg)" },
+    { id: "busto", label: "Busto" },
+    { id: "bracoDir", label: "Braço Dir." },
+    { id: "bracoEsq", label: "Braço Esq." },
+    { id: "abdomen", label: "Abdômen" },
+    { id: "cintura", label: "Cintura" },
+    { id: "quadril", label: "Quadril" },
+    { id: "culote", label: "Culote" },
+    { id: "coxaDir", label: "Coxa Dir." },
+    { id: "coxaEsq", label: "Coxa Esq." },
+    { id: "panturrilhaDir", label: "Panturrilha Dir." },
+    { id: "panturrilhaEsq", label: "Panturrilha Esq." },
+  ],
+  etapas: [
+    ETAPA_DADOS,
+    {
+      titulo: "Rotina e hábitos",
+      campos: [
+        {
+          tipo: "simnao",
+          id: "cuidadosPele",
+          label: "Faz cuidados diários com a pele?",
+          especifique: true,
+          especifiquePlaceholder: "Quais produtos/rotina?",
+        },
+        {
+          tipo: "texto",
+          id: "aguaFrequencia",
+          label: "Com que frequência bebe água?",
+          placeholder: "Pouco, médio, bastante...",
+        },
+        { tipo: "simnao", id: "alimentacaoBalanceada", label: "Tem alimentação balanceada?" },
+        {
+          tipo: "simnao",
+          id: "bebidaAlcoolica",
+          label: "Ingere bebida alcoólica?",
+          especifique: true,
+          especifiquePlaceholder: "Com que frequência?",
+        },
+        {
+          tipo: "simnao",
+          id: "atividadeFisica",
+          label: "Pratica atividade física?",
+          especifique: true,
+          especifiquePlaceholder: "Qual e com que frequência?",
+        },
+        { tipo: "simnao", id: "muitoTempoSentado", label: "Fica muito tempo sentado(a)?" },
+        { tipo: "simnao", id: "intestinoRegular", label: "Funcionamento intestinal é regular?" },
+      ],
+    },
+    {
+      titulo: "Sua saúde",
+      campos: [
+        {
+          tipo: "simnao",
+          id: "problemasPele",
+          label: "Tem problemas de pele?",
+          especifique: true,
+          especifiquePlaceholder: "Acne, melasma, dermatite...",
+        },
+        {
+          tipo: "simnao",
+          id: "medicamentoDiario",
+          label: "Usa medicamento de uso diário?",
+          especifique: true,
+          especifiquePlaceholder: "Quais?",
+        },
+        {
+          tipo: "simnao",
+          id: "emTratamentoMedico",
+          label: "Está em tratamento médico?",
+          especifique: true,
+          especifiquePlaceholder: "Qual?",
+        },
+        {
+          tipo: "simnao",
+          id: "possuiAlergia",
+          label: "Possui alguma alergia?",
+          especifique: true,
+          especifiquePlaceholder: "A quê? (produtos, látex, medicamentos...)",
+        },
+        {
+          tipo: "simnao",
+          id: "antecedentesOncologicos",
+          label: "Tem antecedentes oncológicos?",
+          especifique: true,
+          especifiquePlaceholder: "Qual e quando?",
+          alertaSeSim: "Antecedentes oncológicos — avaliar contraindicações antes do procedimento.",
+        },
+        {
+          tipo: "simnao",
+          id: "antecedentesCirurgicos",
+          label: "Tem antecedentes cirúrgicos?",
+          especifique: true,
+          especifiquePlaceholder: "Qual(is) cirurgia(s)?",
+        },
+        {
+          tipo: "simnao",
+          id: "cirurgiaRecente",
+          label: "Fez cirurgia recente?",
+          especifique: true,
+          especifiquePlaceholder: "Qual e quando?",
+          alertaSeSim: "Cirurgia recente — confirmar liberação médica e tempo de recuperação.",
+        },
+        {
+          tipo: "simnao",
+          id: "problemasOrtopedicos",
+          label: "Tem problemas ortopédicos?",
+          especifique: true,
+          especifiquePlaceholder: "Quais? (hérnia, lordose, escoliose...)",
+        },
+        {
+          tipo: "simnao",
+          id: "protesesMetalicas",
+          label: "Possui próteses metálicas ou metal implantado?",
+          alertaSeSim: "Prótese/metal implantado — contraindicação possível para radiofrequência.",
+        },
+      ],
+    },
+    {
+      titulo: "Condições de saúde",
+      descricao: "Só marcar Sim ou Não.",
+      layout: "grid",
+      campos: [
+        { tipo: "simnao", id: "cicloMenstrualRegular", label: "Ciclo menstrual regular?" },
+        { tipo: "simnao", id: "estaMenstruada", label: "Está menstruada?" },
+        {
+          tipo: "simnao",
+          id: "estaGravida",
+          label: "Está grávida?",
+          alertaSeSim: "Gestante — confirmar contraindicação do procedimento.",
+        },
+        { tipo: "simnao", id: "disturbioHormonal", label: "Distúrbio hormonal?" },
+        { tipo: "simnao", id: "fumante", label: "Fumante?" },
+        {
+          tipo: "simnao",
+          id: "diabetes",
+          label: "Diabetes?",
+          alertaSeSim: "Diabetes — atenção redobrada em procedimentos com extração/lesão de pele.",
+        },
+        { tipo: "simnao", id: "disturbioRenal", label: "Distúrbio renal?" },
+        {
+          tipo: "simnao",
+          id: "hiperHipotensao",
+          label: "Hiper / hipotensão?",
+          alertaSeSim: "Hiper/hipotensão — monitorar durante o atendimento.",
+        },
+        {
+          tipo: "simnao",
+          id: "problemasCardiacos",
+          label: "Problemas cardíacos?",
+          alertaSeSim: "Problemas cardíacos — avaliar segurança antes de procedimentos.",
+        },
+        {
+          tipo: "simnao",
+          id: "disturbioCirculatorio",
+          label: "Distúrbio circulatório?",
+          alertaSeSim: "Distúrbio circulatório — atenção em drenagem e procedimentos corporais.",
+        },
+        {
+          tipo: "simnao",
+          id: "varizesLesoes",
+          label: "Varizes ou lesões?",
+          alertaSeSim: "Varizes/lesões — evitar manipulação direta na área afetada.",
+        },
+        {
+          tipo: "simnao",
+          id: "epilepsiaConvulsoes",
+          label: "Epilepsia ou convulsões?",
+          alertaSeSim: "Epilepsia/convulsões — contraindicação possível para eletroterapia.",
+        },
+      ],
+    },
+  ],
+};
+
+// ---------- FACIAL (aguardando o papel da Mavi) ----------
+const FACIAL: DefinicaoFicha = {
+  tipo: "facial",
+  nome: "Anamnese Facial",
+  emoji: "✨",
+  emConstrucao: true,
+  camposMedidas: [],
+  etapas: [ETAPA_DADOS],
+};
+
+// ---------- DEPILAÇÃO A LASER (aguardando o papel da Mavi) ----------
+const LASER: DefinicaoFicha = {
+  tipo: "laser",
+  nome: "Depilação a Laser",
+  emoji: "🔆",
+  emConstrucao: true,
+  camposMedidas: [],
+  etapas: [ETAPA_DADOS],
+};
+
+export const FICHAS: Record<Tipo, DefinicaoFicha> = {
+  corporal: CORPORAL,
+  facial: FACIAL,
+  laser: LASER,
+};
+
+export const TIPOS: Tipo[] = ["corporal", "facial", "laser"];
+
+export function ehTipo(v: string): v is Tipo {
+  return v === "corporal" || v === "facial" || v === "laser";
+}
+
+export function getFicha(tipo: string): DefinicaoFicha | undefined {
+  return ehTipo(tipo) ? FICHAS[tipo] : undefined;
+}
+
+export function nomeTipo(tipo: string): string {
+  return getFicha(tipo)?.nome ?? tipo;
+}
 
 export type Respostas = Record<string, string | boolean | null>;
 
-// Calcula os alertas de segurança a partir das respostas
-export function calcularAlertas(respostas: Respostas): string[] {
+// Calcula os alertas de segurança a partir das respostas de uma ficha
+export function calcularAlertas(tipo: string, respostas: Respostas): string[] {
+  const def = getFicha(tipo);
+  if (!def) return [];
   const alertas: string[] = [];
-  for (const etapa of ETAPAS) {
+  for (const etapa of def.etapas) {
     for (const campo of etapa.campos) {
       if (campo.tipo === "simnao" && campo.alertaSeSim && respostas[campo.id] === true) {
         alertas.push(campo.alertaSeSim);
@@ -285,12 +346,16 @@ export function calcularAlertas(respostas: Respostas): string[] {
 }
 
 // Rótulo legível de um campo (para o painel da Marina)
-export function rotuloCampo(id: string): string {
-  for (const etapa of ETAPAS) {
-    for (const campo of etapa.campos) {
-      if (campo.id === id) return campo.label;
+export function rotuloCampo(tipo: string, id: string): string {
+  const def = getFicha(tipo);
+  if (def) {
+    for (const etapa of def.etapas) {
+      for (const campo of etapa.campos) {
+        if (campo.id === id) return campo.label;
+      }
     }
+    const medida = def.camposMedidas.find((m) => m.id === id);
+    if (medida) return medida.label;
   }
-  const medida = CAMPOS_MEDIDAS.find((m) => m.id === id);
-  return medida?.label ?? id;
+  return id;
 }

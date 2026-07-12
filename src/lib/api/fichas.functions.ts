@@ -8,6 +8,7 @@ import { z } from "zod";
 // sem poder ler nem escrever direto no banco.
 
 const schema = z.object({
+  tipo: z.enum(["corporal", "facial", "laser"]),
   nome: z.string().min(1, "Informe o nome."),
   telefone: z.string().optional().default(""),
   respostas: z.record(z.string(), z.union([z.string(), z.boolean(), z.null()])).default({}),
@@ -20,7 +21,9 @@ export const salvarFicha = createServerFn({ method: "POST" })
   .inputValidator(schema)
   .handler(async ({ data }) => {
     // URL é pública (inlined em build). Chave secreta vem do ambiente em runtime.
-    const url = import.meta.env.VITE_SUPABASE_URL as string | undefined;
+    const url =
+      (import.meta.env.VITE_SUPABASE_URL as string | undefined) ||
+      "https://jjkmgkorqzbroebhksca.supabase.co";
     const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
     if (!url || !key) {
@@ -39,6 +42,7 @@ export const salvarFicha = createServerFn({ method: "POST" })
         Prefer: "return=minimal",
       },
       body: JSON.stringify({
+        tipo: data.tipo,
         nome: data.nome,
         telefone: data.telefone || null,
         respostas: data.respostas,

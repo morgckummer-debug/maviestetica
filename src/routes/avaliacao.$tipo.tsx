@@ -1,10 +1,10 @@
 import { useState } from "react";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, useParams, Link } from "@tanstack/react-router";
 import { motion, AnimatePresence } from "motion/react";
 import { ArrowLeft, ArrowRight, AlertTriangle, Sparkles, Loader2 } from "lucide-react";
 import { SITE_URL } from "@/data/services";
 import {
-  ETAPAS,
+  getFicha,
   TERMO_TEXTO,
   AUTORIZACAO_FOTO_TEXTO,
   calcularAlertas,
@@ -13,7 +13,7 @@ import {
 } from "@/data/anamnese";
 import { salvarFicha } from "@/lib/api/fichas.functions";
 
-export const Route = createFileRoute("/avaliacao")({
+export const Route = createFileRoute("/avaliacao/$tipo")({
   head: () => ({
     meta: [
       { title: "Ficha de Avaliação | MAVI Centro de Estética" },
@@ -26,11 +26,8 @@ export const Route = createFileRoute("/avaliacao")({
     ],
     links: [{ rel: "canonical", href: `${SITE_URL}/avaliacao` }],
   }),
-  component: Avaliacao,
+  component: FichaPage,
 });
-
-const TOTAL_ETAPAS = ETAPAS.length + 1; // + termo
-const STEP_LABELS = [...ETAPAS.map((e) => e.titulo), "Termo"];
 
 function Chip({
   label,
@@ -150,7 +147,10 @@ function CampoView({
   );
 }
 
-function Avaliacao() {
+function FichaPage() {
+  const { tipo } = useParams({ from: "/avaliacao/$tipo" });
+  const def = getFicha(tipo);
+
   const [step, setStep] = useState(0);
   const [respostas, setRespostas] = useState<Respostas>({});
   const [termoAceito, setTermoAceito] = useState(false);
@@ -159,15 +159,32 @@ function Avaliacao() {
   const [erro, setErro] = useState<string | null>(null);
   const navigate = useNavigate();
 
+  if (!def) {
+    return (
+      <section className="min-h-[70vh] flex items-center justify-center px-6 text-center">
+        <div>
+          <h1 className="font-display text-3xl text-primary mb-3">Ficha não encontrada</h1>
+          <p className="text-muted-foreground mb-6">Este link de ficha não é válido.</p>
+          <Link to="/avaliacao" className="text-primary underline">
+            Ver as fichas disponíveis
+          </Link>
+        </div>
+      </section>
+    );
+  }
+
+  const etapas = def.etapas;
+  const totalEtapas = etapas.length + 1; // + termo
+  const stepLabels = [...etapas.map((e) => e.titulo), "Termo"];
+
   const set = (id: string, v: string | boolean | null) => setRespostas((r) => ({ ...r, [id]: v }));
 
-  const alertas = calcularAlertas(respostas);
-  const naTermo = step === ETAPAS.length;
+  const alertas = calcularAlertas(tipo, respostas);
+  const naTermo = step === etapas.length;
 
   const podeAvancar = (() => {
     if (naTermo) return termoAceito && !enviando;
-    const etapa = ETAPAS[step];
-    return etapa.campos.every((c) => {
+    return etapas[step].campos.every((c) => {
       if (c.tipo === "texto" && c.obrigatorio) {
         return String(respostas[c.id] ?? "").trim().length > 0;
       }
@@ -181,6 +198,7 @@ function Avaliacao() {
     try {
       await salvarFicha({
         data: {
+          tipo: def.tipo,
           nome: String(respostas.nome ?? "").trim(),
           telefone: String(respostas.whatsapp ?? "").trim(),
           respostas,
@@ -206,7 +224,10 @@ function Avaliacao() {
             Antes do seu atendimento
           </p>
           <h1 className="font-display text-4xl lg:text-5xl text-primary leading-tight">
-            Ficha de <em className="italic font-normal">anamnese</em>
+            {def.emoji} Ficha{" "}
+            <em className="italic font-normal">
+              {def.nome.replace(/^Anamnese\s*/i, "").toLowerCase() || def.nome}
+            </em>
           </h1>
           <p className="mt-4 text-muted-foreground max-w-md mx-auto leading-relaxed">
             Leva poucos minutos. Isso nos ajuda a te receber com mais cuidado e segurança.
@@ -214,7 +235,7 @@ function Avaliacao() {
         </div>
 
         <div className="flex gap-2 mb-2">
-          {STEP_LABELS.map((_, i) => (
+          {stepLabels.map((_, i) => (
             <div
               key={i}
               className={[
@@ -225,7 +246,7 @@ function Avaliacao() {
           ))}
         </div>
         <p className="text-xs uppercase tracking-widest text-muted-foreground mb-8">
-          Etapa {step + 1} de {TOTAL_ETAPAS} — {STEP_LABELS[step]}
+          Etapa {step + 1} de {totalEtapas} — {stepLabels[step]}
         </p>
 
         <div className="relative bg-card border border-border rounded-[2rem] p-6 sm:p-8 lg:p-10 min-h-[420px] flex flex-col">
@@ -240,12 +261,12 @@ function Avaliacao() {
             >
               {!naTermo && (
                 <div>
-                  {ETAPAS[step].descricao && (
-                    <p className="text-sm text-muted-foreground mb-6">{ETAPAS[step].descricao}</p>
+                  {etapas[step].descricao && (
+                    <p className="text-sm text-muted-foreground mb-6">{etapas[step].descricao}</p>
                   )}
-                  {ETAPAS[step].layout === "grid" ? (
+                  {etapas[step].layout === "grid" ? (
                     <div className="grid sm:grid-cols-2 gap-x-8 gap-y-4">
-                      {ETAPAS[step].campos.map((c) => (
+                      {etapas[step].campos.map((c) => (
                         <div key={c.id} className="border-b border-border/50 pb-3">
                           <CampoView campo={c} respostas={respostas} set={set} compacto />
                         </div>
@@ -253,7 +274,7 @@ function Avaliacao() {
                     </div>
                   ) : (
                     <div className="space-y-6">
-                      {ETAPAS[step].campos.map((c) => (
+                      {etapas[step].campos.map((c) => (
                         <CampoView key={c.id} campo={c} respostas={respostas} set={set} />
                       ))}
                     </div>

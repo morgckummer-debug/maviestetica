@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { ArrowLeft, AlertTriangle, Loader2, Camera, Check, Archive } from "lucide-react";
-import { ETAPAS, CAMPOS_MEDIDAS } from "@/data/anamnese";
+import { getFicha, nomeTipo } from "@/data/anamnese";
 import { obterFicha, atualizarFicha, type Ficha } from "@/lib/painel";
 
 export const Route = createFileRoute("/painel/$id")({
@@ -104,6 +104,9 @@ function DetalheFicha() {
   }
 
   const r = ficha.respostas ?? {};
+  const def = getFicha(ficha.tipo);
+  const etapas = def?.etapas ?? [];
+  const camposMedidas = def?.camposMedidas ?? [];
 
   return (
     <div>
@@ -117,6 +120,9 @@ function DetalheFicha() {
 
       <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-6">
         <div>
+          <span className="inline-block text-xs rounded-full bg-lavender-soft px-2.5 py-0.5 text-primary mb-2">
+            {def?.emoji ?? ""} {nomeTipo(ficha.tipo)}
+          </span>
           <h2 className="font-display text-3xl text-primary">{ficha.nome}</h2>
           <p className="text-sm text-muted-foreground mt-1">
             {ficha.telefone || "sem telefone"} · enviada em {formatarData(ficha.created_at)}
@@ -164,7 +170,7 @@ function DetalheFicha() {
 
       {/* Respostas da anamnese */}
       <div className="space-y-6 mb-10">
-        {ETAPAS.map((etapa) => {
+        {etapas.map((etapa) => {
           const linhas = etapa.campos
             .map((c) => {
               const val = valorResposta(r[c.id]);
@@ -205,20 +211,22 @@ function DetalheFicha() {
         <h3 className="font-display text-2xl text-primary mb-1">Medidas e relatório</h3>
         <p className="text-sm text-muted-foreground mb-5">Preenchido no atendimento.</p>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-6">
-          {CAMPOS_MEDIDAS.map((m) => (
-            <div key={m.id}>
-              <label className="block text-xs font-medium text-muted-foreground mb-1.5">
-                {m.label}
-              </label>
-              <input
-                value={medidas[m.id] ?? ""}
-                onChange={(e) => setMedidas((prev) => ({ ...prev, [m.id]: e.target.value }))}
-                className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-              />
-            </div>
-          ))}
-        </div>
+        {camposMedidas.length > 0 && (
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-6">
+            {camposMedidas.map((m) => (
+              <div key={m.id}>
+                <label className="block text-xs font-medium text-muted-foreground mb-1.5">
+                  {m.label}
+                </label>
+                <input
+                  value={medidas[m.id] ?? ""}
+                  onChange={(e) => setMedidas((prev) => ({ ...prev, [m.id]: e.target.value }))}
+                  className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                />
+              </div>
+            ))}
+          </div>
+        )}
 
         <div className="mb-5">
           <label className="block text-sm font-medium mb-2">Relatório</label>

@@ -87,6 +87,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       },
       { name: "author", content: "MAVI Centro de Estética" },
       { name: "robots", content: "index, follow" },
+      { name: "theme-color", content: "#5a3a63" },
+      { name: "apple-mobile-web-app-capable", content: "yes" },
+      { name: "apple-mobile-web-app-title", content: "MAVI" },
+      { name: "mobile-web-app-capable", content: "yes" },
       { property: "og:title", content: "MAVI Centro de Estética | Sete Lagoas, MG" },
       {
         property: "og:description",
@@ -102,14 +106,25 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         content:
           "Centro de estética em Sete Lagoas, MG. Especialistas em drenagem linfática, depilação a laser Ácrus, limpeza de pele profunda, pós-operatório e tratamentos corporais personalizados.",
       },
-      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/35b528cb-fade-48da-818f-063dbb7855d3/id-preview-d1c63947--647d26de-8c81-42f7-9ade-43a6f84e6481.lovable.app-1780275909504.png" },
-      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/35b528cb-fade-48da-818f-063dbb7855d3/id-preview-d1c63947--647d26de-8c81-42f7-9ade-43a6f84e6481.lovable.app-1780275909504.png" },
+      {
+        property: "og:image",
+        content:
+          "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/35b528cb-fade-48da-818f-063dbb7855d3/id-preview-d1c63947--647d26de-8c81-42f7-9ade-43a6f84e6481.lovable.app-1780275909504.png",
+      },
+      {
+        name: "twitter:image",
+        content:
+          "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/35b528cb-fade-48da-818f-063dbb7855d3/id-preview-d1c63947--647d26de-8c81-42f7-9ade-43a6f84e6481.lovable.app-1780275909504.png",
+      },
     ],
     links: [
       {
         rel: "stylesheet",
         href: appCss,
       },
+      { rel: "manifest", href: "/manifest.webmanifest" },
+      { rel: "apple-touch-icon", href: "/icon-192.png" },
+      { rel: "icon", type: "image/png", href: "/icon-192.png" },
     ],
     scripts: [
       {

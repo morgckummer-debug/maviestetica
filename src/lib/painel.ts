@@ -3,6 +3,7 @@
 // guardada no navegador (localStorage) e é renovada automaticamente.
 
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from "./supabase";
+import type { Tipo } from "@/data/anamnese";
 
 const CHAVE_SESSAO = "mavi_sessao";
 
@@ -16,6 +17,7 @@ export type Sessao = {
 export type Ficha = {
   id: string;
   created_at: string;
+  tipo: Tipo;
   nome: string;
   telefone: string | null;
   respostas: Record<string, string | boolean | null>;
