@@ -1,11 +1,12 @@
-import process from "node:process";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from "../supabase";
+
 // Grava uma ficha de anamnese no Supabase.
-// Roda SÓ no servidor: usa a chave secreta service_role (que nunca chega
-// ao navegador) e ignora o RLS. Assim o público consegue enviar a ficha
-// sem poder ler nem escrever direto no banco.
+// Usa a chave PÚBLICA (anon) — o banco só permite inserir, nunca ler
+// (policy do 0003_anon_insert.sql). Ler as fichas continua restrito à
+// Marina logada. Não precisa de chave secreta nem de config no hosting.
 
 const schema = z.object({
   tipo: z.enum(["corporal", "facial", "laser"]),
@@ -20,25 +21,19 @@ const schema = z.object({
 export const salvarFicha = createServerFn({ method: "POST" })
   .inputValidator(schema)
   .handler(async ({ data }) => {
-    // URL é pública (inlined em build). Chave secreta vem do ambiente em runtime.
-    const url =
-      (import.meta.env.VITE_SUPABASE_URL as string | undefined) ||
-      "https://jjkmgkorqzbroebhksca.supabase.co";
-    const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-    if (!url || !key) {
-      throw new Error("Supabase não configurado no servidor.");
+    if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+      throw new Error("Supabase não configurado (falta a chave pública).");
     }
     if (!data.termo_aceito) {
       throw new Error("É necessário aceitar o termo de responsabilidade.");
     }
 
-    const res = await fetch(`${url}/rest/v1/fichas`, {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/fichas`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        apikey: key,
-        Authorization: `Bearer ${key}`,
+        apikey: SUPABASE_ANON_KEY,
+        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
         Prefer: "return=minimal",
       },
       body: JSON.stringify({
