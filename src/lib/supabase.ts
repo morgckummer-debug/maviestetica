@@ -12,9 +12,9 @@
 // por VITE_SUPABASE_URL, mas já vem preenchida para facilitar.
 const URL_PADRAO = "https://jjkmgkorqzbroebhksca.supabase.co";
 
-// Chave PÚBLICA (anon). É feita para ficar exposta — protegida pelo RLS.
-// Cole aqui a chave "anon public" do projeto (Project Settings > API Keys).
-const ANON_KEY_PADRAO = "";
+// Chave PÚBLICA (publishable/anon). É feita para ficar exposta — protegida
+// pelo RLS. Project Settings > API Keys > "Publishable key".
+const ANON_KEY_PADRAO = "sb_publishable_PNmCu11Hdy5YDOFDn2sedA_VcfLdppn";
 
 export const SUPABASE_URL = (import.meta.env.VITE_SUPABASE_URL as string | undefined) || URL_PADRAO;
 export const SUPABASE_ANON_KEY =
