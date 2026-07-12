@@ -12,6 +12,7 @@ import {
   type Respostas,
 } from "@/data/anamnese";
 import { salvarFicha } from "@/lib/api/fichas.functions";
+import { aplicarMascara } from "@/lib/mascaras";
 
 export const Route = createFileRoute("/avaliacao/$tipo")({
   head: () => ({
@@ -82,33 +83,6 @@ function YesNo({
 
 const inputBase =
   "w-full rounded-xl border border-border bg-background px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring";
-
-// (31)93998-3485 — aceita fixo (10 dígitos) e celular (11 dígitos)
-function mascaraTelefone(v: string): string {
-  const d = v.replace(/\D/g, "").slice(0, 11);
-  const p = d.length;
-  if (p === 0) return "";
-  if (p <= 2) return `(${d}`;
-  if (p <= 6) return `(${d.slice(0, 2)})${d.slice(2)}`;
-  if (p <= 10) return `(${d.slice(0, 2)})${d.slice(2, 6)}-${d.slice(6)}`;
-  return `(${d.slice(0, 2)})${d.slice(2, 7)}-${d.slice(7)}`;
-}
-
-// 254.654.325-86
-function mascaraCpf(v: string): string {
-  const d = v.replace(/\D/g, "").slice(0, 11);
-  let out = d.slice(0, 3);
-  if (d.length > 3) out += `.${d.slice(3, 6)}`;
-  if (d.length > 6) out += `.${d.slice(6, 9)}`;
-  if (d.length > 9) out += `-${d.slice(9, 11)}`;
-  return out;
-}
-
-function aplicarMascara(mascara: "telefone" | "cpf" | undefined, v: string): string {
-  if (mascara === "telefone") return mascaraTelefone(v);
-  if (mascara === "cpf") return mascaraCpf(v);
-  return v;
-}
 
 function CampoView({
   campo,
@@ -333,7 +307,7 @@ function FichaPage() {
           Etapa {step + 1} de {totalEtapas} — {stepLabels[step]}
         </p>
 
-        <div className="relative bg-card border border-border rounded-[2rem] p-6 sm:p-8 lg:p-10 min-h-[420px] flex flex-col">
+        <div className="relative overflow-hidden bg-card border border-border rounded-[2rem] p-6 sm:p-8 lg:p-10 min-h-[420px] flex flex-col">
           <AnimatePresence mode="wait">
             <motion.div
               key={step}

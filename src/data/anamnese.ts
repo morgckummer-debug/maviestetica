@@ -785,6 +785,11 @@ export function nomeTipo(tipo: string): string {
   return getFicha(tipo)?.nome ?? tipo;
 }
 
+// Rótulo curto (sem o "Anamnese "), para caber melhor em botões no celular.
+export function nomeCurto(tipo: string): string {
+  return (getFicha(tipo)?.nome ?? tipo).replace(/^Anamnese\s+/i, "");
+}
+
 export type Respostas = Record<string, string | boolean | null>;
 
 // Calcula os alertas de segurança a partir das respostas de uma ficha

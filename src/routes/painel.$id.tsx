@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { ArrowLeft, AlertTriangle, Loader2, Camera, Check, Archive } from "lucide-react";
-import { getFicha, nomeTipo } from "@/data/anamnese";
+import { getFicha, nomeTipo, type Campo } from "@/data/anamnese";
 import { obterFicha, atualizarFicha, type Ficha } from "@/lib/painel";
+import { mascaraTelefone, mascaraCpf, formatarDataBR } from "@/lib/mascaras";
 
 export const Route = createFileRoute("/painel/$id")({
   component: DetalheFicha,
@@ -27,6 +28,15 @@ function valorResposta(v: string | boolean | null | undefined): string | null {
   if (v === false) return "Não";
   if (typeof v === "string" && v.trim()) return v.trim();
   return null;
+}
+
+// Formata o valor exibido conforme o campo (celular, CPF, data de nascimento).
+function formatarValorCampo(campo: Campo, val: string): string {
+  if (campo.tipo !== "texto") return val;
+  if (campo.mascara === "telefone") return mascaraTelefone(val);
+  if (campo.mascara === "cpf") return mascaraCpf(val);
+  if (campo.inputMode === "date") return formatarDataBR(val);
+  return val;
 }
 
 function DetalheFicha() {
@@ -135,7 +145,8 @@ function DetalheFicha() {
           </span>
           <h2 className="font-display text-3xl text-primary">{ficha.nome}</h2>
           <p className="text-sm text-muted-foreground mt-1">
-            {ficha.telefone || "sem telefone"} · enviada em {formatarData(ficha.created_at)}
+            {ficha.telefone ? mascaraTelefone(ficha.telefone) : "sem telefone"} · enviada em{" "}
+            {formatarData(ficha.created_at)}
           </p>
         </div>
         <button
@@ -183,8 +194,9 @@ function DetalheFicha() {
         {etapas.map((etapa) => {
           const linhas = etapa.campos
             .map((c) => {
-              const val = valorResposta(r[c.id]);
-              if (val === null) return null;
+              const bruto = valorResposta(r[c.id]);
+              if (bruto === null) return null;
+              const val = formatarValorCampo(c, bruto);
               const detalhe =
                 c.tipo === "simnao" || c.tipo === "selecao"
                   ? valorResposta(r[`${c.id}__detalhe`])
