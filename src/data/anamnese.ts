@@ -259,6 +259,7 @@ const CORPORAL: DefinicaoFicha = {
       campos: [
         { tipo: "simnao", id: "cicloMenstrualRegular", label: "Ciclo menstrual regular?" },
         { tipo: "simnao", id: "estaMenstruada", label: "Está menstruada?" },
+        { tipo: "simnao", id: "menopausa", label: "Já está na menopausa?" },
         {
           tipo: "simnao",
           id: "estaGravida",
@@ -309,14 +310,168 @@ const CORPORAL: DefinicaoFicha = {
   ],
 };
 
-// ---------- FACIAL (aguardando o papel da Mavi) ----------
+// ---------- FACIAL (transcrita do papel da Mavi) ----------
 const FACIAL: DefinicaoFicha = {
   tipo: "facial",
   nome: "Anamnese Facial",
   emoji: "✨",
-  emConstrucao: true,
   camposMedidas: [],
-  etapas: [ETAPA_DADOS],
+  etapas: [
+    ETAPA_DADOS,
+    {
+      titulo: "Rotina e hábitos",
+      campos: [
+        {
+          tipo: "simnao",
+          id: "cuidadosPele",
+          label: "Faz cuidados diários com a pele?",
+          especifique: true,
+          especifiquePlaceholder: "Quais produtos/rotina?",
+        },
+        {
+          tipo: "simnao",
+          id: "ingereAgua",
+          label: "Ingere água regularmente?",
+          especifique: true,
+          especifiquePlaceholder: "Com que frequência?",
+        },
+        {
+          tipo: "simnao",
+          id: "alimentacaoBalanceada",
+          label: "Tem alimentação balanceada?",
+          especifique: true,
+          especifiquePlaceholder: "Observações",
+        },
+        {
+          tipo: "simnao",
+          id: "bebidaAlcoolica",
+          label: "Ingere bebida alcoólica?",
+          especifique: true,
+          especifiquePlaceholder: "Com que frequência?",
+        },
+        {
+          tipo: "simnao",
+          id: "atividadeFisica",
+          label: "Pratica atividade física?",
+          especifique: true,
+          especifiquePlaceholder: "Qual e com que frequência?",
+        },
+        {
+          tipo: "simnao",
+          id: "costumaTomarSol",
+          label: "Costuma tomar sol?",
+          especifique: true,
+          especifiquePlaceholder: "Com que frequência? Usa protetor solar?",
+        },
+      ],
+    },
+    {
+      titulo: "Sua pele e saúde",
+      campos: [
+        {
+          tipo: "selecao",
+          id: "tipoPele",
+          label: "Tipo de pele",
+          opcoes: ["Oleosa", "Normal", "Seca"],
+          especifique: true,
+          especifiquePlaceholder: "Observações (opcional)",
+        },
+        {
+          tipo: "simnao",
+          id: "problemasPele",
+          label: "Problemas de pele?",
+          especifique: true,
+          especifiquePlaceholder: "Acne, melasma, dermatite...",
+        },
+        {
+          tipo: "simnao",
+          id: "jaFezTratamentoEstetico",
+          label: "Já fez tratamento estético?",
+          especifique: true,
+          especifiquePlaceholder: "Qual e quando?",
+        },
+        {
+          tipo: "simnao",
+          id: "medicamentoDiario",
+          label: "Usa medicamento de uso diário?",
+          especifique: true,
+          especifiquePlaceholder: "Quais?",
+        },
+        {
+          tipo: "simnao",
+          id: "possuiAlergia",
+          label: "Possui alguma alergia?",
+          especifique: true,
+          especifiquePlaceholder: "A quê? (produtos, látex, medicamentos...)",
+        },
+        {
+          tipo: "simnao",
+          id: "protesesMetalicas",
+          label: "Possui próteses metálicas?",
+          especifique: true,
+          especifiquePlaceholder: "Quais e onde?",
+        },
+        {
+          tipo: "simnao",
+          id: "cicloMenstrualRegular",
+          label: "Ciclo menstrual regular?",
+          especifique: true,
+          especifiquePlaceholder: "Observações",
+        },
+        {
+          tipo: "simnao",
+          id: "antecedentesOncologicos",
+          label: "Tem antecedentes oncológicos?",
+          especifique: true,
+          especifiquePlaceholder: "Qual e quando?",
+          alertaSeSim: "Antecedentes oncológicos — avaliar contraindicações antes do procedimento.",
+        },
+        {
+          tipo: "simnao",
+          id: "outroProblema",
+          label: "Algum outro problema a ser informado?",
+          especifique: true,
+          especifiquePlaceholder: "Descreva",
+        },
+      ],
+    },
+    {
+      titulo: "Condições de saúde",
+      descricao: "Só marcar Sim ou Não.",
+      layout: "grid",
+      campos: [
+        { tipo: "simnao", id: "fumante", label: "Fumante?" },
+        { tipo: "simnao", id: "estaMenstruada", label: "Está menstruada?" },
+        { tipo: "simnao", id: "menopausa", label: "Já está na menopausa?" },
+        {
+          tipo: "simnao",
+          id: "estaGravida",
+          label: "Está grávida?",
+          alertaSeSim: "Gestante — confirmar contraindicação do procedimento.",
+        },
+        {
+          tipo: "simnao",
+          id: "epilepsiaConvulsoes",
+          label: "Tem epilepsia ou convulsões?",
+          alertaSeSim: "Epilepsia/convulsões — contraindicação possível para eletroterapia.",
+        },
+        { tipo: "simnao", id: "intestinoRegular", label: "Funcionamento intestinal regular?" },
+        {
+          tipo: "simnao",
+          id: "problemasCardiacos",
+          label: "Problemas cardíacos?",
+          alertaSeSim: "Problemas cardíacos — avaliar segurança antes de procedimentos.",
+        },
+        {
+          tipo: "simnao",
+          id: "diabetes",
+          label: "Diabetes?",
+          alertaSeSim: "Diabetes — atenção redobrada em procedimentos com extração/lesão de pele.",
+        },
+        { tipo: "simnao", id: "disturbioHormonal", label: "Distúrbio hormonal?" },
+      ],
+    },
+  ],
 };
 
 // ---------- DEPILAÇÃO (transcrita do papel da Mavi) ----------
