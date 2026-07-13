@@ -1,0 +1,74 @@
+name: Backup dos dados
+
+# Faz uma cópia semanal das fichas e sessões do Supabase, guardada num
+# bucket privado de Storage do próprio projeto (não neste repositório,
+# que é público — nunca deve levar dados de cliente).
+#
+# Configuração necessária (uma vez só), em Settings > Secrets and
+# variables > Actions deste repositório:
+#   SUPABASE_SERVICE_ROLE_KEY — a chave "service_role" do projeto
+#   (Supabase > Project Settings > API Keys > "service_role", clique em
+#   "Reveal"). Essa chave dá acesso total ao banco, ignorando as regras
+#   de permissão — por isso só entra como secret do GitHub, nunca no
+#   código do site.
+on:
+  schedule:
+    - cron: "0 6 * * 0" # todo domingo às 6h UTC (~3h em Brasília)
+  workflow_dispatch: {}
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Confere se a chave secreta foi configurada
+        run: |
+          if [ -z "${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" ]; then
+            echo "::error::Falta configurar o secret SUPABASE_SERVICE_ROLE_KEY nas configurações do repositório (Settings > Secrets and variables > Actions)."
+            exit 1
+          fi
+
+      - name: Garante que o bucket privado de backup existe
+        env:
+          SUPABASE_URL: https://jjkmgkorqzbroebhksca.supabase.co
+          SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          curl -sf -X POST "$SUPABASE_URL/storage/v1/bucket" \
+            -H "apikey: $SERVICE_KEY" \
+            -H "Authorization: Bearer $SERVICE_KEY" \
+            -H "Content-Type: application/json" \
+            -d '{"id":"backups","name":"backups","public":false}' \
+            || echo "Bucket já existe (ou não pôde ser criado agora) — seguindo em frente."
+
+      - name: Exporta fichas e sessões e envia pro Storage
+        env:
+          SUPABASE_URL: https://jjkmgkorqzbroebhksca.supabase.co
+          SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          set -e
+          DATA=$(date -u +%Y-%m-%d)
+
+          curl -sf "$SUPABASE_URL/rest/v1/fichas?select=*" \
+            -H "apikey: $SERVICE_KEY" \
+            -H "Authorization: Bearer $SERVICE_KEY" \
+            -o fichas.json
+
+          curl -sf "$SUPABASE_URL/rest/v1/sessoes?select=*" \
+            -H "apikey: $SERVICE_KEY" \
+            -H "Authorization: Bearer $SERVICE_KEY" \
+            -o sessoes.json
+
+          curl -sf -X POST "$SUPABASE_URL/storage/v1/object/backups/$DATA/fichas.json" \
+            -H "apikey: $SERVICE_KEY" \
+            -H "Authorization: Bearer $SERVICE_KEY" \
+            -H "Content-Type: application/json" \
+            -H "x-upsert: true" \
+            --data-binary @fichas.json
+
+          curl -sf -X POST "$SUPABASE_URL/storage/v1/object/backups/$DATA/sessoes.json" \
+            -H "apikey: $SERVICE_KEY" \
+            -H "Authorization: Bearer $SERVICE_KEY" \
+            -H "Content-Type: application/json" \
+            -H "x-upsert: true" \
+            --data-binary @sessoes.json
+
+          echo "Backup de $DATA enviado com sucesso."
