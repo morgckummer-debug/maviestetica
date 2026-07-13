@@ -182,33 +182,33 @@ function LinhaSessaoView({
 }) {
   if (edicao.sessaoId === id) {
     return (
-      <li className="rounded-lg border border-lavender/50 bg-lavender-soft/20 p-3">
+      <li className="rounded-lg border border-painel-border bg-painel-badge-bg/50 p-3">
         <div className="mb-2">
-          <label className="block text-xs font-medium text-muted-foreground mb-1">Data</label>
+          <label className="block text-xs font-medium text-painel-muted mb-1">Data</label>
           <input
             type="date"
             value={edicao.data}
             onChange={(e) => edicao.onData(e.target.value)}
-            className="rounded-lg border border-border bg-background px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+            className="rounded-lg border border-painel-border bg-painel-bg px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-painel-primary/40"
           />
         </div>
         <div className="mb-3">
-          <label className="block text-xs font-medium text-muted-foreground mb-1">Observação</label>
+          <label className="block text-xs font-medium text-painel-muted mb-1">Observação</label>
           <textarea
             value={edicao.observacao}
             onChange={(e) => edicao.onObservacao(e.target.value)}
             rows={2}
             placeholder="Opcional"
-            className="w-full rounded-lg border border-border bg-background px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+            className="w-full rounded-lg border border-painel-border bg-painel-bg px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-painel-primary/40"
           />
         </div>
-        {edicao.erro && <p className="text-xs text-destructive mb-2">{edicao.erro}</p>}
+        {edicao.erro && <p className="text-xs text-painel-alert-text mb-2">{edicao.erro}</p>}
         <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={edicao.onSalvar}
             disabled={edicao.salvando}
-            className="inline-flex items-center gap-1.5 rounded-full bg-primary text-primary-foreground px-3.5 py-1.5 text-xs font-medium hover:bg-primary/90 transition-colors disabled:opacity-40"
+            className="inline-flex items-center gap-1.5 rounded-full bg-painel-primary text-white px-3.5 py-1.5 text-xs font-medium hover:bg-painel-primary/90 transition-colors disabled:opacity-40"
           >
             {edicao.salvando ? (
               <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -221,7 +221,7 @@ function LinhaSessaoView({
             type="button"
             onClick={edicao.onCancelar}
             disabled={edicao.salvando}
-            className="rounded-full border border-border px-3.5 py-1.5 text-xs font-medium text-foreground/70 hover:border-primary/40 transition-colors disabled:opacity-40"
+            className="rounded-full border border-painel-border px-3.5 py-1.5 text-xs font-medium text-painel-chip-text hover:border-painel-primary/40 transition-colors disabled:opacity-40"
           >
             Cancelar
           </button>
@@ -249,7 +249,7 @@ function LinhaSessaoView({
           type="button"
           onClick={() => edicao.onIniciar({ id, data, observacao })}
           title="Editar sessão"
-          className="p-1 text-muted-foreground/50 hover:text-primary transition-colors"
+          className="p-1 text-painel-muted/50 hover:text-painel-primary transition-colors"
         >
           <Pencil className="h-4 w-4" />
         </button>
@@ -259,7 +259,7 @@ function LinhaSessaoView({
             target="_blank"
             rel="noreferrer"
             title="Enviar por WhatsApp"
-            className="p-1 text-muted-foreground/50 hover:text-primary transition-colors"
+            className="p-1 text-painel-muted/50 hover:text-painel-primary transition-colors"
           >
             <MessageCircle className="h-4 w-4" />
           </a>
@@ -273,7 +273,7 @@ function LinhaSessaoView({
               type="button"
               onClick={onCopiar}
               title="Copiar link"
-              className="text-muted-foreground/60 hover:text-primary transition-colors"
+              className="text-painel-muted/60 hover:text-painel-primary transition-colors"
             >
               {copiado ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
             </button>
@@ -282,7 +282,7 @@ function LinhaSessaoView({
               target="_blank"
               rel="noreferrer"
               title="Enviar por WhatsApp"
-              className="text-muted-foreground/60 hover:text-primary transition-colors"
+              className="text-painel-muted/60 hover:text-painel-primary transition-colors"
             >
               <MessageCircle className="h-3.5 w-3.5" />
             </a>
@@ -292,7 +292,7 @@ function LinhaSessaoView({
           type="button"
           onClick={() => edicao.onIniciar({ id, data, observacao })}
           title="Editar sessão"
-          className="text-muted-foreground/40 hover:text-primary transition-colors"
+          className="text-painel-muted/40 hover:text-painel-primary transition-colors"
         >
           <Pencil className="h-3.5 w-3.5" />
         </button>
@@ -300,7 +300,7 @@ function LinhaSessaoView({
           type="button"
           onClick={onRemover}
           title="Excluir sessão"
-          className="text-muted-foreground/40 hover:text-destructive transition-colors"
+          className="text-painel-muted/40 hover:text-painel-alert-text transition-colors"
         >
           <Trash2 className="h-3.5 w-3.5" />
         </button>
@@ -622,32 +622,32 @@ export function HistoricoSessoes({
   };
 
   return (
-    <div className="rounded-2xl border border-border bg-card p-5 sm:p-6">
+    <div className="rounded-2xl border border-painel-border bg-white p-5 sm:p-6">
       <div className="flex items-center justify-between gap-3 mb-1">
-        <h3 className="font-display text-2xl text-primary">Histórico de sessões</h3>
+        <h3 className="font-display text-2xl text-painel-title">Histórico de sessões</h3>
         {!abrindo && (
           <button
             type="button"
             onClick={abrirForm}
-            className="inline-flex items-center gap-1.5 rounded-full bg-primary text-primary-foreground px-4 py-2 text-sm font-medium hover:bg-primary/90 transition-colors"
+            className="inline-flex items-center gap-1.5 rounded-full bg-painel-primary text-white px-4 py-2 text-sm font-medium hover:bg-painel-primary/90 transition-colors"
           >
             <Plus className="h-4 w-4" />
             Registrar sessão
           </button>
         )}
       </div>
-      <p className="text-sm text-muted-foreground mb-5">
+      <p className="text-sm text-painel-muted mb-5">
         Registre o atendimento e envie o link para a cliente confirmar.
       </p>
 
-      {erro && <p className="text-sm text-destructive mb-4">{erro}</p>}
+      {erro && <p className="text-sm text-painel-alert-text mb-4">{erro}</p>}
 
       {/* Formulário de nova sessão */}
       {abrindo && (
-        <div className="rounded-xl border border-lavender/50 bg-lavender-soft/30 p-4 sm:p-5 mb-6">
+        <div className="rounded-xl border border-painel-border bg-painel-badge-bg/40 p-4 sm:p-5 mb-6">
           {multi && (
             <div className="mb-4">
-              <label className="block text-xs font-medium text-muted-foreground mb-2">
+              <label className="block text-xs font-medium text-painel-muted mb-2">
                 Procedimento
               </label>
               <div className="flex flex-wrap gap-2">
@@ -664,8 +664,8 @@ export function HistoricoSessoes({
                       className={[
                         "rounded-full border px-3.5 py-1.5 text-sm transition-colors",
                         sel
-                          ? "bg-primary border-primary text-primary-foreground font-medium"
-                          : "bg-card border-border text-foreground/70 hover:border-primary/40",
+                          ? "bg-painel-primary border-painel-primary text-white font-medium"
+                          : "bg-white border-painel-border text-painel-chip-text hover:border-painel-primary/40",
                       ].join(" ")}
                     >
                       {FICHAS[f.tipo]?.emoji ?? ""} {nomeCurto(f.tipo)}
@@ -677,20 +677,20 @@ export function HistoricoSessoes({
           )}
 
           <div className="mb-4">
-            <label className="block text-xs font-medium text-muted-foreground mb-1.5">
+            <label className="block text-xs font-medium text-painel-muted mb-1.5">
               Data do atendimento
             </label>
             <input
               type="date"
               value={data}
               onChange={(e) => setData(e.target.value)}
-              className="rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+              className="rounded-lg border border-painel-border bg-painel-bg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-painel-primary/40"
             />
           </div>
 
           {opcoes.length > 0 && (
             <div className="mb-4">
-              <label className="block text-xs font-medium text-muted-foreground mb-2">
+              <label className="block text-xs font-medium text-painel-muted mb-2">
                 {rotuloItensSessao(tipoAtual)}
               </label>
               <div className="flex flex-wrap gap-2">
@@ -705,8 +705,8 @@ export function HistoricoSessoes({
                       className={[
                         "rounded-full border px-3.5 py-1.5 text-sm transition-colors",
                         sel
-                          ? "bg-lavender-soft border-lavender text-primary font-medium"
-                          : "bg-card border-border text-foreground/70 hover:border-primary/40",
+                          ? "bg-painel-primary border-painel-primary text-white font-medium"
+                          : "bg-white border-painel-border text-painel-chip-text hover:border-painel-primary/40",
                       ].join(" ")}
                     >
                       {a}
@@ -720,17 +720,17 @@ export function HistoricoSessoes({
 
           {itensSemPacote.length > 0 && (
             <div className="mb-4">
-              <label className="block text-xs font-medium text-muted-foreground mb-1">
+              <label className="block text-xs font-medium text-painel-muted mb-1">
                 Pacote comprado (opcional)
               </label>
-              <p className="text-xs text-muted-foreground/80 mb-2">
+              <p className="text-xs text-painel-muted/80 mb-2">
                 Deixe em branco se for sessão avulsa. Pode informar aqui ou mais tarde, quando ela
                 decidir comprar o pacote.
               </p>
               <div className="space-y-2">
                 {itensSemPacote.map((item) => (
                   <div key={item} className="flex items-center gap-2">
-                    <span className="text-sm text-foreground/80 flex-1 truncate">{item}</span>
+                    <span className="text-sm text-painel-chip-text flex-1 truncate">{item}</span>
                     <input
                       type="number"
                       min={1}
@@ -740,7 +740,7 @@ export function HistoricoSessoes({
                         setPacotesForm((prev) => ({ ...prev, [item]: e.target.value }))
                       }
                       placeholder="nº de sessões"
-                      className="w-32 rounded-lg border border-border bg-background px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                      className="w-32 rounded-lg border border-painel-border bg-painel-bg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-painel-primary/40"
                     />
                   </div>
                 ))}
@@ -749,15 +749,13 @@ export function HistoricoSessoes({
           )}
 
           <div className="mb-4">
-            <label className="block text-xs font-medium text-muted-foreground mb-1.5">
-              Observação
-            </label>
+            <label className="block text-xs font-medium text-painel-muted mb-1.5">Observação</label>
             <textarea
               value={observacao}
               onChange={(e) => setObservacao(e.target.value)}
               rows={2}
               placeholder="O que foi realizado, observações..."
-              className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+              className="w-full rounded-xl border border-painel-border bg-painel-bg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-painel-primary/40"
             />
           </div>
 
@@ -766,7 +764,7 @@ export function HistoricoSessoes({
               type="button"
               onClick={registrar}
               disabled={salvando || !podeSalvar}
-              className="inline-flex items-center gap-2 rounded-full bg-primary text-primary-foreground px-5 py-2.5 text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-40"
+              className="inline-flex items-center gap-2 rounded-full bg-painel-primary text-white px-5 py-2.5 text-sm font-medium hover:bg-painel-primary/90 transition-colors disabled:opacity-40"
             >
               {salvando ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
               Salvar sessão
@@ -775,7 +773,7 @@ export function HistoricoSessoes({
               type="button"
               onClick={() => setAbrindo(false)}
               disabled={salvando}
-              className="rounded-full border border-border px-5 py-2.5 text-sm font-medium text-foreground/70 hover:border-primary/40 transition-colors disabled:opacity-40"
+              className="rounded-full border border-painel-border px-5 py-2.5 text-sm font-medium text-painel-chip-text hover:border-painel-primary/40 transition-colors disabled:opacity-40"
             >
               Cancelar
             </button>
@@ -786,12 +784,12 @@ export function HistoricoSessoes({
       {/* Lista de sessões */}
       {sessoes === null && !erro && (
         <div className="flex justify-center py-6">
-          <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+          <Loader2 className="h-5 w-5 animate-spin text-painel-muted" />
         </div>
       )}
 
       {sessoes && sessoes.length === 0 && !abrindo && (
-        <p className="text-sm text-muted-foreground py-2">Nenhuma sessão registrada ainda.</p>
+        <p className="text-sm text-painel-muted py-2">Nenhuma sessão registrada ainda.</p>
       )}
 
       <div>
@@ -801,14 +799,14 @@ export function HistoricoSessoes({
           return (
             <div key={g.chave} className="mb-5 last:mb-0">
               <div className="flex items-center gap-2 mb-2 flex-wrap">
-                <h4 className="text-sm font-medium text-foreground">{g.item}</h4>
+                <h4 className="text-sm font-medium text-painel-title">{g.item}</h4>
                 {multi && (
-                  <span className="text-xs text-muted-foreground">
+                  <span className="text-xs text-painel-muted">
                     {FICHAS[g.tipo]?.emoji ?? ""} {nomeCurto(g.tipo)}
                   </span>
                 )}
                 {pacotes.length === 0 && (
-                  <span className="text-xs text-muted-foreground">
+                  <span className="text-xs text-painel-muted">
                     · {g.linhas.length} sessõe{g.linhas.length === 1 ? "" : "s"} registrada
                     {g.linhas.length === 1 ? "" : "s"}
                   </span>
@@ -825,7 +823,7 @@ export function HistoricoSessoes({
                     return (
                       <div key={chaveSeg}>
                         {pacotes.length > 0 && (
-                          <p className="text-xs text-muted-foreground mb-1">Sessões avulsas</p>
+                          <p className="text-xs text-painel-muted mb-1">Sessões avulsas</p>
                         )}
                         <ul className="space-y-1">
                           {seg.linhas.map((l, idx) => (
@@ -858,23 +856,23 @@ export function HistoricoSessoes({
                         className="flex items-center gap-1.5 mb-1.5"
                       >
                         {aberto ? (
-                          <ChevronDown className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                          <ChevronDown className="h-3.5 w-3.5 text-painel-muted shrink-0" />
                         ) : (
-                          <ChevronRight className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                          <ChevronRight className="h-3.5 w-3.5 text-painel-muted shrink-0" />
                         )}
                         <span
-                          className={`text-xs ${seg.completo ? "text-emerald-600 dark:text-emerald-500 font-medium" : "text-muted-foreground"}`}
+                          className={`text-xs ${seg.completo ? "text-painel-gold font-medium" : "text-painel-muted"}`}
                         >
                           Pacote {seg.numero} · {seg.linhas.length} de {seg.pacoteTotal} sessões
                           {seg.completo ? " concluído" : ""}
                         </span>
-                        <span className="text-xs text-primary underline underline-offset-2">
+                        <span className="text-xs text-painel-primary underline underline-offset-2">
                           {aberto ? "Ocultar" : "Detalhes"}
                         </span>
                       </button>
-                      <div className="h-1.5 w-full max-w-[220px] rounded-full bg-secondary/60 overflow-hidden mb-2">
+                      <div className="h-1.5 w-full max-w-[220px] rounded-full bg-painel-border overflow-hidden mb-2">
                         <div
-                          className={`h-full rounded-full transition-all ${seg.completo ? "bg-emerald-500" : "bg-primary"}`}
+                          className="h-full rounded-full bg-painel-gold transition-all"
                           style={{
                             width: `${Math.min(100, (seg.linhas.length / seg.pacoteTotal) * 100)}%`,
                           }}
@@ -910,7 +908,7 @@ export function HistoricoSessoes({
 
         {semItem.length > 0 && (
           <div className="mb-5 last:mb-0">
-            <h4 className="text-sm font-medium text-foreground mb-1.5">Outras sessões</h4>
+            <h4 className="text-sm font-medium text-painel-title mb-1.5">Outras sessões</h4>
             <ul className="space-y-1">
               {semItem.map((s) => (
                 <LinhaSessaoView

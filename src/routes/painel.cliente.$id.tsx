@@ -96,7 +96,7 @@ function PaginaCliente() {
   if (!fichas && !erro) {
     return (
       <div className="flex justify-center py-16">
-        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+        <Loader2 className="h-6 w-6 animate-spin text-painel-muted" />
       </div>
     );
   }
@@ -104,8 +104,8 @@ function PaginaCliente() {
   if (erro) {
     return (
       <div className="text-center py-16">
-        <p className="text-destructive text-sm mb-4">{erro}</p>
-        <Link to="/painel" className="text-primary underline">
+        <p className="text-painel-alert-text text-sm mb-4">{erro}</p>
+        <Link to="/painel" className="text-painel-primary underline">
           Voltar à lista
         </Link>
       </div>
@@ -115,40 +115,40 @@ function PaginaCliente() {
   if (!cliente) {
     return (
       <div className="text-center py-16">
-        <p className="text-muted-foreground mb-4">Cliente não encontrada.</p>
-        <Link to="/painel" className="text-primary underline">
+        <p className="text-painel-muted mb-4">Cliente não encontrada.</p>
+        <Link to="/painel" className="text-painel-primary underline">
           Voltar à lista
         </Link>
       </div>
     );
   }
 
-  const bordaCard = cliente.algumMasculino ? "border-sky-400/50" : "border-border";
+  const bordaCard = cliente.algumMasculino ? "border-sky-400/50" : "border-painel-border";
 
   return (
     <div>
       <Link
         to="/painel"
-        className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary mb-6"
+        className="inline-flex items-center gap-2 text-[13px] text-painel-muted hover:text-painel-primary mb-7"
       >
-        <ArrowLeft className="h-4 w-4" />
+        <ArrowLeft className="h-3.5 w-3.5" />
         Todas as clientes
       </Link>
 
       {/* Cabeçalho da cliente */}
       <div className="mb-6">
-        <div className="flex flex-wrap items-center gap-2 mb-2">
+        <div className="flex flex-wrap items-center gap-2 mb-2.5">
           {cliente.tipos.map((t) => (
             <span
               key={t}
-              className="inline-block text-xs rounded-full bg-lavender-soft px-2.5 py-0.5 text-primary"
+              className="inline-block text-[11px] rounded-full bg-painel-badge-bg px-3 py-0.5 text-painel-primary"
             >
               {FICHAS[t]?.emoji ?? ""} {nomeTipo(t)}
             </span>
           ))}
         </div>
-        <h2 className="font-display text-3xl text-primary">{cliente.nome}</h2>
-        <p className="text-sm text-muted-foreground mt-1">
+        <h2 className="font-display text-4xl text-painel-title">{cliente.nome}</h2>
+        <p className="text-[13px] text-painel-muted mt-2">
           {cliente.telefone ? mascaraTelefone(cliente.telefone) : "sem telefone"}
           {" · "}
           {cliente.fichas.length} ficha(s)
@@ -156,7 +156,7 @@ function PaginaCliente() {
       </div>
 
       {alertas.length > 0 && (
-        <div className="flex gap-3 rounded-xl border border-rose/40 bg-rose/10 px-4 py-3.5 text-sm text-rose mb-6">
+        <div className="flex gap-3 rounded-[14px] border border-painel-alert-border bg-painel-alert-bg px-[22px] py-[18px] text-sm text-painel-alert-text mb-8">
           <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
           <ul className="space-y-1">
             {alertas.map((a, i) => (
@@ -176,19 +176,19 @@ function PaginaCliente() {
       {/* Fichas da cliente — cada uma abre a ficha completa (anamnese/medidas) */}
       <div className="mt-8">
         <div className="flex items-center justify-between gap-3 mb-1">
-          <h3 className="font-display text-2xl text-primary">Fichas</h3>
+          <h3 className="font-display text-2xl text-painel-title">Fichas</h3>
           {!enviandoFicha && (
             <button
               type="button"
               onClick={() => setEnviandoFicha(true)}
-              className="inline-flex items-center gap-1.5 rounded-full bg-primary text-primary-foreground px-4 py-2 text-sm font-medium hover:bg-primary/90 transition-colors"
+              className="inline-flex items-center gap-1.5 rounded-full bg-painel-primary text-white px-[18px] py-2.5 text-sm font-semibold hover:bg-painel-primary/90 transition-colors"
             >
               <Send className="h-4 w-4" />
               Enviar ficha
             </button>
           )}
         </div>
-        <p className="text-sm text-muted-foreground mb-4">
+        <p className="text-sm text-painel-muted mb-4">
           Abra a ficha para ver a anamnese completa e a avaliação. Interessou por outro
           procedimento? Envie uma nova ficha pra ela preencher.
         </p>
@@ -203,54 +203,54 @@ function PaginaCliente() {
           />
         )}
 
-        {erroExcluir && <p className="text-sm text-destructive mb-4">{erroExcluir}</p>}
+        {erroExcluir && <p className="text-sm text-painel-alert-text mb-4">{erroExcluir}</p>}
         <div className="space-y-3">
           {cliente.fichas.map((f) => (
             <div
               key={f.id}
-              className={`flex items-center justify-between gap-4 rounded-2xl border ${bordaCard} bg-card px-5 py-4 transition-colors hover:border-primary/40`}
+              className={`flex items-center justify-between gap-4 rounded-[14px] border ${bordaCard} bg-white px-6 py-5 transition-colors hover:border-painel-primary/40`}
             >
               <Link to="/painel/$id" params={{ id: f.id }} className="min-w-0 flex-1">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-xs rounded-full bg-lavender-soft px-2 py-0.5 text-primary">
+                  <span className="text-[11px] rounded-full bg-painel-badge-bg px-2.5 py-0.5 text-painel-primary">
                     {FICHAS[f.tipo]?.emoji ?? ""} {nomeCurto(f.tipo)}
                   </span>
                   {f.arquivada && (
-                    <span className="text-xs rounded-full bg-muted px-2 py-0.5 text-muted-foreground">
+                    <span className="text-xs rounded-full bg-painel-badge-bg px-2 py-0.5 text-painel-muted">
                       arquivada
                     </span>
                   )}
                   {f.alertas.length > 0 && (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-rose/15 text-rose px-2 py-0.5 text-xs font-medium">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-painel-alert-bg text-painel-alert-text px-2 py-0.5 text-xs font-medium">
                       <AlertTriangle className="h-3 w-3" />
                       {f.alertas.length}
                     </span>
                   )}
                 </div>
-                <p className="text-sm text-muted-foreground mt-1">
+                <p className="text-[13px] text-painel-muted-2 mt-1.5">
                   enviada em {formatarData(f.created_at)}
                 </p>
               </Link>
-              <div className="flex items-center gap-3 shrink-0">
+              <div className="flex items-center gap-3.5 shrink-0">
                 <span
                   className={`inline-flex items-center gap-1 text-xs ${
-                    f.termo_aceito ? "text-primary" : "text-muted-foreground"
+                    f.termo_aceito ? "text-painel-primary" : "text-painel-muted"
                   }`}
                 >
                   <Check className="h-3.5 w-3.5" />
                   Termo
                 </span>
                 {f.autoriza_foto ? (
-                  <Camera className="h-4 w-4 text-lavender" />
+                  <Camera className="h-4 w-4 text-painel-gold" />
                 ) : (
-                  <CameraOff className="h-4 w-4 text-muted-foreground/60" />
+                  <CameraOff className="h-4 w-4 text-painel-icon-muted" />
                 )}
                 <button
                   type="button"
                   onClick={() => excluirUmaFicha(f)}
                   disabled={excluindoId === f.id}
                   title="Excluir ficha"
-                  className="text-muted-foreground/50 hover:text-destructive transition-colors disabled:opacity-40"
+                  className="text-painel-icon-muted hover:text-painel-alert-text transition-colors disabled:opacity-40"
                 >
                   {excluindoId === f.id ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -259,7 +259,7 @@ function PaginaCliente() {
                   )}
                 </button>
                 <Link to="/painel/$id" params={{ id: f.id }} aria-label="Abrir ficha">
-                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                  <ChevronRight className="h-4 w-4 text-painel-icon-muted" />
                 </Link>
               </div>
             </div>

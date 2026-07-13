@@ -78,21 +78,21 @@ function ListaFichas() {
   return (
     <div>
       {/* Busca principal — encontrar a cliente por nome ou CPF */}
-      <div className="relative mb-6">
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+      <div className="relative mb-7">
+        <Search className="absolute left-5 top-1/2 -translate-y-1/2 h-[18px] w-[18px] text-painel-muted" />
         <input
           value={busca}
           onChange={(e) => setBusca(e.target.value)}
           placeholder="Buscar cliente por nome ou CPF"
-          className="w-full rounded-full border border-border bg-background pl-12 pr-4 py-3.5 text-base focus:outline-none focus:ring-2 focus:ring-ring"
+          className="w-full rounded-full border border-painel-border bg-white pl-[52px] pr-5 py-4 text-[15px] text-painel-title placeholder:text-painel-muted-2 focus:outline-none focus:ring-2 focus:ring-painel-primary/40"
         />
       </div>
 
       <EnviarFicha />
 
-      <div className="mb-4">
-        <h2 className="font-display text-3xl text-primary">Clientes</h2>
-        <p className="text-sm text-muted-foreground mt-1">
+      <div className="mb-5 flex items-baseline justify-between gap-3">
+        <h2 className="font-display text-[34px] text-painel-title">Clientes</h2>
+        <p className="text-[13px] text-painel-muted">
           {fichas
             ? busca || filtroTipo !== "todas"
               ? `${filtrados.length} de ${clientes.length} cliente(s)`
@@ -101,17 +101,17 @@ function ListaFichas() {
         </p>
       </div>
 
-      <div className="flex flex-wrap gap-2 mb-6">
+      <div className="flex flex-wrap gap-2.5 mb-7">
         {(["todas", ...TIPOS] as const).map((t) => (
           <button
             key={t}
             type="button"
             onClick={() => setFiltroTipo(t)}
             className={[
-              "rounded-full border px-3 py-1.5 text-xs transition-colors",
+              "rounded-full border px-4 py-2 text-xs transition-colors",
               filtroTipo === t
-                ? "bg-lavender-soft border-lavender text-primary font-medium"
-                : "bg-card border-border text-foreground/60 hover:border-primary/40",
+                ? "bg-painel-primary border-painel-primary text-white font-semibold"
+                : "bg-white border-painel-border text-painel-chip-text hover:border-painel-primary/40",
             ].join(" ")}
           >
             {t === "todas" ? "Todas" : `${FICHAS[t].emoji} ${nomeCurto(t)}`}
@@ -120,19 +120,19 @@ function ListaFichas() {
       </div>
 
       {erro && (
-        <div className="rounded-xl border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+        <div className="rounded-xl border border-painel-alert-border bg-painel-alert-bg px-4 py-3 text-sm text-painel-alert-text">
           {erro}
         </div>
       )}
 
       {!fichas && !erro && (
         <div className="flex justify-center py-16">
-          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+          <Loader2 className="h-6 w-6 animate-spin text-painel-muted" />
         </div>
       )}
 
       {fichas && filtrados.length === 0 && (
-        <div className="flex flex-col items-center justify-center py-16 text-center text-muted-foreground">
+        <div className="flex flex-col items-center justify-center py-16 text-center text-painel-muted">
           <Inbox className="h-10 w-10 mb-3 opacity-50" />
           <p>
             {busca || filtroTipo !== "todas"
@@ -149,41 +149,41 @@ function ListaFichas() {
             to="/painel/cliente/$id"
             params={{ id: c.id }}
             className={[
-              "flex items-center justify-between gap-4 rounded-2xl border bg-card px-5 py-4 transition-colors",
+              "flex items-center justify-between gap-4 rounded-[14px] border bg-white px-6 py-5 transition-colors",
               c.algumMasculino
                 ? "border-sky-400/60 hover:border-sky-500"
-                : "border-border hover:border-primary/40",
+                : "border-painel-border hover:border-painel-primary/40",
             ].join(" ")}
           >
             <div className="min-w-0">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="font-medium text-foreground truncate">{c.nome}</span>
+              <div className="flex items-center gap-2.5 flex-wrap mb-1.5">
+                <span className="text-[15px] text-painel-title truncate">{c.nome}</span>
                 {c.tipos.map((t) => (
                   <span
                     key={t}
-                    className="text-xs rounded-full bg-lavender-soft px-2 py-0.5 text-primary"
+                    className="text-[11px] rounded-full bg-painel-badge-bg px-2.5 py-0.5 text-painel-primary"
                   >
                     {FICHAS[t]?.emoji ?? ""} {nomeCurto(t)}
                   </span>
                 ))}
               </div>
-              <p className="text-sm text-muted-foreground truncate">
+              <p className="text-[13px] text-painel-muted-2 truncate">
                 {c.telefone || "sem telefone"}
                 {c.fichas.length > 1 ? ` · ${c.fichas.length} fichas` : ""}
               </p>
             </div>
-            <div className="flex items-center gap-2 shrink-0">
+            <div className="flex items-center gap-3.5 shrink-0">
               {c.autorizaFoto ? (
                 <span title="Autorizou uso de imagem">
-                  <Camera className="h-4 w-4 text-lavender" />
+                  <Camera className="h-4 w-4 text-painel-gold" />
                 </span>
               ) : (
                 <span title="Não autorizou uso de imagem">
-                  <CameraOff className="h-4 w-4 text-muted-foreground/60" />
+                  <CameraOff className="h-4 w-4 text-painel-icon-muted" />
                 </span>
               )}
               {c.alertas > 0 && (
-                <span className="inline-flex items-center gap-1 rounded-full bg-rose/15 text-rose px-2.5 py-1 text-xs font-medium">
+                <span className="inline-flex items-center gap-1 rounded-full bg-painel-alert-bg text-painel-alert-text px-3 py-1.5 text-xs font-semibold">
                   <AlertTriangle className="h-3.5 w-3.5" />
                   {c.alertas}
                 </span>
@@ -199,19 +199,19 @@ function ListaFichas() {
             type="button"
             onClick={() => setPagina((p) => Math.max(1, p - 1))}
             disabled={paginaAtual === 1}
-            className="inline-flex items-center gap-1 rounded-full border border-border px-3 py-1.5 text-sm text-foreground/70 hover:border-primary/40 disabled:opacity-40 disabled:hover:border-border"
+            className="inline-flex items-center gap-1 rounded-full border border-painel-border px-3 py-1.5 text-sm text-painel-chip-text hover:border-painel-primary/40 disabled:opacity-40 disabled:hover:border-painel-border"
           >
             <ChevronLeft className="h-4 w-4" />
             Anterior
           </button>
-          <span className="text-sm text-muted-foreground">
+          <span className="text-sm text-painel-muted">
             Página {paginaAtual} de {totalPaginas}
           </span>
           <button
             type="button"
             onClick={() => setPagina((p) => Math.min(totalPaginas, p + 1))}
             disabled={paginaAtual === totalPaginas}
-            className="inline-flex items-center gap-1 rounded-full border border-border px-3 py-1.5 text-sm text-foreground/70 hover:border-primary/40 disabled:opacity-40 disabled:hover:border-border"
+            className="inline-flex items-center gap-1 rounded-full border border-painel-border px-3 py-1.5 text-sm text-painel-chip-text hover:border-painel-primary/40 disabled:opacity-40 disabled:hover:border-painel-border"
           >
             Próxima
             <ChevronRight className="h-4 w-4" />
