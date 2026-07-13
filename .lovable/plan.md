@@ -1,50 +1,49 @@
-## Novo Hero (referência da imagem enviada)
+## O que muda
 
-Estrutura inspirada no modelo: fundo claro e arejado, texto à esquerda, foto à direita ocupando boa parte da seção, sem overlay roxo cobrindo a foto.
+Na tela de login do painel (`/painel`), substituir o campo "Usuário" (texto livre de e-mail) por um **dropdown com os nomes** das usuárias. A senha continua digitada normalmente.
 
-### Layout (`src/components/sections/Hero.tsx`)
+Mapeamento fixo no código:
+- **Morgana** → `morgckummer@gmail.com`
+- **Marina** → `morganamavi26@gmail.com`
+
+## Como fica a UI
 
 ```
-┌─────────────────────────────────────────────┐
-│  [eyebrow: Centro de Estética · Sete Lagoas]│
-│                                             │
-│  "Seja a sua                       [FOTO    │
-│   melhor versão"                    massagem│
-│                                     grande, │
-│  ──── Tratamentos faciais e         lado    │
-│       corporais com cuidado…        direito]│
-│                                             │
-│  ( Agendar avaliação )  Instagram           │
-└─────────────────────────────────────────────┘
+┌─────────────────────────────┐
+│  🔒 Painel MAVI             │
+│                             │
+│  Usuária                    │
+│  ┌───────────────────────┐  │
+│  │ Selecione…         ▾  │  │  ← dropdown
+│  └───────────────────────┘  │
+│                             │
+│  Senha                      │
+│  ┌───────────────────────┐  │
+│  │ ••••••••              │  │
+│  └───────────────────────┘  │
+│                             │
+│  [        Entrar        ]   │
+└─────────────────────────────┘
 ```
 
-- Fundo da seção: claro (`bg-background` com leve gradiente lavanda muito sutil), sem foto cobrindo tudo.
-- Coluna esquerda (`max-w-xl`): eyebrow em caps espaçadas, H1 grande entre aspas com `font-display italic` no destaque, divisor curto (linha + parágrafo curto ao lado), CTAs.
-- Coluna direita: foto enviada (`hero-bg.jpg`) em card arredondado grande (`rounded-[2rem] lg:rounded-[3rem]`), `aspect-[4/5]`, `object-cover`, com sombra suave (`shadow-2xl shadow-primary/10`).
-- Grid: `grid lg:grid-cols-[1.05fr_1fr] gap-12 lg:gap-16 items-center`.
-- Mobile: foto vai abaixo do texto, mantendo respiro.
-- Manter `OrganicBlob` decorativos atrás, bem suaves (opacidade baixa).
+Dropdown com duas opções: **Morgana** e **Marina**. Sem campo de e-mail visível, sem "usar outro e-mail". Se um dia surgir uma terceira usuária, é só adicionar uma linha na lista.
 
-### Estilo
+## Detalhes técnicos
 
-- Texto volta para tokens da marca: eyebrow `text-muted-foreground`, H1 `text-foreground` com `<em>` em `text-primary italic`, parágrafo `text-muted-foreground`.
-- CTA primário: pílula `bg-primary text-primary-foreground` arredondada (`rounded-full`), sombra suave.
-- CTA secundário: texto + ícone, sem borda pesada (`text-foreground/80 hover:text-primary`).
-- Tipografia: manter `font-display` no H1, tamanhos `text-5xl sm:text-6xl lg:text-7xl`, leading apertado.
-- Espaçamento generoso: `pt-20 pb-24 lg:pt-32 lg:pb-40`.
+- Editar apenas `LoginForm` em `src/routes/painel.tsx`.
+- Criar constante local:
+  ```ts
+  const USUARIAS = [
+    { nome: "Morgana", email: "morgckummer@gmail.com" },
+    { nome: "Marina",  email: "morganamavi26@gmail.com" },
+  ] as const;
+  ```
+- Trocar `<input type="email">` por um `<select>` estilizado no mesmo padrão visual dos outros campos (mesma classe de borda/arredondamento/foco).
+- Estado passa a guardar o `email` selecionado; `entrar(email, senha)` continua igual — nada muda no `painel.ts`, no Supabase, nem no fluxo de sessão.
+- Validação: botão "Entrar" desabilitado enquanto nenhuma usuária estiver selecionada.
+- Mensagem de erro atual ("E-mail ou senha inválidos") continua servindo.
 
-### Conteúdo (mantém)
+## Fora do escopo
 
-- Eyebrow: "Centro de Estética · Sete Lagoas"
-- H1: "Seja a sua *melhor versão*." (com aspas tipográficas opcionais — confirmo com você se quiser as aspas como no modelo)
-- Subtítulo curto ao lado do divisor: "Tratamentos faciais e corporais com tecnologia, sensibilidade e cuidado."
-- CTAs: WhatsApp (Agendar avaliação) e Instagram.
-
-### Imagem
-
-Usa `src/assets/hero-bg.jpg` (foto da massagem que você já enviou) — agora visível inteira na coluna da direita, sem overlay cobrindo.
-
-### Arquivos
-
-- `src/components/sections/Hero.tsx` — reescrita do layout conforme acima.
-- Nenhum outro arquivo precisa mudar.
+- Não mexer no Supabase (usuárias continuam sendo criadas por e-mail lá).
+- Não mexer no menu do usuário logado, troca de senha, ou nomes de exibição — `nomeExibicao(email)` já deriva "Morgana Kummer" / "Morgana Mavi" a partir do e-mail e segue funcionando.

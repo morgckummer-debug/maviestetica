@@ -28,6 +28,10 @@ export const Route = createFileRoute("/painel")({
 });
 
 function LoginForm({ onEntrar }: { onEntrar: (s: Sessao) => void }) {
+  const USUARIAS = [
+    { nome: "Morgana", email: "morgckummer@gmail.com" },
+    { nome: "Marina", email: "morganamavi26@gmail.com" },
+  ] as const;
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const [erro, setErro] = useState<string | null>(null);
@@ -36,6 +40,10 @@ function LoginForm({ onEntrar }: { onEntrar: (s: Sessao) => void }) {
   const submeter = async (e: React.FormEvent) => {
     e.preventDefault();
     setErro(null);
+    if (!email) {
+      setErro("Selecione a usuária.");
+      return;
+    }
     setCarregando(true);
     try {
       const s = await entrar(email.trim(), senha);
@@ -69,16 +77,23 @@ function LoginForm({ onEntrar }: { onEntrar: (s: Sessao) => void }) {
 
         <form onSubmit={submeter} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium mb-2">Usuário</label>
-            <input
-              type="email"
+            <label className="block text-sm font-medium mb-2">Usuária</label>
+            <select
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
               autoComplete="username"
-              placeholder="seu e-mail de acesso"
-              className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-            />
+              className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring appearance-none bg-[url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2216%22 height=%2216%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22currentColor%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22><polyline points=%226 9 12 15 18 9%22/></svg>')] bg-no-repeat bg-[right_1rem_center] pr-10"
+            >
+              <option value="" disabled>
+                Selecione…
+              </option>
+              {USUARIAS.map((u) => (
+                <option key={u.email} value={u.email}>
+                  {u.nome}
+                </option>
+              ))}
+            </select>
           </div>
           <div>
             <label className="block text-sm font-medium mb-2">Senha</label>
@@ -100,7 +115,7 @@ function LoginForm({ onEntrar }: { onEntrar: (s: Sessao) => void }) {
 
           <button
             type="submit"
-            disabled={carregando}
+            disabled={carregando || !email}
             className="w-full inline-flex items-center justify-center gap-2 rounded-full bg-primary text-primary-foreground px-6 py-3 text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-40"
           >
             {carregando ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
