@@ -1,6 +1,15 @@
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Search, AlertTriangle, Loader2, Camera, CameraOff, Inbox } from "lucide-react";
+import {
+  Search,
+  AlertTriangle,
+  Loader2,
+  Camera,
+  CameraOff,
+  Inbox,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 import { listarFichas, type Ficha } from "@/lib/painel";
 import { agruparClientes, digitos, type Cliente } from "@/lib/clientes";
 import { TIPOS, FICHAS, nomeCurto, type Tipo } from "@/data/anamnese";
@@ -10,11 +19,14 @@ export const Route = createFileRoute("/painel/")({
   component: ListaFichas,
 });
 
+const POR_PAGINA = 20;
+
 function ListaFichas() {
   const [fichas, setFichas] = useState<Ficha[] | null>(null);
   const [erro, setErro] = useState<string | null>(null);
   const [busca, setBusca] = useState("");
   const [filtroTipo, setFiltroTipo] = useState<Tipo | "todas">("todas");
+  const [pagina, setPagina] = useState(1);
 
   useEffect(() => {
     listarFichas()
@@ -51,6 +63,16 @@ function ListaFichas() {
       return false;
     });
   }, [clientes, busca, filtroTipo]);
+
+  // Volta para a primeira página sempre que a busca ou o filtro mudam o
+  // resultado — senão a cliente pode ficar "presa" numa página vazia.
+  useEffect(() => {
+    setPagina(1);
+  }, [busca, filtroTipo]);
+
+  const totalPaginas = Math.max(1, Math.ceil(filtrados.length / POR_PAGINA));
+  const paginaAtual = Math.min(pagina, totalPaginas);
+  const paginados = filtrados.slice((paginaAtual - 1) * POR_PAGINA, paginaAtual * POR_PAGINA);
 
   return (
     <div>
@@ -120,7 +142,7 @@ function ListaFichas() {
       )}
 
       <div className="space-y-3">
-        {filtrados.map((c: Cliente) => (
+        {paginados.map((c: Cliente) => (
           <Link
             key={c.id}
             to="/painel/cliente/$id"
@@ -169,6 +191,32 @@ function ListaFichas() {
           </Link>
         ))}
       </div>
+
+      {filtrados.length > POR_PAGINA && (
+        <div className="flex items-center justify-center gap-4 mt-6">
+          <button
+            type="button"
+            onClick={() => setPagina((p) => Math.max(1, p - 1))}
+            disabled={paginaAtual === 1}
+            className="inline-flex items-center gap-1 rounded-full border border-border px-3 py-1.5 text-sm text-foreground/70 hover:border-primary/40 disabled:opacity-40 disabled:hover:border-border"
+          >
+            <ChevronLeft className="h-4 w-4" />
+            Anterior
+          </button>
+          <span className="text-sm text-muted-foreground">
+            Página {paginaAtual} de {totalPaginas}
+          </span>
+          <button
+            type="button"
+            onClick={() => setPagina((p) => Math.min(totalPaginas, p + 1))}
+            disabled={paginaAtual === totalPaginas}
+            className="inline-flex items-center gap-1 rounded-full border border-border px-3 py-1.5 text-sm text-foreground/70 hover:border-primary/40 disabled:opacity-40 disabled:hover:border-border"
+          >
+            Próxima
+            <ChevronRight className="h-4 w-4" />
+          </button>
+        </div>
+      )}
     </div>
   );
 }
