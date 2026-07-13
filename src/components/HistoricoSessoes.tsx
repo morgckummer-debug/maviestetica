@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Check,
   ChevronDown,
@@ -398,11 +398,28 @@ export function HistoricoSessoes({
 
   const ids = useMemo(() => fichas.map((f) => f.id), [fichas]);
 
+  // Enquanto a Marina está registrando ou editando uma sessão, o
+  // auto-refresh não troca os dados debaixo dela.
+  const ocupadoRef = useRef(false);
+  useEffect(() => {
+    ocupadoRef.current = abrindo || editandoSessaoId !== null;
+  }, [abrindo, editandoSessaoId]);
+
   useEffect(() => {
     setOrigin(window.location.origin);
     listarSessoesDeFichas(ids)
       .then(setSessoes)
       .catch((e) => setErro(e instanceof Error ? e.message : "Erro ao carregar sessões."));
+
+    // Auto-refresh: pega a confirmação da cliente (ou nova sessão de
+    // outro dispositivo) a cada 20s, sem precisar recarregar a página.
+    const intervalo = setInterval(() => {
+      if (ocupadoRef.current) return;
+      listarSessoesDeFichas(ids)
+        .then(setSessoes)
+        .catch(() => {});
+    }, 20000);
+    return () => clearInterval(intervalo);
   }, [ids]);
 
   const toggleItem = (a: string) =>
