@@ -832,7 +832,7 @@ export function HistoricoSessoes({
                             <LinhaSessaoView
                               key={l.sessaoId}
                               id={l.sessaoId}
-                              texto={`${dataBR(l.data)}: ${idx + 1}ª sessão (${l.confirmado ? "confirmado pelo cliente" : "aguardando confirmação"})`}
+                              texto={`${dataBR(l.data)}: ${idx + 1}ª sessão (${l.confirmado ? "confirmado" : "aguardando confirmação"})`}
                               data={l.data}
                               observacao={l.observacao}
                               confirmado={l.confirmado}
@@ -886,7 +886,7 @@ export function HistoricoSessoes({
                             <LinhaSessaoView
                               key={l.sessaoId}
                               id={l.sessaoId}
-                              texto={`${dataBR(l.data)}: ${idx + 1}ª sessão (${l.confirmado ? "confirmado pelo cliente" : "aguardando confirmação"})`}
+                              texto={`${dataBR(l.data)}: ${idx + 1}ª sessão (${l.confirmado ? "confirmado" : "aguardando confirmação"})`}
                               data={l.data}
                               observacao={l.observacao}
                               confirmado={l.confirmado}
@@ -916,7 +916,7 @@ export function HistoricoSessoes({
                 <LinhaSessaoView
                   key={s.id}
                   id={s.id}
-                  texto={`${dataBR(s.data)}${s.observacao ? `: ${s.observacao}` : ""} (${s.confirmado ? "confirmado pelo cliente" : "aguardando confirmação"})`}
+                  texto={`${dataBR(s.data)}${s.observacao ? `: ${s.observacao}` : ""} (${s.confirmado ? "confirmado" : "aguardando confirmação"})`}
                   data={s.data}
                   observacao={s.observacao}
                   confirmado={s.confirmado}
