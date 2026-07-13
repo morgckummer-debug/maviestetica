@@ -4,6 +4,7 @@ import { Lock, LogOut, Loader2, KeyRound, Check, X, ChevronDown } from "lucide-r
 import { SITE_URL } from "@/data/services";
 import { supabaseConfigurado } from "@/lib/supabase";
 import { entrar, sair, sessaoValida, trocarSenha, type Sessao } from "@/lib/painel";
+import logo from "@/assets/logo-mavi-dark.png";
 
 // Deriva um nome de exibição a partir do e-mail de login (ex.:
 // "marina.figueiredo@..." → "Marina Figueiredo"), já que o login continua
@@ -55,8 +56,15 @@ function LoginForm({ onEntrar }: { onEntrar: (s: Sessao) => void }) {
   };
 
   return (
-    <section className="min-h-[70vh] flex items-center justify-center px-6 py-16">
-      <div className="w-full max-w-sm">
+    <section className="relative min-h-screen flex items-center justify-center overflow-hidden px-6 py-16 bg-gradient-to-b from-lavender-soft/30 via-background to-background">
+      <img
+        src={logo}
+        alt=""
+        aria-hidden="true"
+        className="pointer-events-none select-none absolute left-1/2 top-1/2 h-[420px] w-[420px] max-w-none -translate-x-1/2 -translate-y-1/2 object-contain opacity-[0.06] sm:h-[640px] sm:w-[640px]"
+      />
+
+      <div className="relative w-full max-w-sm">
         <div className="text-center mb-8">
           <div className="flex justify-center mb-4">
             <div className="rounded-full bg-lavender-soft p-3">
@@ -64,64 +72,65 @@ function LoginForm({ onEntrar }: { onEntrar: (s: Sessao) => void }) {
             </div>
           </div>
           <h1 className="font-display text-3xl text-primary">Painel MAVI</h1>
-          <p className="mt-2 text-sm text-muted-foreground">Acesso restrito à Marina.</p>
         </div>
 
-        {!supabaseConfigurado() && (
-          <div className="mb-5 rounded-xl border border-rose/40 bg-rose/10 px-4 py-3 text-sm text-rose">
-            Supabase ainda não configurado. Defina as variáveis de ambiente
-            <code className="mx-1">VITE_SUPABASE_URL</code> e
-            <code className="mx-1">VITE_SUPABASE_ANON_KEY</code>.
-          </div>
-        )}
-
-        <form onSubmit={submeter} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium mb-2">Usuária</label>
-            <select
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              autoComplete="username"
-              className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring appearance-none bg-[url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2216%22 height=%2216%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22currentColor%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22><polyline points=%226 9 12 15 18 9%22/></svg>')] bg-no-repeat bg-[right_1rem_center] pr-10"
-            >
-              <option value="" disabled>
-                Selecione…
-              </option>
-              {USUARIAS.map((u) => (
-                <option key={u.email} value={u.email}>
-                  {u.nome}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-2">Senha</label>
-            <input
-              type="password"
-              value={senha}
-              onChange={(e) => setSenha(e.target.value)}
-              required
-              autoComplete="current-password"
-              className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-            />
-          </div>
-
-          {erro && (
-            <div className="rounded-xl border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive">
-              {erro}
+        <div className="rounded-3xl border border-border/60 bg-card/90 backdrop-blur-sm shadow-xl shadow-primary/5 p-6 sm:p-8">
+          {!supabaseConfigurado() && (
+            <div className="mb-5 rounded-xl border border-rose/40 bg-rose/10 px-4 py-3 text-sm text-rose">
+              Supabase ainda não configurado. Defina as variáveis de ambiente
+              <code className="mx-1">VITE_SUPABASE_URL</code> e
+              <code className="mx-1">VITE_SUPABASE_ANON_KEY</code>.
             </div>
           )}
 
-          <button
-            type="submit"
-            disabled={carregando || !email}
-            className="w-full inline-flex items-center justify-center gap-2 rounded-full bg-primary text-primary-foreground px-6 py-3 text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-40"
-          >
-            {carregando ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-            Entrar
-          </button>
-        </form>
+          <form onSubmit={submeter} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium mb-2">Usuária</label>
+              <select
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                autoComplete="username"
+                className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring appearance-none bg-[url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2216%22 height=%2216%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22currentColor%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22><polyline points=%226 9 12 15 18 9%22/></svg>')] bg-no-repeat bg-[right_1rem_center] pr-10"
+              >
+                <option value="" disabled>
+                  Selecione…
+                </option>
+                {USUARIAS.map((u) => (
+                  <option key={u.email} value={u.email}>
+                    {u.nome}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-2">Senha</label>
+              <input
+                type="password"
+                value={senha}
+                onChange={(e) => setSenha(e.target.value)}
+                required
+                autoComplete="current-password"
+                className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+              />
+            </div>
+
+            {erro && (
+              <div className="rounded-xl border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+                {erro}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={carregando || !email}
+              className="w-full inline-flex items-center justify-center gap-2 rounded-full bg-primary text-primary-foreground px-6 py-3 text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-40"
+            >
+              {carregando ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+              Entrar
+            </button>
+          </form>
+        </div>
       </div>
     </section>
   );
