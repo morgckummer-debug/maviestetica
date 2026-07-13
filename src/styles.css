@@ -72,6 +72,23 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+
+  /* Painel admin — redesign "Lilás Atelier". Tokens à parte (não usados no
+     resto do site) para reproduzir as cores exatas do handoff de design. */
+  --color-painel-bg: var(--painel-bg);
+  --color-painel-border: var(--painel-border);
+  --color-painel-primary: var(--painel-primary);
+  --color-painel-primary-deep: var(--painel-primary-deep);
+  --color-painel-title: var(--painel-title);
+  --color-painel-muted: var(--painel-muted);
+  --color-painel-muted-2: var(--painel-muted-2);
+  --color-painel-chip-text: var(--painel-chip-text);
+  --color-painel-badge-bg: var(--painel-badge-bg);
+  --color-painel-icon-muted: var(--painel-icon-muted);
+  --color-painel-gold: var(--painel-gold);
+  --color-painel-alert-bg: var(--painel-alert-bg);
+  --color-painel-alert-border: var(--painel-alert-border);
+  --color-painel-alert-text: var(--painel-alert-text);
 }
 
 :root {
@@ -113,6 +130,24 @@
   --sidebar-accent-foreground: oklch(0.208 0.042 265.755);
   --sidebar-border: oklch(0.929 0.013 255.508);
   --sidebar-ring: oklch(0.704 0.04 256.788);
+
+  /* Painel admin — redesign "Lilás Atelier" (hifi, cores exatas do handoff
+     em design_handoff_painel_lilas_atelier/). Hex direto (não oklch) de
+     propósito: são os valores exatos do design, escopados só ao painel. */
+  --painel-bg: #faf6fb;
+  --painel-border: #ecdff4;
+  --painel-primary: #9a6fb0;
+  --painel-primary-deep: #6d4d84;
+  --painel-title: #4a3559;
+  --painel-muted: #a685bb;
+  --painel-muted-2: #b7a3c6;
+  --painel-chip-text: #7a638c;
+  --painel-badge-bg: #f1e4f5;
+  --painel-icon-muted: #d9c8e8;
+  --painel-gold: #b3924c;
+  --painel-alert-bg: #f6dde3;
+  --painel-alert-border: #eabfca;
+  --painel-alert-text: #a45d6f;
 }
 
 .dark {

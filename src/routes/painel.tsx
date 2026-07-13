@@ -1,10 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { createFileRoute, Outlet, useNavigate, Link } from "@tanstack/react-router";
-import { Lock, LogOut, Loader2, KeyRound, Check, X, ChevronDown } from "lucide-react";
+import { LogOut, Loader2, KeyRound, Check, X, ChevronDown } from "lucide-react";
 import { SITE_URL } from "@/data/services";
 import { supabaseConfigurado } from "@/lib/supabase";
 import { entrar, sair, sessaoValida, trocarSenha, type Sessao } from "@/lib/painel";
-import logo from "@/assets/logo-mavi-dark.png";
 
 // Deriva um nome de exibição a partir do e-mail de login (ex.:
 // "marina.figueiredo@..." → "Marina Figueiredo"), já que o login continua
@@ -56,42 +55,42 @@ function LoginForm({ onEntrar }: { onEntrar: (s: Sessao) => void }) {
   };
 
   return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden px-6 py-16 bg-gradient-to-b from-lavender-soft/30 via-background to-background">
-      <img
-        src={logo}
-        alt=""
+    <section className="relative min-h-screen flex items-center justify-center overflow-hidden px-6 py-16 bg-painel-bg">
+      <div
         aria-hidden="true"
-        className="pointer-events-none select-none absolute left-1/2 top-1/2 h-[420px] w-[420px] max-w-none -translate-x-1/2 -translate-y-1/2 object-contain opacity-[0.06] sm:h-[640px] sm:w-[640px]"
+        className="pointer-events-none select-none absolute left-1/2 top-[46%] h-20 w-20 -translate-x-1/2 -translate-y-1/2 rounded-full border"
+        style={{ borderColor: "rgba(196,169,64,.35)" }}
+      />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none select-none absolute left-1/2 top-[46%] h-[120px] w-[120px] -translate-x-1/2 -translate-y-1/2 rounded-full border"
+        style={{ borderColor: "rgba(196,169,64,.18)" }}
       />
 
-      <div className="relative w-full max-w-sm">
-        <div className="text-center mb-8">
-          <div className="flex justify-center mb-4">
-            <div className="rounded-full bg-lavender-soft p-3">
-              <Lock className="h-6 w-6 text-primary" />
-            </div>
-          </div>
-          <h1 className="font-display text-3xl text-primary">Painel MAVI</h1>
-        </div>
+      <div className="relative w-full max-w-sm text-center">
+        <p className="text-[11px] tracking-[.22em] text-painel-gold mb-3.5 uppercase">Clínica</p>
+        <h1 className="font-display text-5xl italic text-painel-primary-deep mb-10">MAVI</h1>
 
-        <div className="rounded-3xl border border-border/60 bg-card/90 backdrop-blur-sm shadow-xl shadow-primary/5 p-6 sm:p-8">
+        <div className="rounded-[20px] border border-painel-border bg-white p-9 text-left shadow-[0_24px_50px_-30px_rgba(120,80,150,0.25)]">
           {!supabaseConfigurado() && (
-            <div className="mb-5 rounded-xl border border-rose/40 bg-rose/10 px-4 py-3 text-sm text-rose">
+            <div className="mb-5 rounded-xl border border-painel-alert-border bg-painel-alert-bg px-4 py-3 text-sm text-painel-alert-text">
               Supabase ainda não configurado. Defina as variáveis de ambiente
               <code className="mx-1">VITE_SUPABASE_URL</code> e
               <code className="mx-1">VITE_SUPABASE_ANON_KEY</code>.
             </div>
           )}
 
-          <form onSubmit={submeter} className="space-y-4">
+          <form onSubmit={submeter} className="space-y-5">
             <div>
-              <label className="block text-sm font-medium mb-2">Usuária</label>
+              <label className="block text-[11px] tracking-[.06em] text-painel-muted mb-2.5 uppercase">
+                Usuária
+              </label>
               <select
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 autoComplete="username"
-                className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring appearance-none bg-[url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2216%22 height=%2216%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22currentColor%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22><polyline points=%226 9 12 15 18 9%22/></svg>')] bg-no-repeat bg-[right_1rem_center] pr-10"
+                className="w-full rounded-xl border border-painel-border bg-painel-bg px-4 py-3.5 text-sm text-painel-title focus:outline-none focus:ring-2 focus:ring-painel-primary/40 appearance-none bg-[url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2214%22 height=%2214%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23a685bb%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22><polyline points=%226 9 12 15 18 9%22/></svg>')] bg-no-repeat bg-[right_1rem_center] pr-10"
               >
                 <option value="" disabled>
                   Selecione…
@@ -104,19 +103,21 @@ function LoginForm({ onEntrar }: { onEntrar: (s: Sessao) => void }) {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium mb-2">Senha</label>
+              <label className="block text-[11px] tracking-[.06em] text-painel-muted mb-2.5 uppercase">
+                Senha
+              </label>
               <input
                 type="password"
                 value={senha}
                 onChange={(e) => setSenha(e.target.value)}
                 required
                 autoComplete="current-password"
-                className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                className="w-full rounded-xl border border-painel-border bg-painel-bg px-4 py-3.5 text-sm text-painel-title focus:outline-none focus:ring-2 focus:ring-painel-primary/40"
               />
             </div>
 
             {erro && (
-              <div className="rounded-xl border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+              <div className="rounded-xl border border-painel-alert-border bg-painel-alert-bg px-4 py-3 text-sm text-painel-alert-text">
                 {erro}
               </div>
             )}
@@ -124,7 +125,7 @@ function LoginForm({ onEntrar }: { onEntrar: (s: Sessao) => void }) {
             <button
               type="submit"
               disabled={carregando || !email}
-              className="w-full inline-flex items-center justify-center gap-2 rounded-full bg-primary text-primary-foreground px-6 py-3 text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-40"
+              className="w-full inline-flex items-center justify-center gap-2 rounded-full bg-painel-primary text-white px-6 py-3.5 text-sm font-semibold tracking-[.03em] hover:bg-painel-primary/90 transition-colors disabled:opacity-40"
             >
               {carregando ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
               Entrar
@@ -168,30 +169,28 @@ function TrocarSenhaForm({ onFechar }: { onFechar: () => void }) {
   };
 
   return (
-    <div className="rounded-2xl border border-lavender/50 bg-lavender-soft/40 p-5 mb-8">
+    <div className="rounded-2xl border border-painel-border bg-painel-badge-bg/40 p-5 mb-8">
       <div className="flex items-center justify-between gap-2 mb-4">
         <div className="flex items-center gap-2">
-          <KeyRound className="h-4 w-4 text-primary" />
-          <h3 className="font-medium text-primary">Trocar senha</h3>
+          <KeyRound className="h-4 w-4 text-painel-primary" />
+          <h3 className="font-medium text-painel-title">Trocar senha</h3>
         </div>
         <button
           type="button"
           onClick={onFechar}
           title="Fechar"
-          className="text-muted-foreground/60 hover:text-primary transition-colors"
+          className="text-painel-muted hover:text-painel-primary transition-colors"
         >
           <X className="h-4 w-4" />
         </button>
       </div>
 
       {sucesso ? (
-        <p className="text-sm text-primary">Senha alterada com sucesso.</p>
+        <p className="text-sm text-painel-primary">Senha alterada com sucesso.</p>
       ) : (
         <form onSubmit={submeter} className="space-y-3">
           <div>
-            <label className="block text-xs font-medium text-muted-foreground mb-1.5">
-              Nova senha
-            </label>
+            <label className="block text-xs font-medium text-painel-muted mb-1.5">Nova senha</label>
             <input
               type="password"
               value={senha}
@@ -199,11 +198,11 @@ function TrocarSenhaForm({ onFechar }: { onFechar: () => void }) {
               required
               minLength={6}
               autoComplete="new-password"
-              className="w-full rounded-xl border border-border bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+              className="w-full rounded-xl border border-painel-border bg-white px-4 py-2.5 text-sm text-painel-title focus:outline-none focus:ring-2 focus:ring-painel-primary/40"
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-muted-foreground mb-1.5">
+            <label className="block text-xs font-medium text-painel-muted mb-1.5">
               Confirmar nova senha
             </label>
             <input
@@ -213,15 +212,15 @@ function TrocarSenhaForm({ onFechar }: { onFechar: () => void }) {
               required
               minLength={6}
               autoComplete="new-password"
-              className="w-full rounded-xl border border-border bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+              className="w-full rounded-xl border border-painel-border bg-white px-4 py-2.5 text-sm text-painel-title focus:outline-none focus:ring-2 focus:ring-painel-primary/40"
             />
           </div>
-          {erro && <p className="text-sm text-destructive">{erro}</p>}
+          {erro && <p className="text-sm text-painel-alert-text">{erro}</p>}
           <div className="flex items-center gap-2">
             <button
               type="submit"
               disabled={salvando}
-              className="inline-flex items-center gap-1.5 rounded-full bg-primary text-primary-foreground px-4 py-2 text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-40"
+              className="inline-flex items-center gap-1.5 rounded-full bg-painel-primary text-white px-4 py-2 text-sm font-medium hover:bg-painel-primary/90 transition-colors disabled:opacity-40"
             >
               {salvando ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
               Salvar
@@ -230,7 +229,7 @@ function TrocarSenhaForm({ onFechar }: { onFechar: () => void }) {
               type="button"
               onClick={onFechar}
               disabled={salvando}
-              className="rounded-full border border-border px-4 py-2 text-sm font-medium text-foreground/70 hover:border-primary/40 transition-colors disabled:opacity-40"
+              className="rounded-full border border-painel-border px-4 py-2 text-sm font-medium text-painel-muted hover:border-painel-primary/40 transition-colors disabled:opacity-40"
             >
               Cancelar
             </button>
@@ -267,24 +266,26 @@ function MenuUsuario({
       <button
         type="button"
         onClick={() => setAberto((v) => !v)}
-        className="inline-flex items-center gap-2 rounded-full border border-border px-3 py-1.5 sm:px-4 sm:py-2 text-sm font-medium text-foreground/70 hover:border-primary/40 transition-colors"
+        className="inline-flex items-center gap-2.5 rounded-full border border-painel-border pl-2 pr-4 py-[7px] text-sm font-medium text-painel-title hover:border-painel-primary/40 transition-colors"
       >
-        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-lavender-soft text-xs font-semibold text-primary">
+        <span className="flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded-full bg-painel-primary text-xs font-bold text-white">
           {nome.charAt(0).toUpperCase()}
         </span>
-        <span className="hidden sm:inline">{nome}</span>
-        <ChevronDown className={`h-4 w-4 shrink-0 transition-transform ${aberto ? "rotate-180" : ""}`} />
+        <span className="hidden sm:inline text-[13px]">{nome}</span>
+        <ChevronDown
+          className={`h-3 w-3 shrink-0 text-painel-muted transition-transform ${aberto ? "rotate-180" : ""}`}
+        />
       </button>
 
       {aberto && (
-        <div className="absolute right-0 top-full mt-2 w-48 rounded-xl border border-border bg-card shadow-lg py-1.5 z-10">
+        <div className="absolute right-0 top-full mt-2 w-48 rounded-xl border border-painel-border bg-white shadow-lg py-1.5 z-10">
           <button
             type="button"
             onClick={() => {
               setAberto(false);
               onTrocarSenha();
             }}
-            className="flex w-full items-center gap-2 px-4 py-2.5 text-sm text-foreground/80 hover:bg-lavender-soft/40 transition-colors"
+            className="flex w-full items-center gap-2 px-4 py-2.5 text-sm text-painel-title hover:bg-painel-badge-bg/40 transition-colors"
           >
             <KeyRound className="h-4 w-4" />
             Trocar senha
@@ -295,7 +296,7 @@ function MenuUsuario({
               setAberto(false);
               onSair();
             }}
-            className="flex w-full items-center gap-2 px-4 py-2.5 text-sm text-destructive hover:bg-destructive/10 transition-colors"
+            className="flex w-full items-center gap-2 px-4 py-2.5 text-sm text-painel-alert-text hover:bg-painel-alert-bg/50 transition-colors"
           >
             <LogOut className="h-4 w-4" />
             Sair
@@ -330,8 +331,8 @@ function PainelLayout() {
 
   if (estado === "carregando") {
     return (
-      <div className="min-h-[70vh] flex items-center justify-center">
-        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      <div className="min-h-screen flex items-center justify-center bg-painel-bg">
+        <Loader2 className="h-6 w-6 animate-spin text-painel-muted" />
       </div>
     );
   }
@@ -348,25 +349,27 @@ function PainelLayout() {
   }
 
   return (
-    <div className="mx-auto max-w-5xl px-4 sm:px-6 py-8">
-      <header className="flex items-center justify-between gap-4 mb-8 pb-5 border-b border-border">
-        <Link to="/painel" className="font-display text-2xl text-primary">
-          Painel <span className="italic">MAVI</span>
-        </Link>
-        <div className="flex items-center gap-3 text-sm">
-          <MenuUsuario
-            nome={nomeExibicao(email)}
-            onTrocarSenha={() => setTrocandoSenha(true)}
-            onSair={() => {
-              sair();
-              setEstado("deslogado");
-              navigate({ to: "/painel" });
-            }}
-          />
-        </div>
-      </header>
-      {trocandoSenha && <TrocarSenhaForm onFechar={() => setTrocandoSenha(false)} />}
-      <Outlet />
+    <div className="min-h-screen bg-painel-bg">
+      <div className="mx-auto max-w-5xl px-4 sm:px-6 py-8">
+        <header className="flex items-center justify-between gap-4 mb-8 pb-5 border-b border-painel-border">
+          <Link to="/painel" className="font-display text-2xl text-painel-title">
+            Painel <span className="italic text-painel-primary">MAVI</span>
+          </Link>
+          <div className="flex items-center gap-3 text-sm">
+            <MenuUsuario
+              nome={nomeExibicao(email)}
+              onTrocarSenha={() => setTrocandoSenha(true)}
+              onSair={() => {
+                sair();
+                setEstado("deslogado");
+                navigate({ to: "/painel" });
+              }}
+            />
+          </div>
+        </header>
+        {trocandoSenha && <TrocarSenhaForm onFechar={() => setTrocandoSenha(false)} />}
+        <Outlet />
+      </div>
     </div>
   );
 }
