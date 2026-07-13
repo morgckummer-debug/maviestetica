@@ -8,13 +8,15 @@ import {
   CameraOff,
   Check,
   ChevronRight,
+  Send,
   Trash2,
 } from "lucide-react";
-import { FICHAS, nomeTipo, nomeCurto } from "@/data/anamnese";
+import { FICHAS, TIPOS, nomeTipo, nomeCurto } from "@/data/anamnese";
 import { listarFichas, excluirFicha, type Ficha } from "@/lib/painel";
 import { clientePorFichaId, type Cliente } from "@/lib/clientes";
 import { mascaraTelefone } from "@/lib/mascaras";
 import { HistoricoSessoes, type Procedimento } from "@/components/HistoricoSessoes";
+import { EnviarFicha } from "@/components/EnviarFicha";
 
 export const Route = createFileRoute("/painel/cliente/$id")({
   component: PaginaCliente,
@@ -39,6 +41,7 @@ function PaginaCliente() {
   const [erro, setErro] = useState<string | null>(null);
   const [erroExcluir, setErroExcluir] = useState<string | null>(null);
   const [excluindoId, setExcluindoId] = useState<string | null>(null);
+  const [enviandoFicha, setEnviandoFicha] = useState(false);
 
   useEffect(() => {
     listarFichas()
@@ -85,6 +88,10 @@ function PaginaCliente() {
         : [],
     [cliente],
   );
+
+  // Sugere de cara um procedimento que a cliente ainda não tem ficha,
+  // caso ela se interesse por outro tratamento.
+  const tipoSugerido = cliente ? (TIPOS.find((t) => !cliente.tipos.includes(t)) ?? TIPOS[0]) : TIPOS[0];
 
   if (!fichas && !erro) {
     return (
@@ -168,10 +175,34 @@ function PaginaCliente() {
 
       {/* Fichas da cliente — cada uma abre a ficha completa (anamnese/medidas) */}
       <div className="mt-8">
-        <h3 className="font-display text-2xl text-primary mb-1">Fichas</h3>
+        <div className="flex items-center justify-between gap-3 mb-1">
+          <h3 className="font-display text-2xl text-primary">Fichas</h3>
+          {!enviandoFicha && (
+            <button
+              type="button"
+              onClick={() => setEnviandoFicha(true)}
+              className="inline-flex items-center gap-1.5 rounded-full bg-primary text-primary-foreground px-4 py-2 text-sm font-medium hover:bg-primary/90 transition-colors"
+            >
+              <Send className="h-4 w-4" />
+              Enviar ficha
+            </button>
+          )}
+        </div>
         <p className="text-sm text-muted-foreground mb-4">
-          Abra a ficha para ver a anamnese completa e a avaliação.
+          Abra a ficha para ver a anamnese completa e a avaliação. Interessou por outro
+          procedimento? Envie uma nova ficha pra ela preencher.
         </p>
+
+        {enviandoFicha && (
+          <EnviarFicha
+            nomeInicial={cliente.nome}
+            celularInicial={cliente.telefone}
+            tipoInicial={tipoSugerido}
+            convitePadrao
+            onFechar={() => setEnviandoFicha(false)}
+          />
+        )}
+
         {erroExcluir && <p className="text-sm text-destructive mb-4">{erroExcluir}</p>}
         <div className="space-y-3">
           {cliente.fichas.map((f) => (
