@@ -6,6 +6,7 @@ import {
   Copy,
   Loader2,
   MessageCircle,
+  Pencil,
   Plus,
   Trash2,
 } from "lucide-react";
@@ -20,6 +21,7 @@ import {
   listarSessoesDeFichas,
   criarSessao,
   excluirSessao,
+  atualizarSessao,
   atualizarFicha,
   type SessaoAtendimento,
 } from "@/lib/painel";
@@ -86,6 +88,7 @@ function confirmadaEm(iso: string): string {
 type LinhaSessao = {
   sessaoId: string;
   data: string;
+  observacao: string | null;
   confirmado: boolean;
   confirmado_em: string | null;
   token: string;
@@ -132,25 +135,97 @@ function segmentarPorPacote(linhas: LinhaSessao[], pacotes: number[]): Segmento[
   return segmentos;
 }
 
+// Estado (e ações) da edição de sessão, compartilhado entre todas as
+// linhas — só uma pode estar em edição por vez.
+type EdicaoSessao = {
+  sessaoId: string | null;
+  data: string;
+  observacao: string;
+  salvando: boolean;
+  onData: (v: string) => void;
+  onObservacao: (v: string) => void;
+  onSalvar: () => void;
+  onCancelar: () => void;
+  onIniciar: (s: { id: string; data: string; observacao: string | null }) => void;
+};
+
 // Uma linha de sessão (data + status colorido + ações). Reaproveitada nos
-// segmentos de pacote e nas sessões sem item ("Outras sessões").
+// segmentos de pacote e nas sessões sem item ("Outras sessões"). Vira um
+// formulário inline quando está sendo editada (ex.: corrigir a data).
 function LinhaSessaoView({
+  id,
   texto,
+  data,
+  observacao,
   confirmado,
   confirmadoEm,
   copiado,
   onCopiar,
   linkWhatsapp,
   onRemover,
+  edicao,
 }: {
+  id: string;
   texto: string;
+  data: string;
+  observacao: string | null;
   confirmado: boolean;
   confirmadoEm: string | null;
   copiado: boolean;
   onCopiar: () => void;
   linkWhatsapp: string;
   onRemover: () => void;
+  edicao: EdicaoSessao;
 }) {
+  if (edicao.sessaoId === id) {
+    return (
+      <li className="rounded-lg border border-lavender/50 bg-lavender-soft/20 p-3">
+        <div className="mb-2">
+          <label className="block text-xs font-medium text-muted-foreground mb-1">Data</label>
+          <input
+            type="date"
+            value={edicao.data}
+            onChange={(e) => edicao.onData(e.target.value)}
+            className="rounded-lg border border-border bg-background px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+          />
+        </div>
+        <div className="mb-3">
+          <label className="block text-xs font-medium text-muted-foreground mb-1">Observação</label>
+          <textarea
+            value={edicao.observacao}
+            onChange={(e) => edicao.onObservacao(e.target.value)}
+            rows={2}
+            placeholder="Opcional"
+            className="w-full rounded-lg border border-border bg-background px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={edicao.onSalvar}
+            disabled={edicao.salvando}
+            className="inline-flex items-center gap-1.5 rounded-full bg-primary text-primary-foreground px-3.5 py-1.5 text-xs font-medium hover:bg-primary/90 transition-colors disabled:opacity-40"
+          >
+            {edicao.salvando ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <Check className="h-3.5 w-3.5" />
+            )}
+            Salvar
+          </button>
+          <button
+            type="button"
+            onClick={edicao.onCancelar}
+            disabled={edicao.salvando}
+            className="rounded-full border border-border px-3.5 py-1.5 text-xs font-medium text-foreground/70 hover:border-primary/40 transition-colors disabled:opacity-40"
+          >
+            Cancelar
+          </button>
+        </div>
+      </li>
+    );
+  }
+
   return (
     <li className="flex items-center gap-2 text-sm">
       {confirmado && <Check className="h-3.5 w-3.5 shrink-0 text-emerald-600 dark:text-emerald-500" />}
@@ -162,35 +237,45 @@ function LinhaSessaoView({
       >
         {texto}
       </span>
-      {!confirmado && (
-        <span className="flex items-center gap-1.5 ml-auto shrink-0">
-          <button
-            type="button"
-            onClick={onCopiar}
-            title="Copiar link"
-            className="text-muted-foreground/60 hover:text-primary transition-colors"
-          >
-            {copiado ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
-          </button>
-          <a
-            href={linkWhatsapp}
-            target="_blank"
-            rel="noreferrer"
-            title="Enviar por WhatsApp"
-            className="text-muted-foreground/60 hover:text-primary transition-colors"
-          >
-            <MessageCircle className="h-3.5 w-3.5" />
-          </a>
-        </span>
-      )}
-      <button
-        type="button"
-        onClick={onRemover}
-        title="Excluir sessão"
-        className={`shrink-0 text-muted-foreground/40 hover:text-destructive transition-colors ${confirmado ? "ml-auto" : ""}`}
-      >
-        <Trash2 className="h-3.5 w-3.5" />
-      </button>
+      <span className="flex items-center gap-1.5 ml-auto shrink-0">
+        {!confirmado && (
+          <>
+            <button
+              type="button"
+              onClick={onCopiar}
+              title="Copiar link"
+              className="text-muted-foreground/60 hover:text-primary transition-colors"
+            >
+              {copiado ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+            </button>
+            <a
+              href={linkWhatsapp}
+              target="_blank"
+              rel="noreferrer"
+              title="Enviar por WhatsApp"
+              className="text-muted-foreground/60 hover:text-primary transition-colors"
+            >
+              <MessageCircle className="h-3.5 w-3.5" />
+            </a>
+          </>
+        )}
+        <button
+          type="button"
+          onClick={() => edicao.onIniciar({ id, data, observacao })}
+          title="Editar sessão"
+          className="text-muted-foreground/40 hover:text-primary transition-colors"
+        >
+          <Pencil className="h-3.5 w-3.5" />
+        </button>
+        <button
+          type="button"
+          onClick={onRemover}
+          title="Excluir sessão"
+          className="text-muted-foreground/40 hover:text-destructive transition-colors"
+        >
+          <Trash2 className="h-3.5 w-3.5" />
+        </button>
+      </span>
     </li>
   );
 }
@@ -229,6 +314,7 @@ function agruparPorItem(
       g.linhas.push({
         sessaoId: s.id,
         data: s.data,
+        observacao: s.observacao,
         confirmado: s.confirmado,
         confirmado_em: s.confirmado_em,
         token: s.token,
@@ -266,6 +352,12 @@ export function HistoricoSessoes({
   const [salvando, setSalvando] = useState(false);
 
   const [copiadoId, setCopiadoId] = useState<string | null>(null);
+
+  // Edição de uma sessão já registrada (corrigir data/observação).
+  const [editandoSessaoId, setEditandoSessaoId] = useState<string | null>(null);
+  const [editData, setEditData] = useState("");
+  const [editObservacao, setEditObservacao] = useState("");
+  const [salvandoEdicao, setSalvandoEdicao] = useState(false);
 
   // Pacotes salvos nesta sessão do painel (além dos que já vieram nas
   // fichas), pra refletir na hora sem precisar recarregar a página.
@@ -375,6 +467,47 @@ export function HistoricoSessoes({
     } catch (e) {
       setErro(e instanceof Error ? e.message : "Erro ao excluir sessão.");
     }
+  };
+
+  const iniciarEdicaoSessao = (s: { id: string; data: string; observacao: string | null }) => {
+    setEditandoSessaoId(s.id);
+    setEditData(s.data);
+    setEditObservacao(s.observacao ?? "");
+    setErro(null);
+  };
+
+  const cancelarEdicaoSessao = () => setEditandoSessaoId(null);
+
+  const salvarEdicaoSessao = async () => {
+    if (!editandoSessaoId) return;
+    setSalvandoEdicao(true);
+    setErro(null);
+    try {
+      const observacao = editObservacao.trim() || null;
+      await atualizarSessao(editandoSessaoId, { data: editData, observacao });
+      setSessoes((prev) =>
+        (prev ?? []).map((s) =>
+          s.id === editandoSessaoId ? { ...s, data: editData, observacao } : s,
+        ),
+      );
+      setEditandoSessaoId(null);
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : "Erro ao salvar a sessão.");
+    } finally {
+      setSalvandoEdicao(false);
+    }
+  };
+
+  const edicaoSessao: EdicaoSessao = {
+    sessaoId: editandoSessaoId,
+    data: editData,
+    observacao: editObservacao,
+    salvando: salvandoEdicao,
+    onData: setEditData,
+    onObservacao: setEditObservacao,
+    onSalvar: salvarEdicaoSessao,
+    onCancelar: cancelarEdicaoSessao,
+    onIniciar: iniciarEdicaoSessao,
   };
 
   const linkDe = (token: string) => `${origin}/confirmar/${token}`;
@@ -645,13 +778,17 @@ export function HistoricoSessoes({
                           {seg.linhas.map((l, idx) => (
                             <LinhaSessaoView
                               key={l.sessaoId}
+                              id={l.sessaoId}
                               texto={`${dataBR(l.data)}: ${idx + 1}ª sessão (${l.confirmado ? "confirmado pelo cliente" : "aguardando confirmação"})`}
+                              data={l.data}
+                              observacao={l.observacao}
                               confirmado={l.confirmado}
                               confirmadoEm={l.confirmado_em}
                               copiado={copiadoId === l.sessaoId}
                               onCopiar={() => copiar(l.sessaoId, l.token)}
                               linkWhatsapp={whatsappDe(l.token, l.data)}
                               onRemover={() => remover(l.sessaoId)}
+                              edicao={edicaoSessao}
                             />
                           ))}
                         </ul>
@@ -695,13 +832,17 @@ export function HistoricoSessoes({
                           {seg.linhas.map((l, idx) => (
                             <LinhaSessaoView
                               key={l.sessaoId}
+                              id={l.sessaoId}
                               texto={`${dataBR(l.data)}: ${idx + 1}ª sessão (${l.confirmado ? "confirmado pelo cliente" : "aguardando confirmação"})`}
+                              data={l.data}
+                              observacao={l.observacao}
                               confirmado={l.confirmado}
                               confirmadoEm={l.confirmado_em}
                               copiado={copiadoId === l.sessaoId}
                               onCopiar={() => copiar(l.sessaoId, l.token)}
                               linkWhatsapp={whatsappDe(l.token, l.data)}
                               onRemover={() => remover(l.sessaoId)}
+                              edicao={edicaoSessao}
                             />
                           ))}
                         </ul>
@@ -721,13 +862,17 @@ export function HistoricoSessoes({
               {semItem.map((s) => (
                 <LinhaSessaoView
                   key={s.id}
+                  id={s.id}
                   texto={`${dataBR(s.data)}${s.observacao ? `: ${s.observacao}` : ""} (${s.confirmado ? "confirmado pelo cliente" : "aguardando confirmação"})`}
+                  data={s.data}
+                  observacao={s.observacao}
                   confirmado={s.confirmado}
                   confirmadoEm={s.confirmado_em}
                   copiado={copiadoId === s.id}
                   onCopiar={() => copiar(s.id, s.token)}
                   linkWhatsapp={whatsappDe(s.token, s.data)}
                   onRemover={() => remover(s.id)}
+                  edicao={edicaoSessao}
                 />
               ))}
             </ul>

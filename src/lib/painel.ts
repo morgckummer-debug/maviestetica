@@ -237,6 +237,20 @@ export async function criarSessao(
   return arr[0];
 }
 
+// Corrige data/observação de uma sessão já registrada (ex.: data digitada
+// errada). Não mexe em áreas, confirmação nem token.
+export async function atualizarSessao(
+  id: string,
+  patch: Partial<Pick<SessaoAtendimento, "data" | "observacao">>,
+): Promise<void> {
+  const res = await apiRest(`sessoes?id=eq.${encodeURIComponent(id)}`, {
+    method: "PATCH",
+    headers: { Prefer: "return=minimal" },
+    body: JSON.stringify(patch),
+  });
+  if (!res.ok) throw new Error("Não foi possível salvar as alterações da sessão.");
+}
+
 export async function excluirSessao(id: string): Promise<void> {
   const res = await apiRest(`sessoes?id=eq.${encodeURIComponent(id)}`, {
     method: "DELETE",
