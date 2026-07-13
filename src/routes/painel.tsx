@@ -1,9 +1,23 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createFileRoute, Outlet, useNavigate, Link } from "@tanstack/react-router";
-import { Lock, LogOut, Loader2, KeyRound, Check, X } from "lucide-react";
+import { Lock, LogOut, Loader2, KeyRound, Check, X, ChevronDown } from "lucide-react";
 import { SITE_URL } from "@/data/services";
 import { supabaseConfigurado } from "@/lib/supabase";
 import { entrar, sair, sessaoValida, trocarSenha, type Sessao } from "@/lib/painel";
+
+// Deriva um nome de exibição a partir do e-mail de login (ex.:
+// "marina.figueiredo@..." → "Marina Figueiredo"), já que o login continua
+// sendo por e-mail mas o cabeçalho fica mais pessoal mostrando um nome.
+function nomeExibicao(email?: string): string {
+  const local = email?.split("@")[0] ?? "";
+  const partes = local
+    .replace(/[._-]+/g, " ")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
+  if (partes.length === 0) return "Usuária";
+  return partes.map((p) => p.charAt(0).toUpperCase() + p.slice(1)).join(" ");
+}
 
 export const Route = createFileRoute("/painel")({
   head: () => ({
@@ -203,6 +217,71 @@ function TrocarSenhaForm({ onFechar }: { onFechar: () => void }) {
   );
 }
 
+function MenuUsuario({
+  nome,
+  onTrocarSenha,
+  onSair,
+}: {
+  nome: string;
+  onTrocarSenha: () => void;
+  onSair: () => void;
+}) {
+  const [aberto, setAberto] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!aberto) return;
+    const fechar = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setAberto(false);
+    };
+    document.addEventListener("mousedown", fechar);
+    return () => document.removeEventListener("mousedown", fechar);
+  }, [aberto]);
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        onClick={() => setAberto((v) => !v)}
+        className="inline-flex items-center gap-2 rounded-full border border-border px-3 py-1.5 sm:px-4 sm:py-2 text-sm font-medium text-foreground/70 hover:border-primary/40 transition-colors"
+      >
+        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-lavender-soft text-xs font-semibold text-primary">
+          {nome.charAt(0).toUpperCase()}
+        </span>
+        <span className="hidden sm:inline">{nome}</span>
+        <ChevronDown className={`h-4 w-4 shrink-0 transition-transform ${aberto ? "rotate-180" : ""}`} />
+      </button>
+
+      {aberto && (
+        <div className="absolute right-0 top-full mt-2 w-48 rounded-xl border border-border bg-card shadow-lg py-1.5 z-10">
+          <button
+            type="button"
+            onClick={() => {
+              setAberto(false);
+              onTrocarSenha();
+            }}
+            className="flex w-full items-center gap-2 px-4 py-2.5 text-sm text-foreground/80 hover:bg-lavender-soft/40 transition-colors"
+          >
+            <KeyRound className="h-4 w-4" />
+            Trocar senha
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setAberto(false);
+              onSair();
+            }}
+            className="flex w-full items-center gap-2 px-4 py-2.5 text-sm text-destructive hover:bg-destructive/10 transition-colors"
+          >
+            <LogOut className="h-4 w-4" />
+            Sair
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function PainelLayout() {
   const [estado, setEstado] = useState<"carregando" | "logado" | "deslogado">("carregando");
   const [email, setEmail] = useState<string | undefined>();
@@ -251,28 +330,15 @@ function PainelLayout() {
           Painel <span className="italic">MAVI</span>
         </Link>
         <div className="flex items-center gap-3 text-sm">
-          {email && <span className="text-muted-foreground hidden sm:inline">{email}</span>}
-          <button
-            type="button"
-            onClick={() => setTrocandoSenha(true)}
-            title="Trocar senha"
-            className="inline-flex items-center gap-1.5 rounded-full border border-border px-4 py-2 font-medium text-foreground/70 hover:border-primary/40 transition-colors"
-          >
-            <KeyRound className="h-4 w-4" />
-            <span className="hidden sm:inline">Trocar senha</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => {
+          <MenuUsuario
+            nome={nomeExibicao(email)}
+            onTrocarSenha={() => setTrocandoSenha(true)}
+            onSair={() => {
               sair();
               setEstado("deslogado");
               navigate({ to: "/painel" });
             }}
-            className="inline-flex items-center gap-1.5 rounded-full border border-border px-4 py-2 font-medium text-foreground/70 hover:border-primary/40 transition-colors"
-          >
-            <LogOut className="h-4 w-4" />
-            <span className="hidden sm:inline">Sair</span>
-          </button>
+          />
         </div>
       </header>
       {trocandoSenha && <TrocarSenhaForm onFechar={() => setTrocandoSenha(false)} />}
