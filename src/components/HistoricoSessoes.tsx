@@ -26,6 +26,8 @@ import {
   type SessaoAtendimento,
 } from "@/lib/painel";
 
+const CINCO_MINUTOS_MS = 5 * 60 * 1000;
+
 // Uma opção de procedimento = uma ficha da cliente (depilação, facial...).
 // `pacotes` traz, por item, a lista de pacotes comprados em ordem (ex.:
 // [10, 10] = comprou um pacote de 10, completou, e comprou mais 10).
@@ -437,13 +439,13 @@ export function HistoricoSessoes({
       .catch((e) => setErro(e instanceof Error ? e.message : "Erro ao carregar sessões."));
 
     // Auto-refresh: pega a confirmação da cliente (ou nova sessão de
-    // outro dispositivo) a cada 20s, sem precisar recarregar a página.
+    // outro dispositivo) a cada 5min, sem precisar recarregar a página.
     const intervalo = setInterval(() => {
       if (ocupadoRef.current) return;
       listarSessoesDeFichas(ids)
         .then(setSessoes)
         .catch(() => {});
-    }, 20000);
+    }, CINCO_MINUTOS_MS);
     return () => clearInterval(intervalo);
   }, [ids]);
 
@@ -830,7 +832,7 @@ export function HistoricoSessoes({
                             <LinhaSessaoView
                               key={l.sessaoId}
                               id={l.sessaoId}
-                              texto={`${dataBR(l.data)}: ${idx + 1}ª sessão (${l.confirmado ? "confirmado pelo cliente" : "aguardando confirmação"})`}
+                              texto={`${dataBR(l.data)}: ${idx + 1}ª sessão (${l.confirmado ? "confirmado" : "aguardando confirmação"})`}
                               data={l.data}
                               observacao={l.observacao}
                               confirmado={l.confirmado}
@@ -884,7 +886,7 @@ export function HistoricoSessoes({
                             <LinhaSessaoView
                               key={l.sessaoId}
                               id={l.sessaoId}
-                              texto={`${dataBR(l.data)}: ${idx + 1}ª sessão (${l.confirmado ? "confirmado pelo cliente" : "aguardando confirmação"})`}
+                              texto={`${dataBR(l.data)}: ${idx + 1}ª sessão (${l.confirmado ? "confirmado" : "aguardando confirmação"})`}
                               data={l.data}
                               observacao={l.observacao}
                               confirmado={l.confirmado}
@@ -914,7 +916,7 @@ export function HistoricoSessoes({
                 <LinhaSessaoView
                   key={s.id}
                   id={s.id}
-                  texto={`${dataBR(s.data)}${s.observacao ? `: ${s.observacao}` : ""} (${s.confirmado ? "confirmado pelo cliente" : "aguardando confirmação"})`}
+                  texto={`${dataBR(s.data)}${s.observacao ? `: ${s.observacao}` : ""} (${s.confirmado ? "confirmado" : "aguardando confirmação"})`}
                   data={s.data}
                   observacao={s.observacao}
                   confirmado={s.confirmado}
