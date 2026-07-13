@@ -247,10 +247,19 @@ export async function atualizarSessao(
 ): Promise<void> {
   const res = await apiRest(`sessoes?id=eq.${encodeURIComponent(id)}`, {
     method: "PATCH",
-    headers: { Prefer: "return=minimal" },
+    headers: { Prefer: "return=representation" },
     body: JSON.stringify(patch),
   });
   if (!res.ok) throw new Error("Não foi possível salvar as alterações da sessão.");
+  // Se o banco não tem a policy de UPDATE em sessoes, o PostgREST responde
+  // OK mas não altera nenhuma linha — sem isso, o erro passaria em
+  // silêncio (é o que estava acontecendo).
+  const alteradas = (await res.json().catch(() => [])) as unknown[];
+  if (!Array.isArray(alteradas) || alteradas.length === 0) {
+    throw new Error(
+      "A alteração não foi salva no banco (permissão de atualizar sessões ausente). Rode de novo a parte de UPDATE da migração 0005_sessoes.sql no Supabase.",
+    );
+  }
 }
 
 export async function excluirSessao(id: string): Promise<void> {
