@@ -20,6 +20,7 @@ export const Route = createFileRoute("/painel/")({
 });
 
 const POR_PAGINA = 20;
+const CINCO_MINUTOS_MS = 5 * 60 * 1000;
 
 function ListaFichas() {
   const [fichas, setFichas] = useState<Ficha[] | null>(null);
@@ -33,7 +34,7 @@ function ListaFichas() {
       .then(setFichas)
       .catch((e) => setErro(e instanceof Error ? e.message : "Erro ao carregar."));
 
-    // Auto-refresh: atualiza a lista sozinha a cada 20s (ex.: nova ficha
+    // Auto-refresh: atualiza a lista sozinha a cada 5min (ex.: nova ficha
     // preenchida pela cliente), sem precisar recarregar a página. Falhas
     // aqui ficam em silêncio — não interrompe quem já está com a lista
     // carregada só por causa de uma soneca de rede.
@@ -41,7 +42,7 @@ function ListaFichas() {
       listarFichas()
         .then(setFichas)
         .catch(() => {});
-    }, 20000);
+    }, CINCO_MINUTOS_MS);
     return () => clearInterval(intervalo);
   }, []);
 
