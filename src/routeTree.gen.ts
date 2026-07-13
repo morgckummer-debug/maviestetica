@@ -19,8 +19,8 @@ import { Route as AvaliacaoIndexRouteImport } from './routes/avaliacao.index'
 import { Route as ServicosSlugRouteImport } from './routes/servicos.$slug'
 import { Route as ResultadosPowerReduxRouteImport } from './routes/resultados.power-redux'
 import { Route as PainelIdRouteImport } from './routes/painel.$id'
-import { Route as AvaliacaoTipoRouteImport } from './routes/avaliacao.$tipo'
 import { Route as ConfirmarTokenRouteImport } from './routes/confirmar.$token'
+import { Route as AvaliacaoTipoRouteImport } from './routes/avaliacao.$tipo'
 import { Route as PainelClienteIdRouteImport } from './routes/painel.cliente.$id'
 
 const PowerReduxRoute = PowerReduxRouteImport.update({
@@ -73,14 +73,14 @@ const PainelIdRoute = PainelIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => PainelRoute,
 } as any)
-const AvaliacaoTipoRoute = AvaliacaoTipoRouteImport.update({
-  id: '/avaliacao/$tipo',
-  path: '/avaliacao/$tipo',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ConfirmarTokenRoute = ConfirmarTokenRouteImport.update({
   id: '/confirmar/$token',
   path: '/confirmar/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AvaliacaoTipoRoute = AvaliacaoTipoRouteImport.update({
+  id: '/avaliacao/$tipo',
+  path: '/avaliacao/$tipo',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PainelClienteIdRoute = PainelClienteIdRouteImport.update({
@@ -266,18 +266,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PainelIdRouteImport
       parentRoute: typeof PainelRoute
     }
-    '/avaliacao/$tipo': {
-      id: '/avaliacao/$tipo'
-      path: '/avaliacao/$tipo'
-      fullPath: '/avaliacao/$tipo'
-      preLoaderRoute: typeof AvaliacaoTipoRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/confirmar/$token': {
       id: '/confirmar/$token'
       path: '/confirmar/$token'
       fullPath: '/confirmar/$token'
       preLoaderRoute: typeof ConfirmarTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/avaliacao/$tipo': {
+      id: '/avaliacao/$tipo'
+      path: '/avaliacao/$tipo'
+      fullPath: '/avaliacao/$tipo'
+      preLoaderRoute: typeof AvaliacaoTipoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/painel/cliente/$id': {
@@ -292,14 +292,14 @@ declare module '@tanstack/react-router' {
 
 interface PainelRouteChildren {
   PainelIdRoute: typeof PainelIdRoute
-  PainelClienteIdRoute: typeof PainelClienteIdRoute
   PainelIndexRoute: typeof PainelIndexRoute
+  PainelClienteIdRoute: typeof PainelClienteIdRoute
 }
 
 const PainelRouteChildren: PainelRouteChildren = {
   PainelIdRoute: PainelIdRoute,
-  PainelClienteIdRoute: PainelClienteIdRoute,
   PainelIndexRoute: PainelIndexRoute,
+  PainelClienteIdRoute: PainelClienteIdRoute,
 }
 
 const PainelRouteWithChildren =
@@ -320,3 +320,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
