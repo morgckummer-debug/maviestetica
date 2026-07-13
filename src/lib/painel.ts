@@ -27,9 +27,11 @@ export type Ficha = {
   medidas: Record<string, string>;
   relatorio: string | null;
   arquivada: boolean;
-  // Sessões compradas por item (ex.: "Axilas": 10), para a barra de
-  // progresso do pacote no histórico de sessões.
-  pacotes: Record<string, number>;
+  // Pacotes comprados por item, em ordem (ex.: "Axilas": [10, 10] = comprou
+  // 10, completou, comprou mais 10), para a barra de progresso do histórico
+  // de sessões. Aceita também um número só, formato salvo antes de suportar
+  // múltiplos pacotes por item.
+  pacotes: Record<string, number | number[]>;
 };
 
 function agora(): number {

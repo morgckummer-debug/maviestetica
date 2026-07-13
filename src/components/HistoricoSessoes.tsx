@@ -1,5 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
-import { Check, Copy, Loader2, MessageCircle, Plus, Trash2 } from "lucide-react";
+import {
+  Check,
+  ChevronDown,
+  ChevronRight,
+  Copy,
+  Loader2,
+  MessageCircle,
+  Plus,
+  Trash2,
+} from "lucide-react";
 import {
   FICHAS,
   OPCOES_SESSAO,
@@ -16,13 +25,23 @@ import {
 } from "@/lib/painel";
 
 // Uma opção de procedimento = uma ficha da cliente (depilação, facial...).
-// `pacotes` traz quantas sessões de cada item ela comprou (se informado).
+// `pacotes` traz, por item, a lista de pacotes comprados em ordem (ex.:
+// [10, 10] = comprou um pacote de 10, completou, e comprou mais 10).
+// Aceita também o formato antigo (um único número), por compatibilidade.
 export type Procedimento = {
   id: string;
   tipo: Tipo;
   nome: string;
-  pacotes: Record<string, number>;
+  pacotes: Record<string, number | number[]>;
 };
+
+// Normaliza o valor salvo (pode ser o formato antigo — um número só — ou
+// já uma lista de pacotes) para sempre trabalhar com uma lista.
+function normalizarPacotes(v: number | number[] | undefined): number[] {
+  if (Array.isArray(v)) return v.filter((n) => typeof n === "number" && n > 0);
+  if (typeof v === "number" && v > 0) return [v];
+  return [];
+}
 
 // Data de hoje em "YYYY-MM-DD" no fuso local (para o <input type="date">).
 function hojeISO(): string {
@@ -82,6 +101,98 @@ type GrupoItem = {
   linhas: LinhaSessao[];
   maisRecente: string;
 };
+
+// Um pedaço das sessões de um item que pertence a um mesmo pacote comprado
+// (ou, quando `pacoteTotal` é undefined, sessões avulsas fora de pacote).
+type Segmento = {
+  numero: number;
+  linhas: LinhaSessao[];
+  pacoteTotal?: number;
+  completo: boolean;
+};
+
+// Divide as sessões (já em ordem cronológica) de um item nos pacotes
+// comprados, na ordem em que foram definidos: as primeiras N sessões
+// pertencem ao 1º pacote, as próximas M ao 2º, e assim por diante. O que
+// sobrar depois do último pacote (ou tudo, se nunca houve pacote) vira um
+// segmento avulso, sem número de pacote.
+function segmentarPorPacote(linhas: LinhaSessao[], pacotes: number[]): Segmento[] {
+  const segmentos: Segmento[] = [];
+  let indice = 0;
+  pacotes.forEach((tamanho, i) => {
+    if (indice >= linhas.length) return;
+    const fatia = linhas.slice(indice, indice + tamanho);
+    segmentos.push({ numero: i + 1, linhas: fatia, pacoteTotal: tamanho, completo: fatia.length >= tamanho });
+    indice += fatia.length;
+  });
+  if (indice < linhas.length) {
+    segmentos.push({ numero: segmentos.length + 1, linhas: linhas.slice(indice), completo: false });
+  }
+  return segmentos;
+}
+
+// Uma linha de sessão (data + status colorido + ações). Reaproveitada nos
+// segmentos de pacote e nas sessões sem item ("Outras sessões").
+function LinhaSessaoView({
+  texto,
+  confirmado,
+  confirmadoEm,
+  copiado,
+  onCopiar,
+  linkWhatsapp,
+  onRemover,
+}: {
+  texto: string;
+  confirmado: boolean;
+  confirmadoEm: string | null;
+  copiado: boolean;
+  onCopiar: () => void;
+  linkWhatsapp: string;
+  onRemover: () => void;
+}) {
+  return (
+    <li className="flex items-center gap-2 text-sm">
+      {confirmado && <Check className="h-3.5 w-3.5 shrink-0 text-emerald-600 dark:text-emerald-500" />}
+      <span
+        title={confirmadoEm ? `Confirmado em ${confirmadaEm(confirmadoEm)}` : undefined}
+        className={
+          confirmado ? "text-emerald-700 dark:text-emerald-400" : "text-amber-600 dark:text-amber-500"
+        }
+      >
+        {texto}
+      </span>
+      {!confirmado && (
+        <span className="flex items-center gap-1.5 ml-auto shrink-0">
+          <button
+            type="button"
+            onClick={onCopiar}
+            title="Copiar link"
+            className="text-muted-foreground/60 hover:text-primary transition-colors"
+          >
+            {copiado ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+          </button>
+          <a
+            href={linkWhatsapp}
+            target="_blank"
+            rel="noreferrer"
+            title="Enviar por WhatsApp"
+            className="text-muted-foreground/60 hover:text-primary transition-colors"
+          >
+            <MessageCircle className="h-3.5 w-3.5" />
+          </a>
+        </span>
+      )}
+      <button
+        type="button"
+        onClick={onRemover}
+        title="Excluir sessão"
+        className={`shrink-0 text-muted-foreground/40 hover:text-destructive transition-colors ${confirmado ? "ml-auto" : ""}`}
+      >
+        <Trash2 className="h-3.5 w-3.5" />
+      </button>
+    </li>
+  );
+}
 
 // Agrupa as sessões por item (não por data), para o histórico compacto:
 // cada item vira uma lista curta de linhas coloridas por confirmação.
@@ -158,7 +269,11 @@ export function HistoricoSessoes({
 
   // Pacotes salvos nesta sessão do painel (além dos que já vieram nas
   // fichas), pra refletir na hora sem precisar recarregar a página.
-  const [pacotesOverride, setPacotesOverride] = useState<Record<string, number>>({});
+  const [pacotesOverride, setPacotesOverride] = useState<Record<string, number[]>>({});
+
+  // Segmentos (pacotes) já concluídos que a Marina abriu manualmente pra
+  // ver os detalhes, ou pacotes em aberto que ela recolheu.
+  const [expandidos, setExpandidos] = useState<Record<string, boolean>>({});
 
   const fichaPorId = useMemo(() => {
     const m = new Map<string, Procedimento>();
@@ -166,12 +281,15 @@ export function HistoricoSessoes({
     return m;
   }, [fichas]);
 
-  // Quantas sessões desse item a cliente comprou (se já informado).
-  const pacoteDoItem = (fId: string, item: string): number | undefined => {
+  // Lista de pacotes comprados desse item, em ordem (ex.: [10, 10]).
+  const pacotesDoItem = (fId: string, item: string): number[] => {
     const chave = `${fId}::${item}`;
     if (chave in pacotesOverride) return pacotesOverride[chave];
-    return fichaPorId.get(fId)?.pacotes[item];
+    return normalizarPacotes(fichaPorId.get(fId)?.pacotes[item]);
   };
+
+  const somaPacotes = (fId: string, item: string): number =>
+    pacotesDoItem(fId, item).reduce((total, n) => total + n, 0);
 
   const multi = fichas.length > 1;
   const tipoPorFicha = useMemo(() => {
@@ -211,21 +329,21 @@ export function HistoricoSessoes({
       const nova = await criarSessao(fichaId, { data, areas: itens, observacao });
       setSessoes((prev) => [nova, ...(prev ?? [])]);
 
-      // Salva o tamanho do pacote informado para os itens que ainda não
-      // tinham um definido. Erro aqui não desfaz a sessão já registrada —
-      // só avisa à parte.
+      // Adiciona o pacote informado à lista de pacotes desse item (pode já
+      // ter pacotes anteriores concluídos). Erro aqui não desfaz a sessão
+      // já registrada — só avisa à parte.
       const entradas = Object.entries(pacotesForm)
         .filter(([item, v]) => itens.includes(item) && v.trim())
         .map(([item, v]) => [item, parseInt(v, 10)] as const)
         .filter(([, n]) => n > 0);
       if (entradas.length > 0) {
         try {
-          const pacotesAtuais = fichaPorId.get(fichaId)?.pacotes ?? {};
-          const merge = { ...pacotesAtuais };
-          const novoOverride: Record<string, number> = {};
+          const merge = { ...(fichaPorId.get(fichaId)?.pacotes ?? {}) };
+          const novoOverride: Record<string, number[]> = {};
           for (const [item, n] of entradas) {
-            merge[item] = n;
-            novoOverride[`${fichaId}::${item}`] = n;
+            const nova = [...pacotesDoItem(fichaId, item), n];
+            merge[item] = nova;
+            novoOverride[`${fichaId}::${item}`] = nova;
           }
           await atualizarFicha(fichaId, { pacotes: merge });
           setPacotesOverride((prev) => ({ ...prev, ...novoOverride }));
@@ -296,10 +414,13 @@ export function HistoricoSessoes({
     return m;
   }, [sessoes, fichaId]);
 
-  // Itens marcados neste registro que ainda não têm pacote definido — pode
-  // ser sessão avulsa (fica sem pacote) ou a Marina define agora, mesmo que
-  // não seja a 1ª sessão (ex.: cliente experimentou avulso e comprou depois).
-  const itensSemPacote = itens.filter((item) => pacoteDoItem(fichaId, item) === undefined);
+  // Itens marcados neste registro que estão "fora de qualquer pacote já
+  // definido" — ou porque nunca tiveram pacote (avulsa/1ª sessão), ou
+  // porque já completaram todos os pacotes anteriores (ex.: terminou o
+  // pacote de 10 e comprou mais 10). Mostra o campo opcional nesses casos.
+  const itensSemPacote = itens.filter(
+    (item) => (contagemDoProcedimento.get(item) ?? 0) >= somaPacotes(fichaId, item),
+  );
 
   return (
     <div className="rounded-2xl border border-border bg-card p-5 sm:p-6">
@@ -476,94 +597,107 @@ export function HistoricoSessoes({
 
       <div>
         {grupos.map((g) => {
-          const pacoteTotal = pacoteDoItem(g.fichaId, g.item);
-          const completo = pacoteTotal !== undefined && g.linhas.length >= pacoteTotal;
+          const pacotes = pacotesDoItem(g.fichaId, g.item);
+          const segmentos = segmentarPorPacote(g.linhas, pacotes);
           return (
-          <div key={g.chave} className="mb-5 last:mb-0">
-            <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-              <h4 className="text-sm font-medium text-foreground">{g.item}</h4>
-              {multi && (
-                <span className="text-xs text-muted-foreground">
-                  {FICHAS[g.tipo]?.emoji ?? ""} {nomeCurto(g.tipo)}
-                </span>
-              )}
-              {pacoteTotal !== undefined ? (
-                <span
-                  className={`text-xs ${completo ? "text-emerald-600 dark:text-emerald-500 font-medium" : "text-muted-foreground"}`}
-                >
-                  · {Math.min(g.linhas.length, pacoteTotal)} de {pacoteTotal} sessões
-                </span>
-              ) : (
-                <span className="text-xs text-muted-foreground">
-                  · {g.linhas.length} sessõe{g.linhas.length === 1 ? "" : "s"} registrada
-                  {g.linhas.length === 1 ? "" : "s"}
-                </span>
-              )}
-            </div>
-            {pacoteTotal !== undefined && (
-              <div className="h-1.5 w-full max-w-[220px] rounded-full bg-secondary/60 overflow-hidden mb-2">
-                <div
-                  className={`h-full rounded-full transition-all ${completo ? "bg-emerald-500" : "bg-primary"}`}
-                  style={{ width: `${Math.min(100, (g.linhas.length / pacoteTotal) * 100)}%` }}
-                />
-              </div>
-            )}
-            <ul className="space-y-1">
-              {g.linhas.map((l) => (
-                <li key={l.sessaoId + g.item} className="flex items-center gap-2 text-sm">
-                  {l.confirmado && (
-                    <Check className="h-3.5 w-3.5 shrink-0 text-emerald-600 dark:text-emerald-500" />
-                  )}
-                  <span
-                    title={
-                      l.confirmado_em ? `Confirmado em ${confirmadaEm(l.confirmado_em)}` : undefined
-                    }
-                    className={
-                      l.confirmado
-                        ? "text-emerald-700 dark:text-emerald-400"
-                        : "text-amber-600 dark:text-amber-500"
-                    }
-                  >
-                    {dataBR(l.data)}: {l.ordinal}ª sessão (
-                    {l.confirmado ? "confirmado pelo cliente" : "aguardando confirmação"})
+            <div key={g.chave} className="mb-5 last:mb-0">
+              <div className="flex items-center gap-2 mb-2 flex-wrap">
+                <h4 className="text-sm font-medium text-foreground">{g.item}</h4>
+                {multi && (
+                  <span className="text-xs text-muted-foreground">
+                    {FICHAS[g.tipo]?.emoji ?? ""} {nomeCurto(g.tipo)}
                   </span>
-                  {!l.confirmado && (
-                    <span className="flex items-center gap-1.5 ml-auto shrink-0">
+                )}
+                {pacotes.length === 0 && (
+                  <span className="text-xs text-muted-foreground">
+                    · {g.linhas.length} sessõe{g.linhas.length === 1 ? "" : "s"} registrada
+                    {g.linhas.length === 1 ? "" : "s"}
+                  </span>
+                )}
+              </div>
+
+              <div className="space-y-3">
+                {segmentos.map((seg) => {
+                  const chaveSeg = `${g.chave}::${seg.numero}`;
+                  const aberto = expandidos[chaveSeg] ?? !seg.completo;
+
+                  // Segmento sem pacote definido: sessões avulsas.
+                  if (seg.pacoteTotal === undefined) {
+                    return (
+                      <div key={chaveSeg}>
+                        {pacotes.length > 0 && (
+                          <p className="text-xs text-muted-foreground mb-1">Sessões avulsas</p>
+                        )}
+                        <ul className="space-y-1">
+                          {seg.linhas.map((l) => (
+                            <LinhaSessaoView
+                              key={l.sessaoId}
+                              texto={`${dataBR(l.data)}: ${l.ordinal}ª sessão (${l.confirmado ? "confirmado pelo cliente" : "aguardando confirmação"})`}
+                              confirmado={l.confirmado}
+                              confirmadoEm={l.confirmado_em}
+                              copiado={copiadoId === l.sessaoId}
+                              onCopiar={() => copiar(l.sessaoId, l.token)}
+                              linkWhatsapp={whatsappDe(l.token, l.data)}
+                              onRemover={() => remover(l.sessaoId)}
+                            />
+                          ))}
+                        </ul>
+                      </div>
+                    );
+                  }
+
+                  // Segmento de um pacote comprado: colapsa quando concluído.
+                  return (
+                    <div key={chaveSeg}>
                       <button
                         type="button"
-                        onClick={() => copiar(l.sessaoId, l.token)}
-                        title="Copiar link"
-                        className="text-muted-foreground/60 hover:text-primary transition-colors"
+                        onClick={() => setExpandidos((prev) => ({ ...prev, [chaveSeg]: !aberto }))}
+                        className="flex items-center gap-1.5 mb-1.5"
                       >
-                        {copiadoId === l.sessaoId ? (
-                          <Check className="h-3.5 w-3.5" />
+                        {aberto ? (
+                          <ChevronDown className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                         ) : (
-                          <Copy className="h-3.5 w-3.5" />
+                          <ChevronRight className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                         )}
+                        <span
+                          className={`text-xs ${seg.completo ? "text-emerald-600 dark:text-emerald-500 font-medium" : "text-muted-foreground"}`}
+                        >
+                          Pacote {seg.numero} · {seg.linhas.length} de {seg.pacoteTotal} sessões
+                          {seg.completo ? " concluído" : ""}
+                        </span>
+                        <span className="text-xs text-primary underline underline-offset-2">
+                          {aberto ? "Ocultar" : "Detalhes"}
+                        </span>
                       </button>
-                      <a
-                        href={whatsappDe(l.token, l.data)}
-                        target="_blank"
-                        rel="noreferrer"
-                        title="Enviar por WhatsApp"
-                        className="text-muted-foreground/60 hover:text-primary transition-colors"
-                      >
-                        <MessageCircle className="h-3.5 w-3.5" />
-                      </a>
-                    </span>
-                  )}
-                  <button
-                    type="button"
-                    onClick={() => remover(l.sessaoId)}
-                    title="Excluir sessão"
-                    className={`shrink-0 text-muted-foreground/40 hover:text-destructive transition-colors ${l.confirmado ? "ml-auto" : ""}`}
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </div>
+                      <div className="h-1.5 w-full max-w-[220px] rounded-full bg-secondary/60 overflow-hidden mb-2">
+                        <div
+                          className={`h-full rounded-full transition-all ${seg.completo ? "bg-emerald-500" : "bg-primary"}`}
+                          style={{
+                            width: `${Math.min(100, (seg.linhas.length / seg.pacoteTotal) * 100)}%`,
+                          }}
+                        />
+                      </div>
+                      {aberto && (
+                        <ul className="space-y-1">
+                          {seg.linhas.map((l) => (
+                            <LinhaSessaoView
+                              key={l.sessaoId}
+                              texto={`${dataBR(l.data)}: ${l.ordinal}ª sessão (${l.confirmado ? "confirmado pelo cliente" : "aguardando confirmação"})`}
+                              confirmado={l.confirmado}
+                              confirmadoEm={l.confirmado_em}
+                              copiado={copiadoId === l.sessaoId}
+                              onCopiar={() => copiar(l.sessaoId, l.token)}
+                              linkWhatsapp={whatsappDe(l.token, l.data)}
+                              onRemover={() => remover(l.sessaoId)}
+                            />
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           );
         })}
 
@@ -572,56 +706,16 @@ export function HistoricoSessoes({
             <h4 className="text-sm font-medium text-foreground mb-1.5">Outras sessões</h4>
             <ul className="space-y-1">
               {semItem.map((s) => (
-                <li key={s.id} className="flex items-center gap-2 text-sm">
-                  {s.confirmado && (
-                    <Check className="h-3.5 w-3.5 shrink-0 text-emerald-600 dark:text-emerald-500" />
-                  )}
-                  <span
-                    title={s.confirmado_em ? `Confirmado em ${confirmadaEm(s.confirmado_em)}` : undefined}
-                    className={
-                      s.confirmado
-                        ? "text-emerald-700 dark:text-emerald-400"
-                        : "text-amber-600 dark:text-amber-500"
-                    }
-                  >
-                    {dataBR(s.data)}
-                    {s.observacao ? `: ${s.observacao}` : ""} (
-                    {s.confirmado ? "confirmado pelo cliente" : "aguardando confirmação"})
-                  </span>
-                  {!s.confirmado && (
-                    <span className="flex items-center gap-1.5 ml-auto shrink-0">
-                      <button
-                        type="button"
-                        onClick={() => copiar(s.id, s.token)}
-                        title="Copiar link"
-                        className="text-muted-foreground/60 hover:text-primary transition-colors"
-                      >
-                        {copiadoId === s.id ? (
-                          <Check className="h-3.5 w-3.5" />
-                        ) : (
-                          <Copy className="h-3.5 w-3.5" />
-                        )}
-                      </button>
-                      <a
-                        href={whatsappDe(s.token, s.data)}
-                        target="_blank"
-                        rel="noreferrer"
-                        title="Enviar por WhatsApp"
-                        className="text-muted-foreground/60 hover:text-primary transition-colors"
-                      >
-                        <MessageCircle className="h-3.5 w-3.5" />
-                      </a>
-                    </span>
-                  )}
-                  <button
-                    type="button"
-                    onClick={() => remover(s.id)}
-                    title="Excluir sessão"
-                    className={`shrink-0 text-muted-foreground/40 hover:text-destructive transition-colors ${s.confirmado ? "ml-auto" : ""}`}
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </button>
-                </li>
+                <LinhaSessaoView
+                  key={s.id}
+                  texto={`${dataBR(s.data)}${s.observacao ? `: ${s.observacao}` : ""} (${s.confirmado ? "confirmado pelo cliente" : "aguardando confirmação"})`}
+                  confirmado={s.confirmado}
+                  confirmadoEm={s.confirmado_em}
+                  copiado={copiadoId === s.id}
+                  onCopiar={() => copiar(s.id, s.token)}
+                  linkWhatsapp={whatsappDe(s.token, s.data)}
+                  onRemover={() => remover(s.id)}
+                />
               ))}
             </ul>
           </div>
