@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createFileRoute, useNavigate, useParams, Link } from "@tanstack/react-router";
 import { motion, AnimatePresence } from "motion/react";
 import { ArrowLeft, ArrowRight, AlertTriangle, Sparkles, Loader2 } from "lucide-react";
@@ -214,6 +214,20 @@ function FichaPage() {
   const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const navigate = useNavigate();
+
+  // Convite da Mavi: nome/celular já vêm no link (?nome=...&whatsapp=...),
+  // só pré-preenche — nada é salvo até a cliente enviar a ficha no final.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const nomeConvite = params.get("nome");
+    const whatsappConvite = params.get("whatsapp");
+    if (!nomeConvite && !whatsappConvite) return;
+    setRespostas((r) => ({
+      ...r,
+      ...(nomeConvite ? { nome: nomeConvite } : {}),
+      ...(whatsappConvite ? { whatsapp: aplicarMascara("telefone", whatsappConvite) } : {}),
+    }));
+  }, []);
 
   if (!def) {
     return (
