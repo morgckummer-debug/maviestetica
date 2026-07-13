@@ -172,16 +172,14 @@ function DetalheFicha() {
       for (const c of camposDadosPessoais()) {
         respostas[c.id] = dadosForm[c.id]?.trim() || null;
       }
-      // A coluna "telefone" (usada no topo da ficha e para agrupar as
-      // fichas da mesma cliente) espelha o campo "whatsapp" das respostas.
+      // As colunas "telefone" e "nome" (usadas na lista, no topo da ficha e
+      // para agrupar as fichas da mesma cliente) espelham os campos
+      // "whatsapp" e "nome" das respostas — não bastava atualizar só o
+      // JSON de respostas.
       const telefone = respostas.whatsapp ? String(respostas.whatsapp) : null;
-      await atualizarFicha(id, { respostas, telefone });
-      setFicha({
-        ...ficha,
-        respostas,
-        telefone,
-        nome: respostas.nome ? String(respostas.nome) : ficha.nome,
-      });
+      const nome = respostas.nome ? String(respostas.nome).trim() : ficha.nome;
+      await atualizarFicha(id, { respostas, telefone, nome });
+      setFicha({ ...ficha, respostas, telefone, nome });
       setEditandoDados(false);
     } catch (e) {
       setErroDados(e instanceof Error ? e.message : "Erro ao salvar os dados.");
