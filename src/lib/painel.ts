@@ -135,6 +135,29 @@ export function sair(): void {
   salvarSessao(null);
 }
 
+// Troca a senha da Marina (já autenticada) — não pede a senha atual porque
+// o token de acesso válido já garante que é ela quem está pedindo.
+export async function trocarSenha(novaSenha: string): Promise<void> {
+  const s = await sessaoValida();
+  if (!s) throw new Error("NAO_AUTENTICADO");
+  const res = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      apikey: SUPABASE_ANON_KEY ?? "",
+      Authorization: `Bearer ${s.access_token}`,
+    },
+    body: JSON.stringify({ password: novaSenha }),
+  });
+  if (!res.ok) {
+    const err = (await res.json().catch(() => ({}))) as {
+      error_description?: string;
+      msg?: string;
+    };
+    throw new Error(err.error_description || err.msg || "Não foi possível trocar a senha.");
+  }
+}
+
 async function apiRest(path: string, init: RequestInit = {}): Promise<Response> {
   const s = await sessaoValida();
   if (!s) throw new Error("NAO_AUTENTICADO");
