@@ -80,19 +80,20 @@ function confirmadaEm(iso: string): string {
 }
 
 // Uma linha do histórico compacto: uma sessão dentro do grupo de um item
-// (ex.: a 2ª linha do grupo "Axilas").
+// (ex.: a 2ª linha do grupo "Axilas"). O número da sessão (1ª, 2ª...) não
+// fica salvo aqui — é calculado depois, por segmento (pacote/avulsas), pra
+// reiniciar a contagem a cada pacote novo em vez de somar tudo junto.
 type LinhaSessao = {
   sessaoId: string;
   data: string;
-  ordinal: number;
   confirmado: boolean;
   confirmado_em: string | null;
   token: string;
 };
 
 // Um grupo = um item (área/procedimento) de uma ficha, com suas sessões em
-// ordem cronológica. Ex.: "Axilas" agrupa todas as sessões de axila, cada
-// uma numerada (1ª, 2ª, 3ª...) — o "pacote" de sessões daquele item.
+// ordem cronológica. Ex.: "Axilas" agrupa todas as sessões de axila —
+// depois divididas em segmentos (pacotes) por segmentarPorPacote().
 type GrupoItem = {
   chave: string;
   fichaId: string;
@@ -228,7 +229,6 @@ function agruparPorItem(
       g.linhas.push({
         sessaoId: s.id,
         data: s.data,
-        ordinal: g.linhas.length + 1,
         confirmado: s.confirmado,
         confirmado_em: s.confirmado_em,
         token: s.token,
@@ -422,6 +422,19 @@ export function HistoricoSessoes({
     (item) => (contagemDoProcedimento.get(item) ?? 0) >= somaPacotes(fichaId, item),
   );
 
+  // Número que a sessão a ser registrada teria DENTRO do pacote/segmento
+  // atual (reinicia em 1 a cada pacote novo ou quando cai nas avulsas),
+  // em vez de contar tudo junto desde a 1ª sessão do item.
+  const proximaOrdinalLocal = (item: string): number => {
+    const totalAtual = contagemDoProcedimento.get(item) ?? 0;
+    let acumulado = 0;
+    for (const tamanho of pacotesDoItem(fichaId, item)) {
+      if (totalAtual < acumulado + tamanho) return totalAtual - acumulado + 1;
+      acumulado += tamanho;
+    }
+    return totalAtual - acumulado + 1;
+  };
+
   return (
     <div className="rounded-2xl border border-border bg-card p-5 sm:p-6">
       <div className="flex items-center justify-between gap-3 mb-1">
@@ -497,7 +510,7 @@ export function HistoricoSessoes({
               <div className="flex flex-wrap gap-2">
                 {opcoes.map((a) => {
                   const sel = itens.includes(a);
-                  const proximaOrdinal = (contagemDoProcedimento.get(a) ?? 0) + 1;
+                  const proximaOrdinal = proximaOrdinalLocal(a);
                   return (
                     <button
                       key={a}
@@ -629,10 +642,10 @@ export function HistoricoSessoes({
                           <p className="text-xs text-muted-foreground mb-1">Sessões avulsas</p>
                         )}
                         <ul className="space-y-1">
-                          {seg.linhas.map((l) => (
+                          {seg.linhas.map((l, idx) => (
                             <LinhaSessaoView
                               key={l.sessaoId}
-                              texto={`${dataBR(l.data)}: ${l.ordinal}ª sessão (${l.confirmado ? "confirmado pelo cliente" : "aguardando confirmação"})`}
+                              texto={`${dataBR(l.data)}: ${idx + 1}ª sessão (${l.confirmado ? "confirmado pelo cliente" : "aguardando confirmação"})`}
                               confirmado={l.confirmado}
                               confirmadoEm={l.confirmado_em}
                               copiado={copiadoId === l.sessaoId}
@@ -679,10 +692,10 @@ export function HistoricoSessoes({
                       </div>
                       {aberto && (
                         <ul className="space-y-1">
-                          {seg.linhas.map((l) => (
+                          {seg.linhas.map((l, idx) => (
                             <LinhaSessaoView
                               key={l.sessaoId}
-                              texto={`${dataBR(l.data)}: ${l.ordinal}ª sessão (${l.confirmado ? "confirmado pelo cliente" : "aguardando confirmação"})`}
+                              texto={`${dataBR(l.data)}: ${idx + 1}ª sessão (${l.confirmado ? "confirmado pelo cliente" : "aguardando confirmação"})`}
                               confirmado={l.confirmado}
                               confirmadoEm={l.confirmado_em}
                               copiado={copiadoId === l.sessaoId}
