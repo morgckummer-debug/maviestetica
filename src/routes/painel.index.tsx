@@ -109,6 +109,17 @@ function ListaFichas() {
     listarFichas()
       .then(setFichas)
       .catch((e) => setErro(e instanceof Error ? e.message : "Erro ao carregar."));
+
+    // Auto-refresh: atualiza a lista sozinha a cada 20s (ex.: nova ficha
+    // preenchida pela cliente), sem precisar recarregar a página. Falhas
+    // aqui ficam em silêncio — não interrompe quem já está com a lista
+    // carregada só por causa de uma soneca de rede.
+    const intervalo = setInterval(() => {
+      listarFichas()
+        .then(setFichas)
+        .catch(() => {});
+    }, 20000);
+    return () => clearInterval(intervalo);
   }, []);
 
   // Agrupa as fichas por pessoa (mesma cliente = mesmo WhatsApp/CPF).
