@@ -239,7 +239,32 @@ function LinhaSessaoView({
       >
         {texto}
       </span>
-      <span className="flex items-center gap-1.5 ml-auto shrink-0">
+      {/* Celular: só editar e WhatsApp, um em cima do outro (mais espaço
+          pro toque, sem risco de acertar o botão errado). Copiar e excluir
+          ficam escondidos aqui — ainda disponíveis na versão desktop. */}
+      <span className="flex sm:hidden flex-col items-center gap-2.5 ml-auto shrink-0">
+        <button
+          type="button"
+          onClick={() => edicao.onIniciar({ id, data, observacao })}
+          title="Editar sessão"
+          className="p-1 text-muted-foreground/50 hover:text-primary transition-colors"
+        >
+          <Pencil className="h-4 w-4" />
+        </button>
+        {!confirmado && (
+          <a
+            href={linkWhatsapp}
+            target="_blank"
+            rel="noreferrer"
+            title="Enviar por WhatsApp"
+            className="p-1 text-muted-foreground/50 hover:text-primary transition-colors"
+          >
+            <MessageCircle className="h-4 w-4" />
+          </a>
+        )}
+      </span>
+
+      <span className="hidden sm:flex items-center gap-1.5 ml-auto shrink-0">
         {!confirmado && (
           <>
             <button
