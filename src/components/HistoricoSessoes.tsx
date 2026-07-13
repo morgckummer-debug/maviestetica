@@ -142,6 +142,7 @@ type EdicaoSessao = {
   data: string;
   observacao: string;
   salvando: boolean;
+  erro: string | null;
   onData: (v: string) => void;
   onObservacao: (v: string) => void;
   onSalvar: () => void;
@@ -199,6 +200,7 @@ function LinhaSessaoView({
             className="w-full rounded-lg border border-border bg-background px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
           />
         </div>
+        {edicao.erro && <p className="text-xs text-destructive mb-2">{edicao.erro}</p>}
         <div className="flex items-center gap-2">
           <button
             type="button"
@@ -358,6 +360,7 @@ export function HistoricoSessoes({
   const [editData, setEditData] = useState("");
   const [editObservacao, setEditObservacao] = useState("");
   const [salvandoEdicao, setSalvandoEdicao] = useState(false);
+  const [erroEdicao, setErroEdicao] = useState<string | null>(null);
 
   // Pacotes salvos nesta sessão do painel (além dos que já vieram nas
   // fichas), pra refletir na hora sem precisar recarregar a página.
@@ -473,15 +476,18 @@ export function HistoricoSessoes({
     setEditandoSessaoId(s.id);
     setEditData(s.data);
     setEditObservacao(s.observacao ?? "");
-    setErro(null);
+    setErroEdicao(null);
   };
 
-  const cancelarEdicaoSessao = () => setEditandoSessaoId(null);
+  const cancelarEdicaoSessao = () => {
+    setEditandoSessaoId(null);
+    setErroEdicao(null);
+  };
 
   const salvarEdicaoSessao = async () => {
     if (!editandoSessaoId) return;
     setSalvandoEdicao(true);
-    setErro(null);
+    setErroEdicao(null);
     try {
       const observacao = editObservacao.trim() || null;
       await atualizarSessao(editandoSessaoId, { data: editData, observacao });
@@ -492,7 +498,9 @@ export function HistoricoSessoes({
       );
       setEditandoSessaoId(null);
     } catch (e) {
-      setErro(e instanceof Error ? e.message : "Erro ao salvar a sessão.");
+      // Mostrado dentro do próprio formulário de edição — não só lá em
+      // cima, senão passa despercebido quando a lista está rolada.
+      setErroEdicao(e instanceof Error ? e.message : "Erro ao salvar a sessão.");
     } finally {
       setSalvandoEdicao(false);
     }
@@ -503,6 +511,7 @@ export function HistoricoSessoes({
     data: editData,
     observacao: editObservacao,
     salvando: salvandoEdicao,
+    erro: erroEdicao,
     onData: setEditData,
     onObservacao: setEditObservacao,
     onSalvar: salvarEdicaoSessao,
