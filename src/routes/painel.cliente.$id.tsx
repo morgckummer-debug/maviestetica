@@ -17,6 +17,7 @@ import { clientePorFichaId, type Cliente } from "@/lib/clientes";
 import { mascaraTelefone } from "@/lib/mascaras";
 import { HistoricoSessoes, type Procedimento } from "@/components/HistoricoSessoes";
 import { EnviarFicha } from "@/components/EnviarFicha";
+import { RamosWatermark } from "@/components/RamosWatermark";
 
 export const Route = createFileRoute("/painel/cliente/$id")({
   component: PaginaCliente,
@@ -127,6 +128,7 @@ function PaginaCliente() {
 
   return (
     <div>
+      <RamosWatermark className="fixed -right-14 top-24 hidden h-[75vh] max-h-[640px] w-auto opacity-[0.05] sm:block" />
       <Link
         to="/painel"
         className="inline-flex items-center gap-2 text-[13px] text-painel-muted hover:text-painel-primary mb-7"

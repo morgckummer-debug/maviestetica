@@ -15,6 +15,7 @@ import {
 import { getFicha, nomeTipo, type Campo } from "@/data/anamnese";
 import { obterFicha, atualizarFicha, excluirFicha, type Ficha } from "@/lib/painel";
 import { mascaraTelefone, mascaraCpf, formatarDataBR, aplicarMascara } from "@/lib/mascaras";
+import { RamosWatermark } from "@/components/RamosWatermark";
 
 // Etapa de dados pessoais (nome, telefone, endereço...) — é a única que a
 // Marina pode editar depois, para atualizar celular/endereço da cliente.
@@ -245,6 +246,7 @@ function DetalheFicha() {
 
   return (
     <div>
+      <RamosWatermark className="fixed -right-14 top-24 hidden h-[75vh] max-h-[640px] w-auto opacity-[0.05] sm:block" />
       <div className="flex items-center gap-4 mb-6">
         <Link
           to="/painel"
