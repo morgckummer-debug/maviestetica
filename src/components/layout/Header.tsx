@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { Menu, X, MessageCircle } from "lucide-react";
-import logo from "@/assets/logo-mavi-novo.png";
+import logo from "@/assets/logo-mavi.png";
 import { WHATSAPP_URL, services } from "@/data/services";
 
 export function Header() {
