@@ -4,6 +4,7 @@ import { LogOut, Loader2, KeyRound, Check, X, ChevronDown } from "lucide-react";
 import { SITE_URL } from "@/data/services";
 import { supabaseConfigurado } from "@/lib/supabase";
 import { entrar, sair, sessaoValida, trocarSenha, type Sessao } from "@/lib/painel";
+import logo from "@/assets/logo-mavi-novo.png";
 
 // Deriva um nome de exibição a partir do e-mail de login (ex.:
 // "marina.figueiredo@..." → "Marina Figueiredo"), já que o login continua
@@ -68,8 +69,7 @@ function LoginForm({ onEntrar }: { onEntrar: (s: Sessao) => void }) {
       />
 
       <div className="relative w-full max-w-sm text-center">
-        <p className="text-[11px] tracking-[.22em] text-painel-gold mb-3.5 uppercase">Clínica</p>
-        <h1 className="font-display text-5xl italic text-painel-primary-deep mb-10">MAVI</h1>
+        <img src={logo} alt="Clínica MAVI" className="mx-auto h-24 w-auto mb-10" />
 
         <div className="rounded-[20px] border border-painel-border bg-white p-9 text-left shadow-[0_24px_50px_-30px_rgba(120,80,150,0.25)]">
           {!supabaseConfigurado() && (
