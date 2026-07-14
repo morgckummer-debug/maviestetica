@@ -246,7 +246,7 @@ function DetalheFicha() {
   const imc = calcularImc(medidas.altura, medidas.peso);
   // Paciente masculino: bordas em azul para a Marina identificar de cara.
   const masculino = r.sexo === "Masculino";
-  const bordaCard = masculino ? "border-sky-400/50" : "border-border";
+  const bordaCard = masculino ? "border-sky-600" : "border-border";
 
   const setMedida = (id: string, v: string) => setMedidas((prev) => ({ ...prev, [id]: v }));
   const toggleAchado = (id: string, op: string) => {
@@ -281,7 +281,11 @@ function DetalheFicha() {
 
         <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-6">
           <div>
-            <span className="inline-block text-xs rounded-full bg-lavender-soft px-2.5 py-0.5 text-primary mb-2">
+            <span
+              className={`inline-block text-xs rounded-full px-2.5 py-0.5 mb-2 ${
+                masculino ? "bg-sky-600 text-white" : "bg-lavender-soft text-primary"
+              }`}
+            >
               {def?.emoji ?? ""} {nomeTipo(ficha.tipo)}
             </span>
             <h2 className="font-display text-3xl text-primary">{ficha.nome}</h2>
