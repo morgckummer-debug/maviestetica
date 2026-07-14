@@ -4,7 +4,7 @@ import { LogOut, Loader2, KeyRound, Check, X, ChevronDown } from "lucide-react";
 import { SITE_URL } from "@/data/services";
 import { supabaseConfigurado } from "@/lib/supabase";
 import { entrar, sair, sessaoValida, trocarSenha, type Sessao } from "@/lib/painel";
-import logo from "@/assets/logo-mavi-dark.png";
+import logo from "@/assets/logo-mavi-novo.png";
 
 // Deriva um nome de exibição a partir do e-mail de login (ex.:
 // "marina.figueiredo@..." → "Marina Figueiredo"), já que o login continua
