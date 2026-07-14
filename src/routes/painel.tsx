@@ -59,6 +59,7 @@ function LoginForm({ onEntrar }: { onEntrar: (s: Sessao) => void }) {
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden px-6 py-16 bg-painel-bg">
       <RamosWatermark className="absolute -right-16 top-1/2 h-[85vh] max-h-[700px] w-auto -translate-y-1/2 opacity-[0.08]" />
+      <RamosWatermark className="absolute -left-16 top-1/2 h-[85vh] max-h-[700px] w-auto -translate-y-1/2 scale-x-[-1] opacity-[0.08]" />
       <div
         aria-hidden="true"
         className="pointer-events-none select-none absolute left-1/2 top-[46%] h-20 w-20 -translate-x-1/2 -translate-y-1/2 rounded-full border"

@@ -14,6 +14,7 @@ import { listarFichas, type Ficha } from "@/lib/painel";
 import { agruparClientes, digitos, type Cliente } from "@/lib/clientes";
 import { TIPOS, FICHAS, nomeCurto, type Tipo } from "@/data/anamnese";
 import { EnviarFicha } from "@/components/EnviarFicha";
+import { RamosWatermark } from "@/components/RamosWatermark";
 
 export const Route = createFileRoute("/painel/")({
   component: ListaFichas,
@@ -77,6 +78,7 @@ function ListaFichas() {
 
   return (
     <div>
+      <RamosWatermark className="fixed left-1/2 top-1/2 hidden h-[70vh] max-h-[600px] w-auto -translate-x-1/2 -translate-y-1/2 opacity-[0.05] sm:block" />
       {/* Busca principal — encontrar a cliente por nome ou CPF */}
       <div className="relative mb-7">
         <Search className="absolute left-5 top-1/2 -translate-y-1/2 h-[18px] w-[18px] text-painel-muted" />
