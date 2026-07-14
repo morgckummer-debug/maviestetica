@@ -208,7 +208,9 @@ export const getService = (slug: string) => services.find((s) => s.slug === slug
 export const SITE_URL = "https://www.maviestetica.com.br";
 
 const WHATSAPP_NUMBER = "https://wa.me/5531971671266";
-const WHATSAPP_MSG = encodeURIComponent("Olá! Vim do site ou do Instagram e gostaria de agendar com você! :)");
+const WHATSAPP_MSG = encodeURIComponent(
+  "Olá! 💜 Vim do site ou do Instagram e gostaria de agendar com você!",
+);
 export const WHATSAPP_URL = `${WHATSAPP_NUMBER}?text=${WHATSAPP_MSG}`;
 export const WHATSAPP_BASE_URL = WHATSAPP_NUMBER;
 export const WHATSAPP_DISPLAY = "(31) 97167-1266";

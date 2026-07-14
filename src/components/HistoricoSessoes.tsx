@@ -526,6 +526,10 @@ export function HistoricoSessoes({
   const [pacoteValor, setPacoteValor] = useState("");
   const [salvandoPacote, setSalvandoPacote] = useState(false);
   const [erroPacote, setErroPacote] = useState<string | null>(null);
+  // "Cancelar pacote": remove só a última definição de pacote de um item
+  // (ex.: cliente desistiu do pacote, ou foi marcado por engano). As sessões
+  // que estavam nele não são apagadas — voltam a contar como avulsas.
+  const [removendoPacoteChave, setRemovendoPacoteChave] = useState<string | null>(null);
 
   const fichaPorId = useMemo(() => {
     const m = new Map<string, Procedimento>();
@@ -885,6 +889,30 @@ export function HistoricoSessoes({
     }
   };
 
+  const removerPacote = async (fId: string, item: string, chave: string) => {
+    const atuais = pacotesDoItem(fId, item);
+    const ultimo = atuais[atuais.length - 1];
+    if (ultimo === undefined) return;
+    if (
+      !window.confirm(
+        `Cancelar o pacote de ${ultimo} sessões? As sessões que já foram feitas nele não são apagadas — voltam a contar como avulsas.`,
+      )
+    )
+      return;
+    setRemovendoPacoteChave(chave);
+    setErroPacote(null);
+    try {
+      const nova = atuais.slice(0, -1);
+      const merge = { ...(fichaPorId.get(fId)?.pacotes ?? {}), [item]: nova };
+      await atualizarFicha(fId, { pacotes: merge });
+      setPacotesOverride((prev) => ({ ...prev, [`${fId}::${item}`]: nova }));
+    } catch (e) {
+      setErroPacote(e instanceof Error ? e.message : "Erro ao cancelar o pacote.");
+    } finally {
+      setRemovendoPacoteChave(null);
+    }
+  };
+
   return (
     <div className="rounded-2xl border border-painel-border bg-white p-5 sm:p-6">
       <div className="flex flex-wrap items-center justify-between gap-3 mb-1">
@@ -1092,6 +1120,16 @@ export function HistoricoSessoes({
                     className="text-xs text-painel-primary underline underline-offset-2"
                   >
                     {pacotes.length === 0 ? "Fechou um pacote?" : "+ Novo pacote"}
+                  </button>
+                )}
+                {pacotes.length > 0 && editandoPacoteChave !== g.chave && (
+                  <button
+                    type="button"
+                    onClick={() => removerPacote(g.fichaId, g.item, g.chave)}
+                    disabled={removendoPacoteChave === g.chave}
+                    className="text-xs text-painel-alert-text underline underline-offset-2 disabled:opacity-40"
+                  >
+                    {removendoPacoteChave === g.chave ? "Cancelando…" : "Cancelar pacote"}
                   </button>
                 )}
               </div>
