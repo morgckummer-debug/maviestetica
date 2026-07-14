@@ -243,13 +243,14 @@ function PaginaCliente() {
                   onClick={() => excluirUmaFicha(f)}
                   disabled={excluindoId === f.id}
                   title="Excluir ficha"
-                  className="text-painel-icon-muted hover:text-painel-alert-text transition-colors disabled:opacity-40"
+                  className="inline-flex items-center gap-1.5 rounded-full border border-painel-alert-border bg-painel-alert-bg px-3 py-1.5 text-xs font-medium text-painel-alert-text hover:bg-painel-alert-bg/70 transition-colors disabled:opacity-40"
                 >
                   {excluindoId === f.id ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
                   ) : (
-                    <Trash2 className="h-4 w-4" />
+                    <Trash2 className="h-3.5 w-3.5" />
                   )}
+                  Excluir
                 </button>
                 <Link to="/painel/$id" params={{ id: f.id }} aria-label="Abrir ficha">
                   <ChevronRight className="h-4 w-4 text-painel-icon-muted" />
