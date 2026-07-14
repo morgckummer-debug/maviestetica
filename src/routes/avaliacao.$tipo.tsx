@@ -14,6 +14,7 @@ import {
 } from "@/data/anamnese";
 import { salvarFicha } from "@/lib/api/fichas.functions";
 import { aplicarMascara } from "@/lib/mascaras";
+import { RamosWatermark } from "@/components/RamosWatermark";
 
 export const Route = createFileRoute("/avaliacao/$tipo")({
   head: () => ({
@@ -292,6 +293,7 @@ function FichaPage() {
 
   return (
     <section className="min-h-[80vh] py-14 lg:py-20 overflow-x-hidden">
+      <RamosWatermark className="fixed left-1/2 top-1/2 hidden h-[70vh] max-h-[600px] w-auto -translate-x-1/2 -translate-y-1/2 opacity-[0.05] sm:block" />
       <div className="mx-auto max-w-2xl px-6">
         <div className="text-center mb-10">
           <p className="text-xs tracking-[0.3em] uppercase text-muted-foreground mb-4">
