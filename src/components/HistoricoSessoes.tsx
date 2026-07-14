@@ -157,6 +157,25 @@ type EdicaoSessao = {
   onIniciar: (s: { id: string; data: string; observacao: string | null }) => void;
 };
 
+// Estado (e ações) do "conferir antes de enviar": quando a sessão junta
+// mais de um item (ex.: braços + axilas agendados no mesmo atendimento),
+// clicar em WhatsApp abre esta checklist em vez de mandar direto — a Marina
+// marca só o que realmente foi feito naquele dia (por algum motivo, a
+// cliente pode não ter feito tudo o que estava agendado). O que ficar
+// desmarcado vira sessão(ões) pendente(s) separada(s), cada uma com seu
+// próprio link, em vez de ser perdido ou empurrado pra dentro do mesmo link.
+type EnvioWhatsapp = {
+  sessaoId: string | null;
+  areasDisponiveis: string[];
+  areasMarcadas: string[];
+  salvando: boolean;
+  erro: string | null;
+  onToggleArea: (a: string) => void;
+  onConfirmar: () => void;
+  onCancelar: () => void;
+  onIniciar: (sessaoId: string) => void;
+};
+
 // Uma linha de sessão (data + status colorido + ações). Reaproveitada nos
 // segmentos de pacote e nas sessões sem item ("Outras sessões"). Vira um
 // formulário inline quando está sendo editada (ex.: corrigir a data).
@@ -169,9 +188,9 @@ function LinhaSessaoView({
   confirmadoEm,
   copiado,
   onCopiar,
-  linkWhatsapp,
   onRemover,
   edicao,
+  envio,
 }: {
   id: string;
   texto: string;
@@ -181,10 +200,73 @@ function LinhaSessaoView({
   confirmadoEm: string | null;
   copiado: boolean;
   onCopiar: () => void;
-  linkWhatsapp: string;
   onRemover: () => void;
   edicao: EdicaoSessao;
+  envio: EnvioWhatsapp;
 }) {
+  if (envio.sessaoId === id) {
+    return (
+      <li className="rounded-lg border border-painel-border bg-painel-badge-bg/50 p-3">
+        <p className="text-xs font-medium text-painel-title mb-1">
+          O que foi realizado em {dataBR(data)}?
+        </p>
+        <p className="text-[11px] text-painel-muted mb-2">
+          Esse atendimento tinha mais de um item agendado junto. Marque só o que a cliente realmente
+          fez — o link vai refletir isso.
+        </p>
+        <div className="flex flex-wrap gap-1.5 mb-2">
+          {envio.areasDisponiveis.map((a) => {
+            const sel = envio.areasMarcadas.includes(a);
+            return (
+              <button
+                key={a}
+                type="button"
+                onClick={() => envio.onToggleArea(a)}
+                className={[
+                  "rounded-full border px-3 py-1 text-xs transition-colors",
+                  sel
+                    ? "bg-painel-primary border-painel-primary text-white font-medium"
+                    : "bg-white border-painel-border text-painel-chip-text hover:border-painel-primary/40",
+                ].join(" ")}
+              >
+                {a}
+              </button>
+            );
+          })}
+        </div>
+        {envio.areasMarcadas.length < envio.areasDisponiveis.length && (
+          <p className="text-[11px] text-painel-muted mb-2">
+            O que ficar desmarcado vira sessão(ões) pendente(s) separada(s), pra confirmar depois.
+          </p>
+        )}
+        {envio.erro && <p className="text-xs text-painel-alert-text mb-2">{envio.erro}</p>}
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={envio.onConfirmar}
+            disabled={envio.salvando || envio.areasMarcadas.length === 0}
+            className="inline-flex items-center gap-1.5 rounded-full bg-painel-primary text-white px-3.5 py-1.5 text-xs font-medium hover:bg-painel-primary/90 transition-colors disabled:opacity-40"
+          >
+            {envio.salvando ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <MessageCircle className="h-3.5 w-3.5" />
+            )}
+            Enviar
+          </button>
+          <button
+            type="button"
+            onClick={envio.onCancelar}
+            disabled={envio.salvando}
+            className="rounded-full border border-painel-border px-3.5 py-1.5 text-xs font-medium text-painel-chip-text hover:border-painel-primary/40 transition-colors disabled:opacity-40"
+          >
+            Cancelar
+          </button>
+        </div>
+      </li>
+    );
+  }
+
   if (edicao.sessaoId === id) {
     return (
       <li className="rounded-lg border border-painel-border bg-painel-badge-bg/50 p-3">
@@ -296,15 +378,14 @@ function LinhaSessaoView({
           <Pencil className="h-4 w-4" />
         </button>
         {!confirmado && (
-          <a
-            href={linkWhatsapp}
-            target="_blank"
-            rel="noreferrer"
+          <button
+            type="button"
+            onClick={() => envio.onIniciar(id)}
             title="Enviar por WhatsApp"
             className="p-1 text-painel-muted/50 hover:text-painel-primary transition-colors"
           >
             <MessageCircle className="h-4 w-4" />
-          </a>
+          </button>
         )}
       </span>
 
@@ -319,15 +400,14 @@ function LinhaSessaoView({
             >
               {copiado ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
             </button>
-            <a
-              href={linkWhatsapp}
-              target="_blank"
-              rel="noreferrer"
+            <button
+              type="button"
+              onClick={() => envio.onIniciar(id)}
               title="Enviar por WhatsApp"
               className="text-painel-muted/60 hover:text-painel-primary transition-colors"
             >
               <MessageCircle className="h-3.5 w-3.5" />
-            </a>
+            </button>
           </>
         )}
         <button
@@ -432,6 +512,13 @@ export function HistoricoSessoes({
   const [salvandoEdicao, setSalvandoEdicao] = useState(false);
   const [erroEdicao, setErroEdicao] = useState<string | null>(null);
 
+  // "Conferir antes de enviar": abre uma checklist antes do link de
+  // WhatsApp sair, só quando a sessão junta mais de um item.
+  const [enviandoSessaoId, setEnviandoSessaoId] = useState<string | null>(null);
+  const [enviarAreas, setEnviarAreas] = useState<string[]>([]);
+  const [salvandoEnvio, setSalvandoEnvio] = useState(false);
+  const [erroEnvio, setErroEnvio] = useState<string | null>(null);
+
   // Pacotes salvos nesta sessão do painel (além dos que já vieram nas
   // fichas), pra refletir na hora sem precisar recarregar a página.
   const [pacotesOverride, setPacotesOverride] = useState<Record<string, number[]>>({});
@@ -472,8 +559,8 @@ export function HistoricoSessoes({
   // auto-refresh não troca os dados debaixo dela.
   const ocupadoRef = useRef(false);
   useEffect(() => {
-    ocupadoRef.current = abrindo || editandoSessaoId !== null;
-  }, [abrindo, editandoSessaoId]);
+    ocupadoRef.current = abrindo || editandoSessaoId !== null || enviandoSessaoId !== null;
+  }, [abrindo, editandoSessaoId, enviandoSessaoId]);
 
   useEffect(() => {
     setOrigin(window.location.origin);
@@ -657,6 +744,77 @@ export function HistoricoSessoes({
     const msg = `Oi ${primeiro}! Confirme seu atendimento na MAVI do dia ${dataBR(data)}, é rapidinho: ${linkDe(token)}`;
     const numero = numeroWhatsapp(telefoneCliente);
     return `https://wa.me/${numero}?text=${encodeURIComponent(msg)}`;
+  };
+
+  // Ao clicar em "Enviar por WhatsApp": se o atendimento tem só um item,
+  // manda direto — não tem o que conferir. Se juntou vários no mesmo dia
+  // (ex.: braços + axilas agendados juntos), abre a checklist antes.
+  const iniciarEnvioWhatsapp = (sessaoId: string) => {
+    const s = (sessoes ?? []).find((x) => x.id === sessaoId);
+    if (!s) return;
+    if (s.areas.length <= 1) {
+      window.open(whatsappDe(s.token, s.data), "_blank", "noreferrer");
+      return;
+    }
+    setEnviandoSessaoId(sessaoId);
+    setEnviarAreas(s.areas);
+    setErroEnvio(null);
+  };
+
+  const toggleEnviarArea = (a: string) =>
+    setEnviarAreas((prev) => (prev.includes(a) ? prev.filter((x) => x !== a) : [...prev, a]));
+
+  const cancelarEnvio = () => {
+    setEnviandoSessaoId(null);
+    setErroEnvio(null);
+  };
+
+  const confirmarEnvio = async () => {
+    if (!enviandoSessaoId) return;
+    const s = (sessoes ?? []).find((x) => x.id === enviandoSessaoId);
+    if (!s) return;
+    const naoRealizados = s.areas.filter((a) => !enviarAreas.includes(a));
+    setSalvandoEnvio(true);
+    setErroEnvio(null);
+    try {
+      // A sessão que recebe o link fica só com o que a Marina confirmou; o
+      // que não foi feito vira sessão(ões) pendente(s) separada(s), cada
+      // uma com seu próprio link, em vez de sumir ou ficar preso ao mesmo
+      // link do que já foi enviado.
+      await atualizarSessao(s.id, { areas: enviarAreas });
+      const pendentes =
+        naoRealizados.length > 0
+          ? await Promise.all(
+              naoRealizados.map((item) =>
+                criarSessao(s.ficha_id, { data: s.data, areas: [item], observacao: "" }),
+              ),
+            )
+          : [];
+      setSessoes((prev) => {
+        const atualizado = (prev ?? []).map((x) =>
+          x.id === s.id ? { ...x, areas: enviarAreas } : x,
+        );
+        return [...pendentes, ...atualizado];
+      });
+      window.open(whatsappDe(s.token, s.data), "_blank", "noreferrer");
+      setEnviandoSessaoId(null);
+    } catch (e) {
+      setErroEnvio(e instanceof Error ? e.message : "Erro ao preparar o envio.");
+    } finally {
+      setSalvandoEnvio(false);
+    }
+  };
+
+  const envioSessao: EnvioWhatsapp = {
+    sessaoId: enviandoSessaoId,
+    areasDisponiveis: (sessoes ?? []).find((x) => x.id === enviandoSessaoId)?.areas ?? [],
+    areasMarcadas: enviarAreas,
+    salvando: salvandoEnvio,
+    erro: erroEnvio,
+    onToggleArea: toggleEnviarArea,
+    onConfirmar: confirmarEnvio,
+    onCancelar: cancelarEnvio,
+    onIniciar: iniciarEnvioWhatsapp,
   };
 
   const podeSalvar = fichaId && (itens.length > 0 || observacao.trim());
@@ -920,9 +1078,9 @@ export function HistoricoSessoes({
                               confirmadoEm={l.confirmado_em}
                               copiado={copiadoId === l.sessaoId}
                               onCopiar={() => copiar(l.sessaoId, l.token)}
-                              linkWhatsapp={whatsappDe(l.token, l.data)}
                               onRemover={() => remover(l.sessaoId)}
                               edicao={edicaoSessao}
+                              envio={envioSessao}
                             />
                           ))}
                         </ul>
@@ -979,9 +1137,9 @@ export function HistoricoSessoes({
                               confirmadoEm={l.confirmado_em}
                               copiado={copiadoId === l.sessaoId}
                               onCopiar={() => copiar(l.sessaoId, l.token)}
-                              linkWhatsapp={whatsappDe(l.token, l.data)}
                               onRemover={() => remover(l.sessaoId)}
                               edicao={edicaoSessao}
+                              envio={envioSessao}
                             />
                           ))}
                         </ul>
@@ -1009,9 +1167,9 @@ export function HistoricoSessoes({
                   confirmadoEm={s.confirmado_em}
                   copiado={copiadoId === s.id}
                   onCopiar={() => copiar(s.id, s.token)}
-                  linkWhatsapp={whatsappDe(s.token, s.data)}
                   onRemover={() => remover(s.id)}
                   edicao={edicaoSessao}
+                  envio={envioSessao}
                 />
               ))}
             </ul>
