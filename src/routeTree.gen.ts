@@ -18,6 +18,7 @@ import { Route as PainelIndexRouteImport } from './routes/painel.index'
 import { Route as AvaliacaoIndexRouteImport } from './routes/avaliacao.index'
 import { Route as ServicosSlugRouteImport } from './routes/servicos.$slug'
 import { Route as ResultadosPowerReduxRouteImport } from './routes/resultados.power-redux'
+import { Route as PainelPendentesRouteImport } from './routes/painel.pendentes'
 import { Route as PainelIdRouteImport } from './routes/painel.$id'
 import { Route as ConfirmarTokenRouteImport } from './routes/confirmar.$token'
 import { Route as AvaliacaoTipoRouteImport } from './routes/avaliacao.$tipo'
@@ -68,6 +69,11 @@ const ResultadosPowerReduxRoute = ResultadosPowerReduxRouteImport.update({
   path: '/resultados/power-redux',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PainelPendentesRoute = PainelPendentesRouteImport.update({
+  id: '/pendentes',
+  path: '/pendentes',
+  getParentRoute: () => PainelRoute,
+} as any)
 const PainelIdRoute = PainelIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -98,6 +104,7 @@ export interface FileRoutesByFullPath {
   '/avaliacao/$tipo': typeof AvaliacaoTipoRoute
   '/confirmar/$token': typeof ConfirmarTokenRoute
   '/painel/$id': typeof PainelIdRoute
+  '/painel/pendentes': typeof PainelPendentesRoute
   '/resultados/power-redux': typeof ResultadosPowerReduxRoute
   '/servicos/$slug': typeof ServicosSlugRoute
   '/avaliacao/': typeof AvaliacaoIndexRoute
@@ -112,6 +119,7 @@ export interface FileRoutesByTo {
   '/avaliacao/$tipo': typeof AvaliacaoTipoRoute
   '/confirmar/$token': typeof ConfirmarTokenRoute
   '/painel/$id': typeof PainelIdRoute
+  '/painel/pendentes': typeof PainelPendentesRoute
   '/resultados/power-redux': typeof ResultadosPowerReduxRoute
   '/servicos/$slug': typeof ServicosSlugRoute
   '/avaliacao': typeof AvaliacaoIndexRoute
@@ -128,6 +136,7 @@ export interface FileRoutesById {
   '/avaliacao/$tipo': typeof AvaliacaoTipoRoute
   '/confirmar/$token': typeof ConfirmarTokenRoute
   '/painel/$id': typeof PainelIdRoute
+  '/painel/pendentes': typeof PainelPendentesRoute
   '/resultados/power-redux': typeof ResultadosPowerReduxRoute
   '/servicos/$slug': typeof ServicosSlugRoute
   '/avaliacao/': typeof AvaliacaoIndexRoute
@@ -145,6 +154,7 @@ export interface FileRouteTypes {
     | '/avaliacao/$tipo'
     | '/confirmar/$token'
     | '/painel/$id'
+    | '/painel/pendentes'
     | '/resultados/power-redux'
     | '/servicos/$slug'
     | '/avaliacao/'
@@ -159,6 +169,7 @@ export interface FileRouteTypes {
     | '/avaliacao/$tipo'
     | '/confirmar/$token'
     | '/painel/$id'
+    | '/painel/pendentes'
     | '/resultados/power-redux'
     | '/servicos/$slug'
     | '/avaliacao'
@@ -174,6 +185,7 @@ export interface FileRouteTypes {
     | '/avaliacao/$tipo'
     | '/confirmar/$token'
     | '/painel/$id'
+    | '/painel/pendentes'
     | '/resultados/power-redux'
     | '/servicos/$slug'
     | '/avaliacao/'
@@ -259,6 +271,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ResultadosPowerReduxRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/painel/pendentes': {
+      id: '/painel/pendentes'
+      path: '/pendentes'
+      fullPath: '/painel/pendentes'
+      preLoaderRoute: typeof PainelPendentesRouteImport
+      parentRoute: typeof PainelRoute
+    }
     '/painel/$id': {
       id: '/painel/$id'
       path: '/$id'
@@ -292,12 +311,14 @@ declare module '@tanstack/react-router' {
 
 interface PainelRouteChildren {
   PainelIdRoute: typeof PainelIdRoute
+  PainelPendentesRoute: typeof PainelPendentesRoute
   PainelIndexRoute: typeof PainelIndexRoute
   PainelClienteIdRoute: typeof PainelClienteIdRoute
 }
 
 const PainelRouteChildren: PainelRouteChildren = {
   PainelIdRoute: PainelIdRoute,
+  PainelPendentesRoute: PainelPendentesRoute,
   PainelIndexRoute: PainelIndexRoute,
   PainelClienteIdRoute: PainelClienteIdRoute,
 }
@@ -320,3 +341,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
