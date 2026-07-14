@@ -147,6 +147,19 @@ function DetalheFicha() {
     }
   };
 
+  // A cliente pode mudar de ideia sobre autorizar o uso de imagem depois de
+  // enviar a ficha — a Marina atualiza aqui, sem precisar reenviar tudo.
+  const alternarAutorizaFoto = async () => {
+    if (!ficha) return;
+    const novo = !ficha.autoriza_foto;
+    try {
+      await atualizarFicha(id, { autoriza_foto: novo });
+      setFicha({ ...ficha, autoriza_foto: novo });
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : "Erro ao atualizar a autorização de imagem.");
+    }
+  };
+
   const camposDadosPessoais = (): Campo[] => {
     if (!ficha) return [];
     const etapa = getFicha(ficha.tipo)?.etapas.find((e) => e.titulo === TITULO_DADOS_PESSOAIS);
@@ -343,11 +356,14 @@ function DetalheFicha() {
           <Check className="h-3.5 w-3.5" />
           Termo {ficha.termo_aceito ? "aceito" : "não aceito"}
         </span>
-        <span
-          className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 ${
+        <button
+          type="button"
+          onClick={alternarAutorizaFoto}
+          title="A cliente mudou de ideia? Clique para atualizar."
+          className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 transition-colors ${
             ficha.autoriza_foto
-              ? "bg-lavender-soft text-primary"
-              : "bg-destructive/10 text-destructive"
+              ? "bg-lavender-soft text-primary hover:bg-lavender-soft/70"
+              : "bg-destructive/10 text-destructive hover:bg-destructive/20"
           }`}
         >
           {ficha.autoriza_foto ? (
@@ -356,7 +372,7 @@ function DetalheFicha() {
             <CameraOff className="h-3.5 w-3.5" />
           )}
           {ficha.autoriza_foto ? "Autorizou imagem" : "Não autorizou imagem"}
-        </span>
+        </button>
       </div>
 
       {/* Respostas da anamnese */}
