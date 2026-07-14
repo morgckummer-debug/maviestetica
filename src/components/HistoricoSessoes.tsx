@@ -863,20 +863,25 @@ export function HistoricoSessoes({
                         <span
                           className={`text-xs ${seg.completo ? "text-painel-gold font-medium" : "text-painel-muted"}`}
                         >
-                          Pacote {seg.numero} · {seg.linhas.length} de {seg.pacoteTotal} sessões
+                          Pacote {seg.numero}
                           {seg.completo ? " concluído" : ""}
                         </span>
                         <span className="text-xs text-painel-primary underline underline-offset-2">
                           {aberto ? "Ocultar" : "Detalhes"}
                         </span>
                       </button>
-                      <div className="h-1.5 w-full max-w-[220px] rounded-full bg-painel-border overflow-hidden mb-2">
-                        <div
-                          className="h-full rounded-full bg-painel-gold transition-all"
-                          style={{
-                            width: `${Math.min(100, (seg.linhas.length / seg.pacoteTotal) * 100)}%`,
-                          }}
-                        />
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 mb-2">
+                        <span className="text-xs text-painel-muted shrink-0 order-2 sm:order-1">
+                          {seg.linhas.length} de {seg.pacoteTotal} sessões
+                        </span>
+                        <div className="order-1 sm:order-2 h-1.5 w-full max-w-[220px] rounded-full bg-painel-border overflow-hidden">
+                          <div
+                            className="h-full rounded-full bg-painel-gold transition-all"
+                            style={{
+                              width: `${Math.min(100, (seg.linhas.length / seg.pacoteTotal) * 100)}%`,
+                            }}
+                          />
+                        </div>
                       </div>
                       {aberto && (
                         <ul className="space-y-1">
