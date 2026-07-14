@@ -251,11 +251,24 @@ export type SessaoPendente = SessaoAtendimento & {
   ficha: { nome: string; telefone: string | null; tipo: Tipo };
 };
 
-// Todas as sessões (de qualquer cliente/ficha) ainda aguardando confirmação
-// da cliente pelo WhatsApp — para o painel "Pendentes de confirmação".
+const DIAS_TOLERANCIA_PENDENTE = 15;
+
+// Data de X dias atrás em "YYYY-MM-DD" no fuso local.
+function diasAtrasISO(dias: number): string {
+  const d = new Date();
+  d.setDate(d.getDate() - dias);
+  const off = d.getTimezoneOffset() * 60000;
+  return new Date(d.getTime() - off).toISOString().slice(0, 10);
+}
+
+// Sessões (de qualquer cliente/ficha) ainda aguardando confirmação da
+// cliente pelo WhatsApp, e realizadas há pelo menos 15 dias — antes disso
+// não entra na lista, pra não cutucar quem ainda está dentro do prazo
+// normal de confirmar. Para o painel "Pendentes de confirmação".
 export async function listarSessoesPendentes(): Promise<SessaoPendente[]> {
+  const limite = diasAtrasISO(DIAS_TOLERANCIA_PENDENTE);
   const res = await apiRest(
-    "sessoes?select=*,ficha:fichas(nome,telefone,tipo)&confirmado=eq.false&order=data.asc",
+    `sessoes?select=*,ficha:fichas(nome,telefone,tipo)&confirmado=eq.false&data=lte.${limite}&order=data.asc`,
   );
   if (!res.ok) throw new Error("Não foi possível carregar as sessões pendentes.");
   return (await res.json()) as SessaoPendente[];
