@@ -166,16 +166,9 @@ function PaginaCliente() {
         </div>
       )}
 
-      {/* Histórico de sessões unificado (o caderninho digital) */}
-      <HistoricoSessoes
-        fichas={procedimentos}
-        nomeCliente={cliente.nome}
-        telefoneCliente={cliente.telefone}
-      />
-
       {/* Fichas da cliente — cada uma abre a ficha completa (anamnese/medidas) */}
-      <div className="mt-8">
-        <div className="flex items-center justify-between gap-3 mb-1">
+      <div>
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-1">
           <h3 className="font-display text-2xl text-painel-title">Fichas</h3>
           {!enviandoFicha && (
             <button
@@ -208,7 +201,7 @@ function PaginaCliente() {
           {cliente.fichas.map((f) => (
             <div
               key={f.id}
-              className={`flex items-center justify-between gap-4 rounded-[14px] border ${bordaCard} bg-white px-6 py-5 transition-colors hover:border-painel-primary/40`}
+              className={`flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-[14px] border ${bordaCard} bg-white px-5 py-5 sm:px-6 transition-colors hover:border-painel-primary/40`}
             >
               <Link to="/painel/$id" params={{ id: f.id }} className="min-w-0 flex-1">
                 <div className="flex items-center gap-2 flex-wrap">
@@ -265,6 +258,15 @@ function PaginaCliente() {
             </div>
           ))}
         </div>
+      </div>
+
+      {/* Histórico de sessões unificado (o caderninho digital) */}
+      <div className="mt-8">
+        <HistoricoSessoes
+          fichas={procedimentos}
+          nomeCliente={cliente.nome}
+          telefoneCliente={cliente.telefone}
+        />
       </div>
     </div>
   );
