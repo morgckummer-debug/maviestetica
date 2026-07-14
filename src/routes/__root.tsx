@@ -14,6 +14,7 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
+import { SITE_URL } from "@/data/services";
 
 function NotFoundComponent() {
   return (
@@ -107,16 +108,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         content:
           "Centro de estética em Sete Lagoas, MG. Especialistas em drenagem linfática, depilação a laser Ácrus, limpeza de pele profunda, pós-operatório e tratamentos corporais personalizados.",
       },
-      {
-        property: "og:image",
-        content:
-          "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/35b528cb-fade-48da-818f-063dbb7855d3/id-preview-d1c63947--647d26de-8c81-42f7-9ade-43a6f84e6481.lovable.app-1780275909504.png",
-      },
-      {
-        name: "twitter:image",
-        content:
-          "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/35b528cb-fade-48da-818f-063dbb7855d3/id-preview-d1c63947--647d26de-8c81-42f7-9ade-43a6f84e6481.lovable.app-1780275909504.png",
-      },
+      { property: "og:image", content: `${SITE_URL}/icon-512.png` },
+      { name: "twitter:image", content: `${SITE_URL}/icon-512.png` },
     ],
     links: [
       {
