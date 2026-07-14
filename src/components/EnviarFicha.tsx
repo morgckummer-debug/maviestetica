@@ -65,7 +65,7 @@ export function EnviarFicha({
   };
 
   return (
-    <div className="rounded-2xl border border-lavender/50 bg-lavender-soft/40 p-5 mb-8">
+    <div className="rounded-2xl border border-lavender/50 bg-lavender-soft p-5 mb-8">
       <div className="flex items-center justify-between gap-2 mb-4">
         <div className="flex items-center gap-2">
           <Send className="h-4 w-4 text-primary" />
