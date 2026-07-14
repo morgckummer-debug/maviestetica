@@ -225,6 +225,7 @@ export type SessaoAtendimento = {
   token: string;
   confirmado: boolean;
   confirmado_em: string | null;
+  arquivado: boolean;
 };
 
 export async function listarSessoes(fichaId: string): Promise<SessaoAtendimento[]> {
@@ -236,7 +237,8 @@ export async function listarSessoes(fichaId: string): Promise<SessaoAtendimento[
 }
 
 // Sessões de várias fichas de uma vez (histórico unificado da cliente,
-// que pode ter mais de um procedimento/ficha).
+// que pode ter mais de um procedimento/ficha). Traz também as arquivadas —
+// quem exibe filtra por `arquivado` conforme a seção (ativas vs. arquivadas).
 export async function listarSessoesDeFichas(fichaIds: string[]): Promise<SessaoAtendimento[]> {
   if (fichaIds.length === 0) return [];
   const lista = fichaIds.map((id) => encodeURIComponent(id)).join(",");
@@ -264,11 +266,12 @@ function diasAtrasISO(dias: number): string {
 // Sessões (de qualquer cliente/ficha) ainda aguardando confirmação da
 // cliente pelo WhatsApp, e realizadas há pelo menos 15 dias — antes disso
 // não entra na lista, pra não cutucar quem ainda está dentro do prazo
-// normal de confirmar. Para o painel "Pendentes de confirmação".
+// normal de confirmar. Sessões arquivadas não entram (foram canceladas).
+// Para o painel "Pendentes de confirmação".
 export async function listarSessoesPendentes(): Promise<SessaoPendente[]> {
   const limite = diasAtrasISO(DIAS_TOLERANCIA_PENDENTE);
   const res = await apiRest(
-    `sessoes?select=*,ficha:fichas(nome,telefone,tipo)&confirmado=eq.false&data=lte.${limite}&order=data.asc`,
+    `sessoes?select=*,ficha:fichas(nome,telefone,tipo)&confirmado=eq.false&arquivado=eq.false&data=lte.${limite}&order=data.asc`,
   );
   if (!res.ok) throw new Error("Não foi possível carregar as sessões pendentes.");
   return (await res.json()) as SessaoPendente[];
@@ -323,15 +326,31 @@ export async function atualizarSessao(
   }
 }
 
-export async function excluirSessao(id: string): Promise<void> {
+// Arquiva (ou restaura) uma sessão em vez de apagar de verdade — nada é
+// perdido, a sessão só some da lista ativa e pode ser restaurada depois em
+// "Sessões arquivadas". Ver migração 0008_arquivar_sessoes.sql.
+export async function arquivarSessao(id: string, arquivado: boolean): Promise<void> {
   const res = await apiRest(`sessoes?id=eq.${encodeURIComponent(id)}`, {
-    method: "DELETE",
+    method: "PATCH",
     headers: { Prefer: "return=representation" },
+    body: JSON.stringify({ arquivado }),
   });
-  if (!res.ok) throw new Error("Não foi possível excluir a sessão.");
-  const apagadas = (await res.json().catch(() => [])) as unknown[];
-  if (!Array.isArray(apagadas) || apagadas.length === 0) {
-    throw new Error("Exclusão bloqueada pelo banco. Rode a migração 0005_sessoes.sql no Supabase.");
+  if (!res.ok) {
+    const detalhe = await res.text().catch(() => "");
+    if (/column .*arquivado.* does not exist/i.test(detalhe)) {
+      throw new Error(
+        "Rode a migração 0008_arquivar_sessoes.sql no Supabase (SQL Editor) para ativar o arquivamento.",
+      );
+    }
+    throw new Error(
+      arquivado ? "Não foi possível arquivar a sessão." : "Não foi possível restaurar a sessão.",
+    );
+  }
+  const alteradas = (await res.json().catch(() => [])) as unknown[];
+  if (!Array.isArray(alteradas) || alteradas.length === 0) {
+    throw new Error(
+      "A alteração não foi salva no banco (permissão de atualizar sessões ausente). Rode de novo a parte de UPDATE da migração 0005_sessoes.sql no Supabase.",
+    );
   }
 }
 

@@ -149,9 +149,15 @@ function DetalheFicha() {
 
   // A cliente pode mudar de ideia sobre autorizar o uso de imagem depois de
   // enviar a ficha — a Marina atualiza aqui, sem precisar reenviar tudo.
+  // Pede confirmação: é um dado de consentimento, não pode mudar num clique
+  // sem querer.
   const alternarAutorizaFoto = async () => {
     if (!ficha) return;
     const novo = !ficha.autoriza_foto;
+    const pergunta = novo
+      ? "Marcar que a cliente AUTORIZOU o uso de imagem?"
+      : "Marcar que a cliente NÃO autoriza (ou retirou a autorização) o uso de imagem?";
+    if (!window.confirm(pergunta)) return;
     try {
       await atualizarFicha(id, { autoriza_foto: novo });
       setFicha({ ...ficha, autoriza_foto: novo });
