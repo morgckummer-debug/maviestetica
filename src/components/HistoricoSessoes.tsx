@@ -527,6 +527,15 @@ export function HistoricoSessoes({
   // ver os detalhes, ou pacotes em aberto que ela recolheu.
   const [expandidos, setExpandidos] = useState<Record<string, boolean>>({});
 
+  // "Fechou um pacote?": anexa um tamanho de pacote a um item que já tem
+  // sessões avulsas registradas (ex.: fez 1 sessão avulsa e só depois
+  // comprou o pacote de 10 — essa sessão vira a 1ª do pacote). Também serve
+  // pra registrar um novo pacote depois que o anterior foi concluído.
+  const [editandoPacoteChave, setEditandoPacoteChave] = useState<string | null>(null);
+  const [pacoteValor, setPacoteValor] = useState("");
+  const [salvandoPacote, setSalvandoPacote] = useState(false);
+  const [erroPacote, setErroPacote] = useState<string | null>(null);
+
   const fichaPorId = useMemo(() => {
     const m = new Map<string, Procedimento>();
     fichas.forEach((f) => m.set(f.id, f));
@@ -856,6 +865,35 @@ export function HistoricoSessoes({
     return totalAtual - acumulado + 1;
   };
 
+  const iniciarEdicaoPacote = (chave: string) => {
+    setEditandoPacoteChave(chave);
+    setPacoteValor("");
+    setErroPacote(null);
+  };
+
+  const cancelarEdicaoPacote = () => {
+    setEditandoPacoteChave(null);
+    setErroPacote(null);
+  };
+
+  const salvarPacote = async (fId: string, item: string) => {
+    const n = parseInt(pacoteValor, 10);
+    if (!n || n <= 0) return;
+    setSalvandoPacote(true);
+    setErroPacote(null);
+    try {
+      const nova = [...pacotesDoItem(fId, item), n];
+      const merge = { ...(fichaPorId.get(fId)?.pacotes ?? {}), [item]: nova };
+      await atualizarFicha(fId, { pacotes: merge });
+      setPacotesOverride((prev) => ({ ...prev, [`${fId}::${item}`]: nova }));
+      setEditandoPacoteChave(null);
+    } catch (e) {
+      setErroPacote(e instanceof Error ? e.message : "Erro ao salvar o pacote.");
+    } finally {
+      setSalvandoPacote(false);
+    }
+  };
+
   return (
     <div className="rounded-2xl border border-painel-border bg-white p-5 sm:p-6">
       <div className="flex flex-wrap items-center justify-between gap-3 mb-1">
@@ -1035,6 +1073,10 @@ export function HistoricoSessoes({
         {grupos.map((g) => {
           const pacotes = pacotesDoItem(g.fichaId, g.item);
           const segmentos = segmentarPorPacote(g.linhas, pacotes);
+          // Sem pacote em aberto pra esse item — ou nunca teve pacote, ou já
+          // concluiu todos os anteriores. É quando faz sentido oferecer
+          // "fechar pacote" (encaixando o que já foi feito como 1ª sessão).
+          const semPacoteAtivo = g.linhas.length >= somaPacotes(g.fichaId, g.item);
           return (
             <div key={g.chave} className="mb-5 last:mb-0">
               <div className="flex items-center gap-2 mb-2 flex-wrap">
@@ -1052,7 +1094,53 @@ export function HistoricoSessoes({
                     {g.linhas.length === 1 ? "" : "s"}
                   </span>
                 )}
+                {semPacoteAtivo && editandoPacoteChave !== g.chave && (
+                  <button
+                    type="button"
+                    onClick={() => iniciarEdicaoPacote(g.chave)}
+                    className="text-xs text-painel-primary underline underline-offset-2"
+                  >
+                    {pacotes.length === 0 ? "Fechou um pacote?" : "+ Novo pacote"}
+                  </button>
+                )}
               </div>
+
+              {editandoPacoteChave === g.chave && (
+                <div className="flex flex-wrap items-center gap-2 mb-3 rounded-lg border border-painel-border bg-painel-badge-bg/40 p-2.5">
+                  <label className="text-xs text-painel-muted">
+                    {pacotes.length === 0
+                      ? "Pacote de quantas sessões? (o que já foi feito vira a 1ª)"
+                      : "Novo pacote de quantas sessões?"}
+                  </label>
+                  <input
+                    type="number"
+                    min={1}
+                    inputMode="numeric"
+                    autoFocus
+                    value={pacoteValor}
+                    onChange={(e) => setPacoteValor(e.target.value)}
+                    placeholder="nº de sessões"
+                    className="w-28 rounded-lg border border-painel-border bg-white px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-painel-primary/40"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => salvarPacote(g.fichaId, g.item)}
+                    disabled={salvandoPacote || !pacoteValor.trim()}
+                    className="rounded-full bg-painel-primary text-white px-3.5 py-1.5 text-xs font-medium hover:bg-painel-primary/90 transition-colors disabled:opacity-40"
+                  >
+                    Salvar
+                  </button>
+                  <button
+                    type="button"
+                    onClick={cancelarEdicaoPacote}
+                    disabled={salvandoPacote}
+                    className="rounded-full border border-painel-border px-3.5 py-1.5 text-xs font-medium text-painel-chip-text hover:border-painel-primary/40 transition-colors disabled:opacity-40"
+                  >
+                    Cancelar
+                  </button>
+                  {erroPacote && <p className="w-full text-xs text-painel-alert-text">{erroPacote}</p>}
+                </div>
+              )}
 
               <div className="space-y-3">
                 {segmentos.map((seg) => {
