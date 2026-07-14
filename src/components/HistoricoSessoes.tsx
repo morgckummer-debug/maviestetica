@@ -10,13 +10,7 @@ import {
   Plus,
   Trash2,
 } from "lucide-react";
-import {
-  FICHAS,
-  OPCOES_SESSAO,
-  rotuloItensSessao,
-  nomeCurto,
-  type Tipo,
-} from "@/data/anamnese";
+import { FICHAS, OPCOES_SESSAO, rotuloItensSessao, nomeCurto, type Tipo } from "@/data/anamnese";
 import {
   listarSessoesDeFichas,
   criarSessao,
@@ -128,7 +122,12 @@ function segmentarPorPacote(linhas: LinhaSessao[], pacotes: number[]): Segmento[
   pacotes.forEach((tamanho, i) => {
     if (indice >= linhas.length) return;
     const fatia = linhas.slice(indice, indice + tamanho);
-    segmentos.push({ numero: i + 1, linhas: fatia, pacoteTotal: tamanho, completo: fatia.length >= tamanho });
+    segmentos.push({
+      numero: i + 1,
+      linhas: fatia,
+      pacoteTotal: tamanho,
+      completo: fatia.length >= tamanho,
+    });
     indice += fatia.length;
   });
   if (indice < linhas.length) {
@@ -223,6 +222,12 @@ function LinhaSessaoView({
                 );
               })}
             </div>
+            {edicao.areas.length > 1 && (
+              <p className="mt-1.5 text-[11px] text-painel-muted">
+                Só uma parte foi feita? Desmarque aqui — ao salvar, dá pra criar uma sessão separada
+                e pendente pro que ficou de fora, com link de confirmação próprio.
+              </p>
+            )}
           </div>
         )}
         <div className="mb-3">
@@ -265,11 +270,15 @@ function LinhaSessaoView({
 
   return (
     <li className="flex items-center gap-2 text-sm">
-      {confirmado && <Check className="h-3.5 w-3.5 shrink-0 text-emerald-600 dark:text-emerald-500" />}
+      {confirmado && (
+        <Check className="h-3.5 w-3.5 shrink-0 text-emerald-600 dark:text-emerald-500" />
+      )}
       <span
         title={confirmadoEm ? `Confirmado em ${confirmadaEm(confirmadoEm)}` : undefined}
         className={
-          confirmado ? "text-emerald-700 dark:text-emerald-400" : "text-amber-600 dark:text-amber-500"
+          confirmado
+            ? "text-emerald-700 dark:text-emerald-400"
+            : "text-amber-600 dark:text-amber-500"
         }
       >
         {texto}
@@ -568,16 +577,39 @@ export function HistoricoSessoes({
 
   const salvarEdicaoSessao = async () => {
     if (!editandoSessaoId) return;
+    const sessaoOriginal = (sessoes ?? []).find((s) => s.id === editandoSessaoId);
+    // Itens que estavam nesta sessão e a Marina desmarcou agora — ex.: tinha
+    // Braços + Axilas, mas só Axilas foi feito. Sem isso, cada link de
+    // WhatsApp dessa sessão confirmaria os dois juntos, mesmo se ela só
+    // quisesse mandar a confirmação de um deles.
+    const areasRemovidas = (sessaoOriginal?.areas ?? []).filter((a) => !editAreas.includes(a));
+    let criarPendente = false;
+    if (areasRemovidas.length > 0) {
+      criarPendente = window.confirm(
+        `"${areasRemovidas.join(", ")}" vai sair desta sessão. Criar uma sessão pendente separada pra isso, com link de confirmação próprio? (Cancelar só remove, sem criar nada)`,
+      );
+    }
     setSalvandoEdicao(true);
     setErroEdicao(null);
     try {
       const observacao = editObservacao.trim() || null;
       await atualizarSessao(editandoSessaoId, { data: editData, observacao, areas: editAreas });
-      setSessoes((prev) =>
-        (prev ?? []).map((s) =>
+
+      let novaPendente: SessaoAtendimento | null = null;
+      if (criarPendente && sessaoOriginal) {
+        novaPendente = await criarSessao(sessaoOriginal.ficha_id, {
+          data: editData,
+          areas: areasRemovidas,
+          observacao: "",
+        });
+      }
+
+      setSessoes((prev) => {
+        const atualizado = (prev ?? []).map((s) =>
           s.id === editandoSessaoId ? { ...s, data: editData, observacao, areas: editAreas } : s,
-        ),
-      );
+        );
+        return novaPendente ? [novaPendente, ...atualizado] : atualizado;
+      });
       setEditandoSessaoId(null);
     } catch (e) {
       // Mostrado dentro do próprio formulário de edição — não só lá em
@@ -811,7 +843,11 @@ export function HistoricoSessoes({
               disabled={salvando || !podeSalvar}
               className="inline-flex items-center gap-2 rounded-full bg-painel-primary text-white px-5 py-2.5 text-sm font-medium hover:bg-painel-primary/90 transition-colors disabled:opacity-40"
             >
-              {salvando ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+              {salvando ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Check className="h-4 w-4" />
+              )}
               Salvar sessão
             </button>
             <button
@@ -844,7 +880,9 @@ export function HistoricoSessoes({
           return (
             <div key={g.chave} className="mb-5 last:mb-0">
               <div className="flex items-center gap-2 mb-2 flex-wrap">
-                <h4 className="text-base sm:text-lg font-semibold text-painel-primary-deep">{g.item}</h4>
+                <h4 className="text-base sm:text-lg font-semibold text-painel-primary-deep">
+                  {g.item}
+                </h4>
                 {multi && (
                   <span className="text-xs text-painel-muted">
                     {FICHAS[g.tipo]?.emoji ?? ""} {nomeCurto(g.tipo)}
