@@ -56,7 +56,11 @@ function PaginaCliente() {
   );
 
   const excluirUmaFicha = async (f: Ficha) => {
-    if (!window.confirm(`Excluir a ficha de ${nomeTipo(f.tipo)} desta cliente? Essa ação não pode ser desfeita.`))
+    if (
+      !window.confirm(
+        `Excluir a ficha de ${nomeTipo(f.tipo)} desta cliente? Essa ação não pode ser desfeita.`,
+      )
+    )
       return;
     setExcluindoId(f.id);
     setErroExcluir(null);
@@ -85,14 +89,21 @@ function PaginaCliente() {
   const procedimentos: Procedimento[] = useMemo(
     () =>
       cliente
-        ? cliente.fichas.map((f) => ({ id: f.id, tipo: f.tipo, nome: f.nome, pacotes: f.pacotes ?? {} }))
+        ? cliente.fichas.map((f) => ({
+            id: f.id,
+            tipo: f.tipo,
+            nome: f.nome,
+            pacotes: f.pacotes ?? {},
+          }))
         : [],
     [cliente],
   );
 
   // Sugere de cara um procedimento que a cliente ainda não tem ficha,
   // caso ela se interesse por outro tratamento.
-  const tipoSugerido = cliente ? (TIPOS.find((t) => !cliente.tipos.includes(t)) ?? TIPOS[0]) : TIPOS[0];
+  const tipoSugerido = cliente
+    ? (TIPOS.find((t) => !cliente.tipos.includes(t)) ?? TIPOS[0])
+    : TIPOS[0];
 
   if (!fichas && !erro) {
     return (
@@ -129,147 +140,149 @@ function PaginaCliente() {
   return (
     <div>
       <RamosWatermark className="fixed -right-14 top-24 hidden h-[75vh] max-h-[640px] w-auto opacity-[0.05] sm:block" />
-      <Link
-        to="/painel"
-        className="inline-flex items-center gap-2 text-[13px] text-painel-muted hover:text-painel-primary mb-7"
-      >
-        <ArrowLeft className="h-3.5 w-3.5" />
-        Todas as clientes
-      </Link>
+      <div className="relative z-10">
+        <Link
+          to="/painel"
+          className="inline-flex items-center gap-2 text-[13px] text-painel-muted hover:text-painel-primary mb-7"
+        >
+          <ArrowLeft className="h-3.5 w-3.5" />
+          Todas as clientes
+        </Link>
 
-      {/* Cabeçalho da cliente */}
-      <div className="mb-6">
-        <div className="flex flex-wrap items-center gap-2 mb-2.5">
-          {cliente.tipos.map((t) => (
-            <span
-              key={t}
-              className="inline-block text-[11px] rounded-full bg-painel-badge-bg px-3 py-0.5 text-painel-primary"
-            >
-              {FICHAS[t]?.emoji ?? ""} {nomeTipo(t)}
-            </span>
-          ))}
-        </div>
-        <h2 className="font-display text-4xl text-painel-title">{cliente.nome}</h2>
-        <p className="text-[13px] text-painel-muted mt-2">
-          {cliente.telefone ? mascaraTelefone(cliente.telefone) : "sem telefone"}
-          {" · "}
-          {cliente.fichas.length} ficha(s)
-        </p>
-      </div>
-
-      {alertas.length > 0 && (
-        <div className="flex gap-3 rounded-[14px] border border-painel-alert-border bg-painel-alert-bg px-[22px] py-[18px] text-sm text-painel-alert-text mb-8">
-          <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
-          <ul className="space-y-1">
-            {alertas.map((a, i) => (
-              <li key={i}>{a}</li>
+        {/* Cabeçalho da cliente */}
+        <div className="mb-6">
+          <div className="flex flex-wrap items-center gap-2 mb-2.5">
+            {cliente.tipos.map((t) => (
+              <span
+                key={t}
+                className="inline-block text-[11px] rounded-full bg-painel-badge-bg px-3 py-0.5 text-painel-primary"
+              >
+                {FICHAS[t]?.emoji ?? ""} {nomeTipo(t)}
+              </span>
             ))}
-          </ul>
+          </div>
+          <h2 className="font-display text-4xl text-painel-title">{cliente.nome}</h2>
+          <p className="text-[13px] text-painel-muted mt-2">
+            {cliente.telefone ? mascaraTelefone(cliente.telefone) : "sem telefone"}
+            {" · "}
+            {cliente.fichas.length} ficha(s)
+          </p>
         </div>
-      )}
 
-      {/* Fichas da cliente — cada uma abre a ficha completa (anamnese/medidas) */}
-      <div>
-        <div className="flex flex-wrap items-center justify-between gap-3 mb-1">
-          <h3 className="font-display text-2xl text-painel-title">Fichas</h3>
-          {!enviandoFicha && (
-            <button
-              type="button"
-              onClick={() => setEnviandoFicha(true)}
-              className="inline-flex items-center gap-1.5 rounded-full bg-painel-primary text-white px-[18px] py-2.5 text-sm font-semibold hover:bg-painel-primary/90 transition-colors"
-            >
-              <Send className="h-4 w-4" />
-              Enviar ficha
-            </button>
-          )}
-        </div>
-        <p className="text-sm text-painel-muted mb-4">
-          Abra a ficha para ver a anamnese completa e a avaliação. Interessou por outro
-          procedimento? Envie uma nova ficha pra ela preencher.
-        </p>
-
-        {enviandoFicha && (
-          <EnviarFicha
-            nomeInicial={cliente.nome}
-            celularInicial={cliente.telefone}
-            tipoInicial={tipoSugerido}
-            convitePadrao
-            onFechar={() => setEnviandoFicha(false)}
-          />
+        {alertas.length > 0 && (
+          <div className="flex gap-3 rounded-[14px] border border-painel-alert-border bg-painel-alert-bg px-[22px] py-[18px] text-sm text-painel-alert-text mb-8">
+            <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
+            <ul className="space-y-1">
+              {alertas.map((a, i) => (
+                <li key={i}>{a}</li>
+              ))}
+            </ul>
+          </div>
         )}
 
-        {erroExcluir && <p className="text-sm text-painel-alert-text mb-4">{erroExcluir}</p>}
-        <div className="space-y-3">
-          {cliente.fichas.map((f) => (
-            <div
-              key={f.id}
-              className={`flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-[14px] border ${bordaCard} bg-white px-5 py-5 sm:px-6 transition-colors hover:border-painel-primary/40`}
-            >
-              <Link to="/painel/$id" params={{ id: f.id }} className="min-w-0 flex-1">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-[11px] rounded-full bg-painel-badge-bg px-2.5 py-0.5 text-painel-primary">
-                    {FICHAS[f.tipo]?.emoji ?? ""} {nomeCurto(f.tipo)}
-                  </span>
-                  {f.arquivada && (
-                    <span className="text-xs rounded-full bg-painel-badge-bg px-2 py-0.5 text-painel-muted">
-                      arquivada
-                    </span>
-                  )}
-                  {f.alertas.length > 0 && (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-painel-alert-bg text-painel-alert-text px-2 py-0.5 text-xs font-medium">
-                      <AlertTriangle className="h-3 w-3" />
-                      {f.alertas.length}
-                    </span>
-                  )}
-                </div>
-                <p className="text-[13px] text-painel-muted-2 mt-1.5">
-                  enviada em {formatarData(f.created_at)}
-                </p>
-              </Link>
-              <div className="flex items-center gap-3.5 shrink-0">
-                <span
-                  className={`inline-flex items-center gap-1 text-xs ${
-                    f.termo_aceito ? "text-painel-primary" : "text-painel-muted"
-                  }`}
-                >
-                  <Check className="h-3.5 w-3.5" />
-                  Termo
-                </span>
-                {f.autoriza_foto ? (
-                  <Camera className="h-4 w-4 text-painel-gold" />
-                ) : (
-                  <CameraOff className="h-4 w-4 text-painel-icon-muted" />
-                )}
-                <button
-                  type="button"
-                  onClick={() => excluirUmaFicha(f)}
-                  disabled={excluindoId === f.id}
-                  title="Excluir ficha"
-                  className="inline-flex items-center gap-1.5 rounded-full border border-painel-alert-border bg-painel-alert-bg px-3 py-1.5 text-xs font-medium text-painel-alert-text hover:bg-painel-alert-bg/70 transition-colors disabled:opacity-40"
-                >
-                  {excluindoId === f.id ? (
-                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                  ) : (
-                    <Trash2 className="h-3.5 w-3.5" />
-                  )}
-                  Excluir
-                </button>
-                <Link to="/painel/$id" params={{ id: f.id }} aria-label="Abrir ficha">
-                  <ChevronRight className="h-4 w-4 text-painel-icon-muted" />
-                </Link>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
+        {/* Fichas da cliente — cada uma abre a ficha completa (anamnese/medidas) */}
+        <div>
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-1">
+            <h3 className="font-display text-2xl text-painel-title">Fichas</h3>
+            {!enviandoFicha && (
+              <button
+                type="button"
+                onClick={() => setEnviandoFicha(true)}
+                className="inline-flex items-center gap-1.5 rounded-full bg-painel-primary text-white px-[18px] py-2.5 text-sm font-semibold hover:bg-painel-primary/90 transition-colors"
+              >
+                <Send className="h-4 w-4" />
+                Enviar ficha
+              </button>
+            )}
+          </div>
+          <p className="text-sm text-painel-muted mb-4">
+            Abra a ficha para ver a anamnese completa e a avaliação. Interessou por outro
+            procedimento? Envie uma nova ficha pra ela preencher.
+          </p>
 
-      {/* Histórico de sessões unificado (o caderninho digital) */}
-      <div className="mt-8">
-        <HistoricoSessoes
-          fichas={procedimentos}
-          nomeCliente={cliente.nome}
-          telefoneCliente={cliente.telefone}
-        />
+          {enviandoFicha && (
+            <EnviarFicha
+              nomeInicial={cliente.nome}
+              celularInicial={cliente.telefone}
+              tipoInicial={tipoSugerido}
+              convitePadrao
+              onFechar={() => setEnviandoFicha(false)}
+            />
+          )}
+
+          {erroExcluir && <p className="text-sm text-painel-alert-text mb-4">{erroExcluir}</p>}
+          <div className="space-y-3">
+            {cliente.fichas.map((f) => (
+              <div
+                key={f.id}
+                className={`flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-[14px] border ${bordaCard} bg-white px-5 py-5 sm:px-6 transition-colors hover:border-painel-primary/40`}
+              >
+                <Link to="/painel/$id" params={{ id: f.id }} className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-[11px] rounded-full bg-painel-badge-bg px-2.5 py-0.5 text-painel-primary">
+                      {FICHAS[f.tipo]?.emoji ?? ""} {nomeCurto(f.tipo)}
+                    </span>
+                    {f.arquivada && (
+                      <span className="text-xs rounded-full bg-painel-badge-bg px-2 py-0.5 text-painel-muted">
+                        arquivada
+                      </span>
+                    )}
+                    {f.alertas.length > 0 && (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-painel-alert-bg text-painel-alert-text px-2 py-0.5 text-xs font-medium">
+                        <AlertTriangle className="h-3 w-3" />
+                        {f.alertas.length}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-[13px] text-painel-muted-2 mt-1.5">
+                    enviada em {formatarData(f.created_at)}
+                  </p>
+                </Link>
+                <div className="flex items-center gap-3.5 shrink-0">
+                  <span
+                    className={`inline-flex items-center gap-1 text-xs ${
+                      f.termo_aceito ? "text-painel-primary" : "text-painel-muted"
+                    }`}
+                  >
+                    <Check className="h-3.5 w-3.5" />
+                    Termo
+                  </span>
+                  {f.autoriza_foto ? (
+                    <Camera className="h-4 w-4 text-painel-gold" />
+                  ) : (
+                    <CameraOff className="h-4 w-4 text-painel-icon-muted" />
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => excluirUmaFicha(f)}
+                    disabled={excluindoId === f.id}
+                    title="Excluir ficha"
+                    className="inline-flex items-center gap-1.5 rounded-full border border-painel-alert-border bg-painel-alert-bg px-3 py-1.5 text-xs font-medium text-painel-alert-text hover:bg-painel-alert-bg/70 transition-colors disabled:opacity-40"
+                  >
+                    {excluindoId === f.id ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      <Trash2 className="h-3.5 w-3.5" />
+                    )}
+                    Excluir
+                  </button>
+                  <Link to="/painel/$id" params={{ id: f.id }} aria-label="Abrir ficha">
+                    <ChevronRight className="h-4 w-4 text-painel-icon-muted" />
+                  </Link>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Histórico de sessões unificado (o caderninho digital) */}
+        <div className="mt-8">
+          <HistoricoSessoes
+            fichas={procedimentos}
+            nomeCliente={cliente.nome}
+            telefoneCliente={cliente.telefone}
+          />
+        </div>
       </div>
     </div>
   );
