@@ -473,8 +473,8 @@ function agruparPorItem(
       if (s.data > g.maisRecente) g.maisRecente = s.data;
     }
   }
-  const grupos = [...porChave.values()].sort((a, b) => b.maisRecente.localeCompare(a.maisRecente));
-  semItem.sort((a, b) => b.data.localeCompare(a.data));
+  const grupos = [...porChave.values()].sort((a, b) => a.maisRecente.localeCompare(b.maisRecente));
+  semItem.sort((a, b) => a.data.localeCompare(b.data));
   return { grupos, semItem };
 }
 
