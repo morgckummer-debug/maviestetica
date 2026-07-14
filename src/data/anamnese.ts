@@ -837,6 +837,7 @@ export const OPCOES_SESSAO: Record<Tipo, string[]> = {
     "Taping Pós-Parto",
     "Pós-Operatório",
     "Drenagem para Gestantes",
+    "Max Pós-Parto",
   ],
 };
 
