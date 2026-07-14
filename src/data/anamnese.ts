@@ -811,15 +811,17 @@ export const FICHAS: Record<Tipo, DefinicaoFicha> = {
 // Áreas de depilação, reaproveitadas no registro de sessões do painel
 // (mesma lista da ficha a laser, para a Marina marcar o que foi feito).
 export const AREAS_DEPILACAO: string[] = [
+  "Meia-perna",
   "Axilas",
-  "Seios e/ou abdômen",
-  "Braço/antebraço",
   "Virilha",
-  "Coxa e/ou canela",
-  "Glúteos e extras",
-  "Linha alba",
+  "Virilha completa",
+  "Perianal",
+  "Coxa",
   "Buço",
-  "Rosto",
+  "Queixo",
+  "Tórax",
+  "Abdômen",
+  "Pescoço",
 ];
 
 // Botões de "o que foi feito" no registro de sessão, por tipo de ficha.
@@ -835,6 +837,7 @@ export const OPCOES_SESSAO: Record<Tipo, string[]> = {
     "Taping Pós-Parto",
     "Pós-Operatório",
     "Drenagem para Gestantes",
+    "Max Pós-Parto",
   ],
 };
 
