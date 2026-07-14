@@ -623,7 +623,7 @@ export function HistoricoSessoes({
 
   return (
     <div className="rounded-2xl border border-painel-border bg-white p-5 sm:p-6">
-      <div className="flex items-center justify-between gap-3 mb-1">
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-1">
         <h3 className="font-display text-2xl text-painel-title">Histórico de sessões</h3>
         {!abrindo && (
           <button
@@ -853,7 +853,7 @@ export function HistoricoSessoes({
                       <button
                         type="button"
                         onClick={() => setExpandidos((prev) => ({ ...prev, [chaveSeg]: !aberto }))}
-                        className="flex items-center gap-1.5 mb-1.5"
+                        className="flex flex-wrap items-center gap-1.5 mb-1.5 text-left"
                       >
                         {aberto ? (
                           <ChevronDown className="h-3.5 w-3.5 text-painel-muted shrink-0" />
