@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
+  Archive,
+  ArchiveRestore,
   Check,
   ChevronDown,
   ChevronRight,
@@ -8,13 +10,12 @@ import {
   MessageCircle,
   Pencil,
   Plus,
-  Trash2,
 } from "lucide-react";
 import { FICHAS, OPCOES_SESSAO, rotuloItensSessao, nomeCurto, type Tipo } from "@/data/anamnese";
 import {
   listarSessoesDeFichas,
   criarSessao,
-  excluirSessao,
+  arquivarSessao,
   atualizarSessao,
   atualizarFicha,
   type SessaoAtendimento,
@@ -167,6 +168,18 @@ type EnvioWhatsapp = {
   onIniciar: (sessaoId: string) => void;
 };
 
+// Arquivar uma sessão que a cliente JÁ confirmou (tem "assinatura" digital)
+// pede uma segunda confirmação bem mais visível do que o window.confirm
+// usado nas outras ações — pra ninguém apagar uma confirmação por engano.
+type ArquivarConfirmada = {
+  sessaoId: string | null;
+  salvando: boolean;
+  erro: string | null;
+  onConfirmar: () => void;
+  onCancelar: () => void;
+  onIniciar: (sessaoId: string) => void;
+};
+
 // Uma linha de sessão (data + status colorido + ações). Reaproveitada nos
 // segmentos de pacote e nas sessões sem item ("Outras sessões"). Vira um
 // formulário inline quando está sendo editada (ex.: corrigir a data).
@@ -179,9 +192,9 @@ function LinhaSessaoView({
   confirmadoEm,
   copiado,
   onCopiar,
-  onRemover,
   edicao,
   envio,
+  arquivar,
 }: {
   id: string;
   texto: string;
@@ -191,10 +204,49 @@ function LinhaSessaoView({
   confirmadoEm: string | null;
   copiado: boolean;
   onCopiar: () => void;
-  onRemover: () => void;
   edicao: EdicaoSessao;
   envio: EnvioWhatsapp;
+  arquivar: ArquivarConfirmada;
 }) {
+  if (arquivar.sessaoId === id) {
+    return (
+      <li className="rounded-lg border border-painel-alert-border bg-painel-alert-bg p-3">
+        <p className="text-xs font-medium text-painel-alert-text mb-1">
+          Essa sessão já foi confirmada pela cliente
+          {confirmadoEm ? ` em ${confirmadaEm(confirmadoEm)}` : ""}.
+        </p>
+        <p className="text-[11px] text-painel-alert-text/90 mb-2">
+          Arquivar mesmo assim? Ela some da lista, mas nada é apagado — dá pra restaurar depois em
+          "Sessões arquivadas".
+        </p>
+        {arquivar.erro && <p className="text-xs text-painel-alert-text mb-2">{arquivar.erro}</p>}
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={arquivar.onConfirmar}
+            disabled={arquivar.salvando}
+            className="inline-flex items-center gap-1.5 rounded-full bg-painel-alert-text text-white px-3.5 py-1.5 text-xs font-medium hover:opacity-90 transition-colors disabled:opacity-40"
+          >
+            {arquivar.salvando ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <Archive className="h-3.5 w-3.5" />
+            )}
+            Sim, arquivar mesmo assim
+          </button>
+          <button
+            type="button"
+            onClick={arquivar.onCancelar}
+            disabled={arquivar.salvando}
+            className="rounded-full border border-painel-border px-3.5 py-1.5 text-xs font-medium text-painel-chip-text hover:border-painel-primary/40 transition-colors disabled:opacity-40"
+          >
+            Cancelar
+          </button>
+        </div>
+      </li>
+    );
+  }
+
   if (envio.sessaoId === id) {
     return (
       <li className="rounded-lg border border-painel-border bg-painel-badge-bg/50 p-3">
@@ -357,7 +409,7 @@ function LinhaSessaoView({
         {texto}
       </span>
       {/* Celular: só editar e WhatsApp, um em cima do outro (mais espaço
-          pro toque, sem risco de acertar o botão errado). Copiar e excluir
+          pro toque, sem risco de acertar o botão errado). Copiar e arquivar
           ficam escondidos aqui — ainda disponíveis na versão desktop. */}
       <span className="flex sm:hidden flex-col items-center gap-2.5 ml-auto shrink-0">
         <button
@@ -411,11 +463,11 @@ function LinhaSessaoView({
         </button>
         <button
           type="button"
-          onClick={onRemover}
-          title="Excluir sessão"
+          onClick={() => arquivar.onIniciar(id)}
+          title="Arquivar sessão"
           className="text-painel-muted/40 hover:text-painel-alert-text transition-colors"
         >
-          <Trash2 className="h-3.5 w-3.5" />
+          <Archive className="h-3.5 w-3.5" />
         </button>
       </span>
     </li>
@@ -531,6 +583,15 @@ export function HistoricoSessoes({
   // que estavam nele não são apagadas — voltam a contar como avulsas.
   const [removendoPacoteChave, setRemovendoPacoteChave] = useState<string | null>(null);
 
+  // Arquivar sessão: se já foi confirmada pela cliente, pede confirmação
+  // reforçada (ver ArquivarConfirmada) em vez do window.confirm simples.
+  const [arquivandoId, setArquivandoId] = useState<string | null>(null);
+  const [salvandoArquivar, setSalvandoArquivar] = useState(false);
+  const [erroArquivar, setErroArquivar] = useState<string | null>(null);
+  // Restaurar uma sessão arquivada, e mostrar/ocultar a lista delas.
+  const [restaurandoId, setRestaurandoId] = useState<string | null>(null);
+  const [mostrarArquivadas, setMostrarArquivadas] = useState(false);
+
   const fichaPorId = useMemo(() => {
     const m = new Map<string, Procedimento>();
     fichas.forEach((f) => m.set(f.id, f));
@@ -637,16 +698,69 @@ export function HistoricoSessoes({
     }
   };
 
-  const remover = async (sessaoId: string) => {
+  const marcarArquivada = (sessaoId: string, arquivado: boolean) =>
+    setSessoes((prev) => (prev ?? []).map((x) => (x.id === sessaoId ? { ...x, arquivado } : x)));
+
+  // Sessão ainda não confirmada: um window.confirm simples já basta (mesmo
+  // padrão usado no resto do app). Sessão já confirmada pela cliente: abre
+  // o cartão de confirmação reforçada (ver ArquivarConfirmada), bem mais
+  // difícil de acionar sem querer do que um confirm() do navegador.
+  const iniciarArquivar = (sessaoId: string) => {
     const s = (sessoes ?? []).find((x) => x.id === sessaoId);
     if (!s) return;
+    if (s.confirmado) {
+      setErroArquivar(null);
+      setArquivandoId(sessaoId);
+      return;
+    }
     const detalhe = s.areas.length > 0 ? ` (${s.areas.join(", ")})` : "";
-    if (!window.confirm(`Excluir a sessão de ${dataBR(s.data)}${detalhe}?`)) return;
+    if (
+      !window.confirm(
+        `Arquivar a sessão de ${dataBR(s.data)}${detalhe}? Dá pra restaurar depois em "Sessões arquivadas".`,
+      )
+    )
+      return;
+    arquivar(sessaoId);
+  };
+
+  const arquivar = async (sessaoId: string) => {
+    setSalvandoArquivar(true);
+    setErroArquivar(null);
     try {
-      await excluirSessao(sessaoId);
-      setSessoes((prev) => (prev ?? []).filter((x) => x.id !== sessaoId));
+      await arquivarSessao(sessaoId, true);
+      marcarArquivada(sessaoId, true);
+      setArquivandoId(null);
     } catch (e) {
-      setErro(e instanceof Error ? e.message : "Erro ao excluir sessão.");
+      setErroArquivar(e instanceof Error ? e.message : "Erro ao arquivar sessão.");
+    } finally {
+      setSalvandoArquivar(false);
+    }
+  };
+
+  const cancelarArquivar = () => {
+    setArquivandoId(null);
+    setErroArquivar(null);
+  };
+
+  const arquivarState: ArquivarConfirmada = {
+    sessaoId: arquivandoId,
+    salvando: salvandoArquivar,
+    erro: erroArquivar,
+    onConfirmar: () => arquivandoId && arquivar(arquivandoId),
+    onCancelar: cancelarArquivar,
+    onIniciar: iniciarArquivar,
+  };
+
+  const restaurar = async (sessaoId: string) => {
+    setRestaurandoId(sessaoId);
+    setErro(null);
+    try {
+      await arquivarSessao(sessaoId, false);
+      marcarArquivada(sessaoId, false);
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : "Erro ao restaurar sessão.");
+    } finally {
+      setRestaurandoId(null);
     }
   };
 
@@ -669,6 +783,14 @@ export function HistoricoSessoes({
   const salvarEdicaoSessao = async () => {
     if (!editandoSessaoId) return;
     const sessaoOriginal = (sessoes ?? []).find((s) => s.id === editandoSessaoId);
+    // Editar uma sessão que a cliente já confirmou muda o que ela "assinou"
+    // sem ela saber — pede uma confirmação extra antes de salvar.
+    if (
+      sessaoOriginal?.confirmado &&
+      !window.confirm("Essa sessão já foi confirmada pela cliente. Alterar os dados mesmo assim?")
+    ) {
+      return;
+    }
     // Itens que estavam nesta sessão e a Marina desmarcou agora — ex.: tinha
     // Braços + Axilas, mas só Axilas foi feito. Sem isso, cada link de
     // WhatsApp dessa sessão confirmaria os dois juntos, mesmo se ela só
@@ -823,21 +945,26 @@ export function HistoricoSessoes({
 
   const podeSalvar = fichaId && (itens.length > 0 || observacao.trim());
 
+  // Sessões arquivadas ficam fora do histórico ativo (e de qualquer conta
+  // de progresso/pacote) — só aparecem na seção "Sessões arquivadas".
+  const sessoesAtivas = useMemo(() => (sessoes ?? []).filter((s) => !s.arquivado), [sessoes]);
+  const sessoesArquivadas = useMemo(() => (sessoes ?? []).filter((s) => s.arquivado), [sessoes]);
+
   // Agrupado por item (área/procedimento), para o histórico compacto.
   const { grupos, semItem } = useMemo(
-    () => agruparPorItem(sessoes ?? [], tipoPorFicha),
-    [sessoes, tipoPorFicha],
+    () => agruparPorItem(sessoesAtivas, tipoPorFicha),
+    [sessoesAtivas, tipoPorFicha],
   );
 
   // Nº de sessões já registradas de cada item do procedimento escolhido no
   // formulário, para mostrar "Axilas · seria a 5ª sessão" antes de salvar.
   const contagemDoProcedimento = useMemo(() => {
     const m = new Map<string, number>();
-    (sessoes ?? [])
+    sessoesAtivas
       .filter((s) => s.ficha_id === fichaId)
       .forEach((s) => s.areas.forEach((a) => m.set(a, (m.get(a) ?? 0) + 1)));
     return m;
-  }, [sessoes, fichaId]);
+  }, [sessoesAtivas, fichaId]);
 
   // Itens marcados neste registro que estão "fora de qualquer pacote já
   // definido" — ou porque nunca tiveram pacote (avulsa/1ª sessão), ou
@@ -1084,7 +1211,7 @@ export function HistoricoSessoes({
         </div>
       )}
 
-      {sessoes && sessoes.length === 0 && !abrindo && (
+      {sessoes && sessoesAtivas.length === 0 && !abrindo && (
         <p className="text-sm text-painel-muted py-2">Nenhuma sessão registrada ainda.</p>
       )}
 
@@ -1167,7 +1294,9 @@ export function HistoricoSessoes({
                   >
                     Cancelar
                   </button>
-                  {erroPacote && <p className="w-full text-xs text-painel-alert-text">{erroPacote}</p>}
+                  {erroPacote && (
+                    <p className="w-full text-xs text-painel-alert-text">{erroPacote}</p>
+                  )}
                 </div>
               )}
 
@@ -1195,7 +1324,7 @@ export function HistoricoSessoes({
                               confirmadoEm={l.confirmado_em}
                               copiado={copiadoId === l.sessaoId}
                               onCopiar={() => copiar(l.sessaoId, l.token)}
-                              onRemover={() => remover(l.sessaoId)}
+                              arquivar={arquivarState}
                               edicao={edicaoSessao}
                               envio={envioSessao}
                             />
@@ -1254,7 +1383,7 @@ export function HistoricoSessoes({
                               confirmadoEm={l.confirmado_em}
                               copiado={copiadoId === l.sessaoId}
                               onCopiar={() => copiar(l.sessaoId, l.token)}
-                              onRemover={() => remover(l.sessaoId)}
+                              arquivar={arquivarState}
                               edicao={edicaoSessao}
                               envio={envioSessao}
                             />
@@ -1284,7 +1413,7 @@ export function HistoricoSessoes({
                   confirmadoEm={s.confirmado_em}
                   copiado={copiadoId === s.id}
                   onCopiar={() => copiar(s.id, s.token)}
-                  onRemover={() => remover(s.id)}
+                  arquivar={arquivarState}
                   edicao={edicaoSessao}
                   envio={envioSessao}
                 />
@@ -1293,6 +1422,54 @@ export function HistoricoSessoes({
           </div>
         )}
       </div>
+
+      {sessoesArquivadas.length > 0 && (
+        <div className="mt-6 pt-5 border-t border-painel-border">
+          <button
+            type="button"
+            onClick={() => setMostrarArquivadas((v) => !v)}
+            className="flex items-center gap-1.5 text-sm text-painel-muted hover:text-painel-primary transition-colors"
+          >
+            {mostrarArquivadas ? (
+              <ChevronDown className="h-3.5 w-3.5" />
+            ) : (
+              <ChevronRight className="h-3.5 w-3.5" />
+            )}
+            <Archive className="h-3.5 w-3.5" />
+            Sessões arquivadas ({sessoesArquivadas.length})
+          </button>
+
+          {mostrarArquivadas && (
+            <ul className="mt-3 space-y-1.5">
+              {sessoesArquivadas.map((s) => {
+                const item = s.areas.length > 0 ? s.areas.join(", ") : s.observacao || "sem item";
+                return (
+                  <li key={s.id} className="flex items-center gap-2 text-sm text-painel-muted-2">
+                    <span className="truncate">
+                      {dataBR(s.data)}: {item}{" "}
+                      {s.confirmado ? "(estava confirmada)" : "(estava pendente)"}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => restaurar(s.id)}
+                      disabled={restaurandoId === s.id}
+                      title="Restaurar sessão"
+                      className="ml-auto shrink-0 inline-flex items-center gap-1 text-xs text-painel-primary hover:opacity-80 transition-colors disabled:opacity-40"
+                    >
+                      {restaurandoId === s.id ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        <ArchiveRestore className="h-3.5 w-3.5" />
+                      )}
+                      Restaurar
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </div>
+      )}
     </div>
   );
 }
