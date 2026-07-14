@@ -272,11 +272,12 @@ export async function criarSessao(
   return arr[0];
 }
 
-// Corrige data/observação de uma sessão já registrada (ex.: data digitada
-// errada). Não mexe em áreas, confirmação nem token.
+// Corrige data/observação/áreas de uma sessão já registrada (ex.: data
+// digitada errada, ou marcou braços + axilas mas só fez axilas no dia).
+// Não mexe em confirmação nem token.
 export async function atualizarSessao(
   id: string,
-  patch: Partial<Pick<SessaoAtendimento, "data" | "observacao">>,
+  patch: Partial<Pick<SessaoAtendimento, "data" | "observacao" | "areas">>,
 ): Promise<void> {
   const res = await apiRest(`sessoes?id=eq.${encodeURIComponent(id)}`, {
     method: "PATCH",

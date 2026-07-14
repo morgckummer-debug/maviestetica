@@ -143,10 +143,16 @@ type EdicaoSessao = {
   sessaoId: string | null;
   data: string;
   observacao: string;
+  // Áreas/procedimentos realizados nesta sessão — editável pra corrigir
+  // antes de mandar o link de confirmação (ex.: agendou braços + axilas,
+  // mas só fez axilas no dia).
+  areas: string[];
+  opcoesAreas: string[];
   salvando: boolean;
   erro: string | null;
   onData: (v: string) => void;
   onObservacao: (v: string) => void;
+  onToggleArea: (a: string) => void;
   onSalvar: () => void;
   onCancelar: () => void;
   onIniciar: (s: { id: string; data: string; observacao: string | null }) => void;
@@ -192,6 +198,33 @@ function LinhaSessaoView({
             className="rounded-lg border border-painel-border bg-painel-bg px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-painel-primary/40"
           />
         </div>
+        {edicao.opcoesAreas.length > 0 && (
+          <div className="mb-3">
+            <label className="block text-xs font-medium text-painel-muted mb-1">
+              O que foi realizado
+            </label>
+            <div className="flex flex-wrap gap-1.5">
+              {edicao.opcoesAreas.map((a) => {
+                const sel = edicao.areas.includes(a);
+                return (
+                  <button
+                    key={a}
+                    type="button"
+                    onClick={() => edicao.onToggleArea(a)}
+                    className={[
+                      "rounded-full border px-3 py-1 text-xs transition-colors",
+                      sel
+                        ? "bg-painel-primary border-painel-primary text-white font-medium"
+                        : "bg-white border-painel-border text-painel-chip-text hover:border-painel-primary/40",
+                    ].join(" ")}
+                  >
+                    {a}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
         <div className="mb-3">
           <label className="block text-xs font-medium text-painel-muted mb-1">Observação</label>
           <textarea
@@ -386,6 +419,7 @@ export function HistoricoSessoes({
   const [editandoSessaoId, setEditandoSessaoId] = useState<string | null>(null);
   const [editData, setEditData] = useState("");
   const [editObservacao, setEditObservacao] = useState("");
+  const [editAreas, setEditAreas] = useState<string[]>([]);
   const [salvandoEdicao, setSalvandoEdicao] = useState(false);
   const [erroEdicao, setErroEdicao] = useState<string | null>(null);
 
@@ -520,6 +554,7 @@ export function HistoricoSessoes({
     setEditandoSessaoId(s.id);
     setEditData(s.data);
     setEditObservacao(s.observacao ?? "");
+    setEditAreas((sessoes ?? []).find((x) => x.id === s.id)?.areas ?? []);
     setErroEdicao(null);
   };
 
@@ -528,16 +563,19 @@ export function HistoricoSessoes({
     setErroEdicao(null);
   };
 
+  const toggleEditArea = (a: string) =>
+    setEditAreas((prev) => (prev.includes(a) ? prev.filter((x) => x !== a) : [...prev, a]));
+
   const salvarEdicaoSessao = async () => {
     if (!editandoSessaoId) return;
     setSalvandoEdicao(true);
     setErroEdicao(null);
     try {
       const observacao = editObservacao.trim() || null;
-      await atualizarSessao(editandoSessaoId, { data: editData, observacao });
+      await atualizarSessao(editandoSessaoId, { data: editData, observacao, areas: editAreas });
       setSessoes((prev) =>
         (prev ?? []).map((s) =>
-          s.id === editandoSessaoId ? { ...s, data: editData, observacao } : s,
+          s.id === editandoSessaoId ? { ...s, data: editData, observacao, areas: editAreas } : s,
         ),
       );
       setEditandoSessaoId(null);
@@ -550,14 +588,21 @@ export function HistoricoSessoes({
     }
   };
 
+  const tipoDaSessaoEmEdicao = editandoSessaoId
+    ? tipoPorFicha.get((sessoes ?? []).find((x) => x.id === editandoSessaoId)?.ficha_id ?? "")
+    : undefined;
+
   const edicaoSessao: EdicaoSessao = {
     sessaoId: editandoSessaoId,
     data: editData,
     observacao: editObservacao,
+    areas: editAreas,
+    opcoesAreas: tipoDaSessaoEmEdicao ? (OPCOES_SESSAO[tipoDaSessaoEmEdicao] ?? []) : [],
     salvando: salvandoEdicao,
     erro: erroEdicao,
     onData: setEditData,
     onObservacao: setEditObservacao,
+    onToggleArea: toggleEditArea,
     onSalvar: salvarEdicaoSessao,
     onCancelar: cancelarEdicaoSessao,
     onIniciar: iniciarEdicaoSessao,
