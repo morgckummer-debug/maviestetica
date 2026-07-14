@@ -51,7 +51,7 @@ function PaginaPendentes() {
         </p>
       </div>
       <p className="text-sm text-painel-muted mb-7">
-        Atendimentos ainda não confirmados pela cliente no WhatsApp.
+        Atendimentos realizados há mais de 15 dias e ainda não confirmados pela cliente no WhatsApp.
       </p>
 
       {erro && (
