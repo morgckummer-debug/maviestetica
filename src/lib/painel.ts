@@ -247,6 +247,20 @@ export async function listarSessoesDeFichas(fichaIds: string[]): Promise<SessaoA
   return (await res.json()) as SessaoAtendimento[];
 }
 
+export type SessaoPendente = SessaoAtendimento & {
+  ficha: { nome: string; telefone: string | null; tipo: Tipo };
+};
+
+// Todas as sessões (de qualquer cliente/ficha) ainda aguardando confirmação
+// da cliente pelo WhatsApp — para o painel "Pendentes de confirmação".
+export async function listarSessoesPendentes(): Promise<SessaoPendente[]> {
+  const res = await apiRest(
+    "sessoes?select=*,ficha:fichas(nome,telefone,tipo)&confirmado=eq.false&order=data.asc",
+  );
+  if (!res.ok) throw new Error("Não foi possível carregar as sessões pendentes.");
+  return (await res.json()) as SessaoPendente[];
+}
+
 export async function criarSessao(
   fichaId: string,
   dados: { data: string; areas: string[]; observacao: string },

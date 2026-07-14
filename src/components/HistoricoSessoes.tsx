@@ -19,6 +19,7 @@ import {
   atualizarFicha,
   type SessaoAtendimento,
 } from "@/lib/painel";
+import { linkConfirmacao, linkWhatsappConfirmacao } from "@/lib/whatsapp";
 
 const CINCO_MINUTOS_MS = 5 * 60 * 1000;
 
@@ -46,16 +47,6 @@ function hojeISO(): string {
   const d = new Date();
   const off = d.getTimezoneOffset() * 60000;
   return new Date(d.getTime() - off).toISOString().slice(0, 10);
-}
-
-// Número em formato internacional para o link do WhatsApp abrir direto na
-// conversa da cliente (sem pedir pra escolher o contato). Números salvos
-// aqui são sempre nacionais (DDD + número, 10 ou 11 dígitos) — prefixamos
-// o código do Brasil (55), igual ao resto do site (ver data/services.ts).
-function numeroWhatsapp(telefone: string | null | undefined): string {
-  const d = String(telefone ?? "").replace(/\D/g, "");
-  if (d.length === 10 || d.length === 11) return `55${d}`;
-  return d;
 }
 
 function dataBR(iso: string): string {
@@ -736,11 +727,9 @@ export function HistoricoSessoes({
     onIniciar: iniciarEdicaoSessao,
   };
 
-  const linkDe = (token: string) => `${origin}/confirmar/${token}`;
-
   const copiar = async (sessaoId: string, token: string) => {
     try {
-      await navigator.clipboard.writeText(linkDe(token));
+      await navigator.clipboard.writeText(linkConfirmacao(origin, token));
       setCopiadoId(sessaoId);
       setTimeout(() => setCopiadoId((c) => (c === sessaoId ? null : c)), 2000);
     } catch {
@@ -748,12 +737,14 @@ export function HistoricoSessoes({
     }
   };
 
-  const whatsappDe = (token: string, data: string) => {
-    const primeiro = nomeCliente.trim().split(" ")[0] || "";
-    const msg = `Oi ${primeiro}! Confirme seu atendimento na MAVI do dia ${dataBR(data)}, é rapidinho: ${linkDe(token)}`;
-    const numero = numeroWhatsapp(telefoneCliente);
-    return `https://wa.me/${numero}?text=${encodeURIComponent(msg)}`;
-  };
+  const whatsappDe = (token: string, data: string) =>
+    linkWhatsappConfirmacao({
+      origin,
+      token,
+      telefone: telefoneCliente,
+      nomeCliente,
+      dataBR: dataBR(data),
+    });
 
   // Ao clicar em "Enviar por WhatsApp": se o atendimento tem só um item,
   // manda direto — não tem o que conferir. Se juntou vários no mesmo dia

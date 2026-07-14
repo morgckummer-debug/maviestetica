@@ -359,6 +359,23 @@ function PainelLayout() {
             <img src={logo} alt="Painel MAVI" className="h-12 w-auto" />
           </Link>
           <div className="flex items-center gap-3 text-sm">
+            <nav className="hidden sm:flex items-center gap-1 mr-2">
+              <Link
+                to="/painel"
+                className="rounded-full px-3.5 py-2 text-[13px] font-medium text-painel-muted hover:text-painel-primary transition-colors"
+                activeProps={{ className: "text-painel-primary" }}
+                activeOptions={{ exact: true }}
+              >
+                Clientes
+              </Link>
+              <Link
+                to="/painel/pendentes"
+                className="rounded-full px-3.5 py-2 text-[13px] font-medium text-painel-muted hover:text-painel-primary transition-colors"
+                activeProps={{ className: "text-painel-primary" }}
+              >
+                Pendentes
+              </Link>
+            </nav>
             <MenuUsuario
               nome={nomeExibicao(email)}
               onTrocarSenha={() => setTrocandoSenha(true)}
