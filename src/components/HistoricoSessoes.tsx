@@ -19,6 +19,7 @@ import {
   atualizarFicha,
   type SessaoAtendimento,
 } from "@/lib/painel";
+import { linkConfirmacao, numeroWhatsapp, dataBR } from "@/lib/whatsapp";
 
 const CINCO_MINUTOS_MS = 5 * 60 * 1000;
 
@@ -46,22 +47,6 @@ function hojeISO(): string {
   const d = new Date();
   const off = d.getTimezoneOffset() * 60000;
   return new Date(d.getTime() - off).toISOString().slice(0, 10);
-}
-
-// Número em formato internacional para o link do WhatsApp abrir direto na
-// conversa da cliente (sem pedir pra escolher o contato). Números salvos
-// aqui são sempre nacionais (DDD + número, 10 ou 11 dígitos) — prefixamos
-// o código do Brasil (55), igual ao resto do site (ver data/services.ts).
-function numeroWhatsapp(telefone: string | null | undefined): string {
-  const d = String(telefone ?? "").replace(/\D/g, "");
-  if (d.length === 10 || d.length === 11) return `55${d}`;
-  return d;
-}
-
-function dataBR(iso: string): string {
-  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso.trim());
-  if (m) return `${m[3]}/${m[2]}/${m[1]}`;
-  return iso;
 }
 
 function confirmadaEm(iso: string): string {
@@ -736,7 +721,7 @@ export function HistoricoSessoes({
     onIniciar: iniciarEdicaoSessao,
   };
 
-  const linkDe = (token: string) => `${origin}/confirmar/${token}`;
+  const linkDe = (token: string) => linkConfirmacao(origin, token);
 
   const copiar = async (sessaoId: string, token: string) => {
     try {
@@ -1138,7 +1123,9 @@ export function HistoricoSessoes({
                   >
                     Cancelar
                   </button>
-                  {erroPacote && <p className="w-full text-xs text-painel-alert-text">{erroPacote}</p>}
+                  {erroPacote && (
+                    <p className="w-full text-xs text-painel-alert-text">{erroPacote}</p>
+                  )}
                 </div>
               )}
 

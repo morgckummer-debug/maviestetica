@@ -247,6 +247,14 @@ export async function listarSessoesDeFichas(fichaIds: string[]): Promise<SessaoA
   return (await res.json()) as SessaoAtendimento[];
 }
 
+// Todas as sessões ainda não confirmadas (de qualquer cliente), para o
+// alerta de pendências no painel principal.
+export async function listarSessoesPendentes(): Promise<SessaoAtendimento[]> {
+  const res = await apiRest("sessoes?confirmado=eq.false&select=*&order=created_at.asc");
+  if (!res.ok) throw new Error("Não foi possível carregar as sessões pendentes.");
+  return (await res.json()) as SessaoAtendimento[];
+}
+
 export async function criarSessao(
   fichaId: string,
   dados: { data: string; areas: string[]; observacao: string },
@@ -264,7 +272,9 @@ export async function criarSessao(
   if (!res.ok) {
     const detalhe = await res.text().catch(() => "");
     if (/relation .*sessoes.* does not exist|does not exist/i.test(detalhe)) {
-      throw new Error("Rode a migração 0005_sessoes.sql no Supabase (SQL Editor) para ativar as sessões.");
+      throw new Error(
+        "Rode a migração 0005_sessoes.sql no Supabase (SQL Editor) para ativar as sessões.",
+      );
     }
     throw new Error("Não foi possível registrar a sessão.");
   }

@@ -10,12 +10,19 @@ import {
   ChevronLeft,
   ChevronRight,
   Send,
+  MessageCircle,
 } from "lucide-react";
-import { listarFichas, type Ficha } from "@/lib/painel";
+import {
+  listarFichas,
+  listarSessoesPendentes,
+  type Ficha,
+  type SessaoAtendimento,
+} from "@/lib/painel";
 import { agruparClientes, digitos, type Cliente } from "@/lib/clientes";
 import { TIPOS, FICHAS, nomeCurto, type Tipo } from "@/data/anamnese";
 import { EnviarFicha } from "@/components/EnviarFicha";
 import { RamosWatermark } from "@/components/RamosWatermark";
+import { linkConfirmacao, linkWhatsapp, dataBR } from "@/lib/whatsapp";
 
 export const Route = createFileRoute("/painel/")({
   component: ListaFichas,
@@ -23,6 +30,15 @@ export const Route = createFileRoute("/painel/")({
 
 const POR_PAGINA = 20;
 const CINCO_MINUTOS_MS = 5 * 60 * 1000;
+const DIA_MS = 24 * 60 * 60 * 1000;
+const TRINTA_DIAS_MS = 30 * DIA_MS;
+
+type PendenciaCliente = {
+  cliente: Cliente;
+  sessaoMaisAntiga: SessaoAtendimento;
+  dias: number;
+  total: number;
+};
 
 function ListaFichas() {
   const [fichas, setFichas] = useState<Ficha[] | null>(null);
@@ -31,6 +47,8 @@ function ListaFichas() {
   const [filtroTipo, setFiltroTipo] = useState<Tipo | "todas">("todas");
   const [pagina, setPagina] = useState(1);
   const [enviandoFicha, setEnviandoFicha] = useState(false);
+  const [sessoesPendentes, setSessoesPendentes] = useState<SessaoAtendimento[] | null>(null);
+  const [origin, setOrigin] = useState("");
 
   useEffect(() => {
     listarFichas()
@@ -49,8 +67,64 @@ function ListaFichas() {
     return () => clearInterval(intervalo);
   }, []);
 
+  useEffect(() => {
+    setOrigin(window.location.origin);
+    listarSessoesPendentes()
+      .then(setSessoesPendentes)
+      .catch(() => {});
+
+    // Auto-refresh: sozinho, sem recarregar a página. Falha em silêncio —
+    // o alerta só reaparece no próximo ciclo, sem travar o resto da tela.
+    const intervalo = setInterval(() => {
+      listarSessoesPendentes()
+        .then(setSessoesPendentes)
+        .catch(() => {});
+    }, CINCO_MINUTOS_MS);
+    return () => clearInterval(intervalo);
+  }, []);
+
   // Agrupa as fichas por pessoa (mesma cliente = mesmo WhatsApp/CPF).
   const clientes = useMemo(() => (fichas ? agruparClientes(fichas) : []), [fichas]);
+
+  const clientePorFicha = useMemo(() => {
+    const m = new Map<string, Cliente>();
+    clientes.forEach((c) => c.fichas.forEach((f) => m.set(f.id, c)));
+    return m;
+  }, [clientes]);
+
+  // Sessões sem confirmação há 30 dias ou mais, agrupadas por cliente — a
+  // Marina não lê e-mail, então isso vira um alerta na própria tela
+  // principal (não um lembrete por e-mail) com um jeito rápido de reenviar
+  // o link pelo WhatsApp, igual ao que ela já usa no histórico de sessões.
+  const pendenciasPorCliente = useMemo(() => {
+    if (!sessoesPendentes) return [];
+    const agora = Date.now();
+    const mapa = new Map<string, PendenciaCliente>();
+    for (const s of sessoesPendentes) {
+      const idade = agora - new Date(s.created_at).getTime();
+      if (idade < TRINTA_DIAS_MS) continue;
+      const cliente = clientePorFicha.get(s.ficha_id);
+      if (!cliente) continue;
+      const atual = mapa.get(cliente.id);
+      if (!atual || s.created_at < atual.sessaoMaisAntiga.created_at) {
+        mapa.set(cliente.id, {
+          cliente,
+          sessaoMaisAntiga: s,
+          dias: Math.floor(idade / DIA_MS),
+          total: (atual?.total ?? 0) + 1,
+        });
+      } else {
+        mapa.set(cliente.id, { ...atual, total: atual.total + 1 });
+      }
+    }
+    return [...mapa.values()].sort((a, b) => b.dias - a.dias);
+  }, [sessoesPendentes, clientePorFicha]);
+
+  const reenviarPendencia = (p: PendenciaCliente) => {
+    const primeiro = p.cliente.nome.trim().split(" ")[0] || "";
+    const msg = `Oi ${primeiro}! Vi aqui que seu atendimento na MAVI do dia ${dataBR(p.sessaoMaisAntiga.data)} ainda tá pendente de confirmação. Pode confirmar quando puder? ${linkConfirmacao(origin, p.sessaoMaisAntiga.token)}`;
+    window.open(linkWhatsapp(p.cliente.telefone, msg), "_blank", "noreferrer");
+  };
 
   const filtrados = useMemo(() => {
     const q = busca.trim().toLowerCase();
@@ -82,6 +156,52 @@ function ListaFichas() {
     <div>
       <RamosWatermark className="fixed left-1/2 top-1/2 hidden h-[70vh] max-h-[600px] w-auto -translate-x-1/2 -translate-y-1/2 opacity-[0.05] sm:block" />
       <div className="relative z-10">
+        {/* Alerta: clientes que receberam o link de confirmação e não
+            confirmaram há 30 dias ou mais. Fica na tela principal (não
+            depende de e-mail) com um botão que já abre o WhatsApp pronto
+            pra reenviar. */}
+        {pendenciasPorCliente.length > 0 && (
+          <div className="mb-7 rounded-2xl border border-painel-alert-border bg-painel-alert-bg p-5">
+            <div className="mb-3 flex items-center gap-2">
+              <AlertTriangle className="h-4 w-4 shrink-0 text-painel-alert-text" />
+              <h3 className="text-sm font-semibold text-painel-alert-text">
+                {pendenciasPorCliente.length} cliente
+                {pendenciasPorCliente.length === 1 ? "" : "s"} sem confirmar há 30 dias ou mais
+              </h3>
+            </div>
+            <ul className="space-y-2">
+              {pendenciasPorCliente.map((p) => (
+                <li
+                  key={p.cliente.id}
+                  className="flex items-center justify-between gap-3 rounded-xl bg-white px-4 py-3"
+                >
+                  <div className="min-w-0">
+                    <Link
+                      to="/painel/cliente/$id"
+                      params={{ id: p.cliente.id }}
+                      className="truncate text-sm text-painel-title hover:underline"
+                    >
+                      {p.cliente.nome}
+                    </Link>
+                    <p className="text-xs text-painel-muted">
+                      {p.dias} dias sem confirmar
+                      {p.total > 1 ? ` · ${p.total} atendimentos pendentes` : ""}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => reenviarPendencia(p)}
+                    className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-painel-primary px-3.5 py-1.5 text-xs font-medium text-white transition-colors hover:bg-painel-primary/90"
+                  >
+                    <MessageCircle className="h-3.5 w-3.5" />
+                    Reenviar
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
         {/* Busca principal — encontrar a cliente por nome ou CPF */}
         <div className="relative mb-7">
           <Search className="absolute left-5 top-1/2 -translate-y-1/2 h-[18px] w-[18px] text-painel-muted" />
