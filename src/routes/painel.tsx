@@ -352,8 +352,8 @@ function PainelLayout() {
     <div className="min-h-screen bg-painel-bg">
       <div className="mx-auto max-w-5xl px-4 sm:px-6 py-8">
         <header className="flex items-center justify-between gap-4 mb-8 pb-5 border-b border-painel-border">
-          <Link to="/painel" className="font-display text-2xl text-painel-title">
-            Painel <span className="italic text-painel-primary">MAVI</span>
+          <Link to="/painel">
+            <img src={logo} alt="Painel MAVI" className="h-12 w-auto" />
           </Link>
           <div className="flex items-center gap-3 text-sm">
             <MenuUsuario
