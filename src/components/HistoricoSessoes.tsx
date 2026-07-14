@@ -799,7 +799,7 @@ export function HistoricoSessoes({
           return (
             <div key={g.chave} className="mb-5 last:mb-0">
               <div className="flex items-center gap-2 mb-2 flex-wrap">
-                <h4 className="text-sm font-medium text-painel-title">{g.item}</h4>
+                <h4 className="text-base sm:text-lg font-semibold text-painel-primary-deep">{g.item}</h4>
                 {multi && (
                   <span className="text-xs text-painel-muted">
                     {FICHAS[g.tipo]?.emoji ?? ""} {nomeCurto(g.tipo)}
