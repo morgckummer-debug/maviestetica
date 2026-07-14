@@ -398,11 +398,19 @@ function DetalheFicha() {
                   c.tipo === "simnao" || c.tipo === "selecao"
                     ? valorResposta(r[`${c.id}__detalhe`])
                     : null;
-                return { id: c.id, label: c.label, val, detalhe };
+                const alerta = c.tipo === "simnao" && Boolean(c.alertaSeSim) && r[c.id] === true;
+                return { id: c.id, label: c.label, val, detalhe, alerta };
               })
               .filter(
-                (x): x is { id: string; label: string; val: string; detalhe: string | null } =>
-                  x !== null,
+                (
+                  x,
+                ): x is {
+                  id: string;
+                  label: string;
+                  val: string;
+                  detalhe: string | null;
+                  alerta: boolean;
+                } => x !== null,
               );
 
             if (linhas.length === 0) return null;
@@ -512,13 +520,30 @@ function DetalheFicha() {
                     {linhas.map((l) => (
                       <div
                         key={l.id}
-                        className="flex justify-between gap-4 py-1.5 text-sm border-b border-border/50"
+                        className={`flex justify-between gap-4 py-1.5 text-sm border-b ${
+                          l.alerta ? "border-rose/30" : "border-border/50"
+                        }`}
                       >
-                        <dt className="text-muted-foreground">{l.label}</dt>
-                        <dd className="text-right text-foreground font-medium shrink-0">
+                        <dt
+                          className={l.alerta ? "text-rose font-medium" : "text-muted-foreground"}
+                        >
+                          {l.alerta && (
+                            <AlertTriangle className="inline h-3.5 w-3.5 mr-1 -mt-0.5" />
+                          )}
+                          {l.label}
+                        </dt>
+                        <dd
+                          className={`text-right font-medium shrink-0 ${
+                            l.alerta ? "text-rose" : "text-foreground"
+                          }`}
+                        >
                           {l.val}
                           {l.detalhe && (
-                            <span className="block text-muted-foreground font-normal">
+                            <span
+                              className={`block font-normal ${
+                                l.alerta ? "text-rose/80" : "text-muted-foreground"
+                              }`}
+                            >
                               {l.detalhe}
                             </span>
                           )}
