@@ -48,7 +48,7 @@ export function EnviarFicha({
       : `${origin}/avaliacao/${tipo}`;
 
   const primeiroNome = nomeLimpo.split(" ")[0];
-  const mensagem = `Oi${primeiroNome ? ` ${primeiroNome}` : ""}! Antes do seu atendimento na MAVI, preencha sua ficha de ${FICHAS[tipo].nome.toLowerCase()} (leva poucos minutos): ${link}`;
+  const mensagem = `Oi${primeiroNome ? ` ${primeiroNome}` : ""}! 💜 Antes do seu atendimento na MAVI, preencha sua ficha de ${FICHAS[tipo].nome.toLowerCase()} — leva só alguns minutinhos: ${link}`;
   const whatsapp =
     convite && celularCompleto
       ? `https://wa.me/55${celularDigitos}?text=${encodeURIComponent(mensagem)}`
