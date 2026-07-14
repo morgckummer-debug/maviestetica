@@ -135,7 +135,10 @@ function PaginaCliente() {
     );
   }
 
-  const bordaCard = cliente.algumMasculino ? "border-sky-400/50" : "border-painel-border";
+  const bordaCard = cliente.algumMasculino ? "border-sky-600" : "border-painel-border";
+  const pillCliente = cliente.algumMasculino
+    ? "bg-sky-600 text-white"
+    : "bg-painel-badge-bg text-painel-primary";
 
   return (
     <div>
@@ -155,7 +158,7 @@ function PaginaCliente() {
             {cliente.tipos.map((t) => (
               <span
                 key={t}
-                className="inline-block text-[11px] rounded-full bg-painel-badge-bg px-3 py-0.5 text-painel-primary"
+                className={`inline-block text-[11px] rounded-full px-3 py-0.5 ${pillCliente}`}
               >
                 {FICHAS[t]?.emoji ?? ""} {nomeTipo(t)}
               </span>
@@ -215,11 +218,13 @@ function PaginaCliente() {
             {cliente.fichas.map((f) => (
               <div
                 key={f.id}
-                className={`flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-[14px] border ${bordaCard} bg-white px-5 py-5 sm:px-6 transition-colors hover:border-painel-primary/40`}
+                className={`flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-[14px] border ${bordaCard} bg-white px-5 py-5 sm:px-6 transition-colors ${
+                  cliente.algumMasculino ? "hover:border-sky-700" : "hover:border-painel-primary/40"
+                }`}
               >
                 <Link to="/painel/$id" params={{ id: f.id }} className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-[11px] rounded-full bg-painel-badge-bg px-2.5 py-0.5 text-painel-primary">
+                    <span className={`text-[11px] rounded-full px-2.5 py-0.5 ${pillCliente}`}>
                       {FICHAS[f.tipo]?.emoji ?? ""} {nomeCurto(f.tipo)}
                     </span>
                     {f.arquivada && (

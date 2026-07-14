@@ -154,7 +154,7 @@ function ListaFichas() {
               className={[
                 "flex items-center justify-between gap-4 rounded-[14px] border bg-white px-6 py-5 transition-colors",
                 c.algumMasculino
-                  ? "border-sky-400/60 hover:border-sky-500"
+                  ? "border-sky-600 hover:border-sky-700"
                   : "border-painel-border hover:border-painel-primary/40",
               ].join(" ")}
             >
@@ -164,7 +164,12 @@ function ListaFichas() {
                   {c.tipos.map((t) => (
                     <span
                       key={t}
-                      className="text-[11px] rounded-full bg-painel-badge-bg px-2.5 py-0.5 text-painel-primary"
+                      className={[
+                        "text-[11px] rounded-full px-2.5 py-0.5",
+                        c.algumMasculino
+                          ? "bg-sky-600 text-white"
+                          : "bg-painel-badge-bg text-painel-primary",
+                      ].join(" ")}
                     >
                       {FICHAS[t]?.emoji ?? ""} {nomeCurto(t)}
                     </span>
