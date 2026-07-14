@@ -9,6 +9,7 @@ import {
   Inbox,
   ChevronLeft,
   ChevronRight,
+  Send,
 } from "lucide-react";
 import { listarFichas, type Ficha } from "@/lib/painel";
 import { agruparClientes, digitos, type Cliente } from "@/lib/clientes";
@@ -29,6 +30,7 @@ function ListaFichas() {
   const [busca, setBusca] = useState("");
   const [filtroTipo, setFiltroTipo] = useState<Tipo | "todas">("todas");
   const [pagina, setPagina] = useState(1);
+  const [enviandoFicha, setEnviandoFicha] = useState(false);
 
   useEffect(() => {
     listarFichas()
@@ -91,7 +93,30 @@ function ListaFichas() {
           />
         </div>
 
-        <EnviarFicha />
+        <div className="mb-7 flex justify-end">
+          <button
+            type="button"
+            onClick={() => setEnviandoFicha(true)}
+            className="inline-flex items-center gap-2 rounded-full bg-painel-primary text-white px-5 py-3 text-sm font-semibold hover:bg-painel-primary/90 transition-colors"
+          >
+            <Send className="h-4 w-4" />
+            Enviar ficha
+          </button>
+        </div>
+
+        {enviandoFicha && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4 py-8"
+            onClick={() => setEnviandoFicha(false)}
+          >
+            <div
+              className="w-full max-w-lg max-h-[90vh] overflow-y-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <EnviarFicha convitePadrao onFechar={() => setEnviandoFicha(false)} />
+            </div>
+          </div>
+        )}
 
         <div className="mb-5 flex items-baseline justify-between gap-3">
           <h2 className="font-display text-[34px] text-painel-title">Clientes</h2>
