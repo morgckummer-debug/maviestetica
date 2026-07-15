@@ -314,12 +314,14 @@ function FichaPage() {
           <p className="text-xs tracking-[0.3em] uppercase text-muted-foreground mb-4">
             Antes do seu atendimento
           </p>
-          <img src={ICONES_FICHA[def.tipo]} alt="" className="mx-auto h-16 w-16 mb-4" />
-          <h1 className="font-display text-4xl lg:text-5xl text-primary leading-tight">
-            Ficha{" "}
-            <em className="italic font-normal">
-              {def.nome.replace(/^Anamnese\s*/i, "").toLowerCase() || def.nome}
-            </em>
+          <h1 className="font-display text-4xl lg:text-5xl text-primary leading-tight flex items-center justify-center gap-3">
+            <img src={ICONES_FICHA[def.tipo]} alt="" className="h-11 w-11 lg:h-14 lg:w-14 shrink-0" />
+            <span>
+              Ficha{" "}
+              <em className="italic font-normal">
+                {def.nome.replace(/^Anamnese\s*/i, "").toLowerCase() || def.nome}
+              </em>
+            </span>
           </h1>
           <p className="mt-4 text-muted-foreground max-w-md mx-auto leading-relaxed">
             Leva poucos minutos. Isso nos ajuda a te receber com mais cuidado e segurança.
