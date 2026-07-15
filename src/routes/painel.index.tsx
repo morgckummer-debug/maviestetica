@@ -25,6 +25,7 @@ import { agruparClientes, digitos, type Cliente } from "@/lib/clientes";
 import { TIPOS, FICHAS, nomeCurto, nomeTipo, type Tipo } from "@/data/anamnese";
 import { EnviarFicha } from "@/components/EnviarFicha";
 import { RamosWatermark } from "@/components/RamosWatermark";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export const Route = createFileRoute("/painel/")({
   component: ListaFichas,
@@ -218,22 +219,21 @@ function ListaFichas() {
           </p>
         </div>
 
-        <div className="flex flex-wrap gap-2.5 mb-7">
-          {(["todas", ...TIPOS] as const).map((t) => (
-            <button
-              key={t}
-              type="button"
-              onClick={() => setFiltroTipo(t)}
-              className={[
-                "rounded-full border px-4 py-2 text-xs transition-colors",
-                filtroTipo === t
-                  ? "bg-painel-primary border-painel-primary text-white font-semibold"
-                  : "bg-white border-painel-border text-painel-chip-text hover:border-painel-primary/40",
-              ].join(" ")}
-            >
-              {t === "todas" ? "Todas" : `${FICHAS[t].emoji} ${nomeCurto(t)}`}
-            </button>
-          ))}
+        <div className="flex items-center gap-2.5 mb-7">
+          <span className="text-[13px] text-painel-muted">Filtrar por ficha</span>
+          <Select value={filtroTipo} onValueChange={(v) => setFiltroTipo(v as Tipo | "todas")}>
+            <SelectTrigger className="w-[190px] rounded-full border-painel-border bg-white text-[13px] text-painel-chip-text focus:ring-painel-primary/40">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="todas">Todas</SelectItem>
+              {TIPOS.map((t) => (
+                <SelectItem key={t} value={t}>
+                  {FICHAS[t].emoji} {nomeCurto(t)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         {erro && (
@@ -274,7 +274,7 @@ function ListaFichas() {
                   inativa
                     ? "grayscale opacity-60 hover:opacity-90 border-painel-border"
                     : c.algumMasculino
-                      ? "border-sky-600 hover:border-sky-700"
+                      ? "border-painel-masculino hover:border-painel-masculino-hover"
                       : "border-painel-border hover:border-painel-primary/40",
                 ].join(" ")}
               >
@@ -300,7 +300,7 @@ function ListaFichas() {
                         className={[
                           "text-[11px] rounded-full px-2.5 py-0.5",
                           c.algumMasculino
-                            ? "bg-sky-600 text-white"
+                            ? "bg-painel-masculino text-white"
                             : "bg-painel-badge-bg text-painel-primary",
                         ].join(" ")}
                       >
