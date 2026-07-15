@@ -323,7 +323,8 @@ function DetalheFicha() {
         {confirmandoExclusao && (
           <div className="flex flex-col sm:flex-row sm:items-center gap-3 rounded-xl border border-destructive/40 bg-destructive/10 px-4 py-3.5 mb-6">
             <p className="text-sm text-destructive flex-1">
-              Excluir a ficha de <strong>{ficha.nome}</strong>? Essa ação não pode ser desfeita.
+              Excluir a ficha de <strong>{ficha.nome}</strong>? Ela vai para "Fichas excluídas" na
+              lista de clientes e pode ser restaurada depois.
             </p>
             <div className="flex gap-2 shrink-0">
               <button
@@ -345,7 +346,7 @@ function DetalheFicha() {
                 ) : (
                   <Trash2 className="h-4 w-4" />
                 )}
-                Excluir definitivamente
+                Sim, excluir
               </button>
             </div>
           </div>

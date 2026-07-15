@@ -3,17 +3,20 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   Search,
   AlertTriangle,
+  Archive,
+  ArchiveRestore,
   Loader2,
   Camera,
   CameraOff,
   Inbox,
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
   Send,
 } from "lucide-react";
-import { listarFichas, type Ficha } from "@/lib/painel";
+import { listarFichas, listarFichasExcluidas, restaurarFicha, type Ficha } from "@/lib/painel";
 import { agruparClientes, digitos, type Cliente } from "@/lib/clientes";
-import { TIPOS, FICHAS, nomeCurto, type Tipo } from "@/data/anamnese";
+import { TIPOS, FICHAS, nomeCurto, nomeTipo, type Tipo } from "@/data/anamnese";
 import { EnviarFicha } from "@/components/EnviarFicha";
 import { RamosWatermark } from "@/components/RamosWatermark";
 
@@ -31,6 +34,14 @@ function ListaFichas() {
   const [filtroTipo, setFiltroTipo] = useState<Tipo | "todas">("todas");
   const [pagina, setPagina] = useState(1);
   const [enviandoFicha, setEnviandoFicha] = useState(false);
+
+  // "Fichas excluídas": carregada só quando a seção é aberta pela primeira
+  // vez — é um recurso raro, não vale buscar sempre que a lista carrega.
+  const [mostrarExcluidas, setMostrarExcluidas] = useState(false);
+  const [fichasExcluidas, setFichasExcluidas] = useState<Ficha[] | null>(null);
+  const [erroExcluidas, setErroExcluidas] = useState<string | null>(null);
+  const [restaurandoId, setRestaurandoId] = useState<string | null>(null);
+  const [erroRestaurar, setErroRestaurar] = useState<string | null>(null);
 
   useEffect(() => {
     listarFichas()
@@ -77,6 +88,31 @@ function ListaFichas() {
   const totalPaginas = Math.max(1, Math.ceil(filtrados.length / POR_PAGINA));
   const paginaAtual = Math.min(pagina, totalPaginas);
   const paginados = filtrados.slice((paginaAtual - 1) * POR_PAGINA, paginaAtual * POR_PAGINA);
+
+  const alternarExcluidas = () => {
+    const abrindo = !mostrarExcluidas;
+    setMostrarExcluidas(abrindo);
+    if (abrindo && fichasExcluidas === null) {
+      setErroExcluidas(null);
+      listarFichasExcluidas()
+        .then(setFichasExcluidas)
+        .catch((e) => setErroExcluidas(e instanceof Error ? e.message : "Erro ao carregar."));
+    }
+  };
+
+  const restaurar = async (f: Ficha) => {
+    setRestaurandoId(f.id);
+    setErroRestaurar(null);
+    try {
+      await restaurarFicha(f.id);
+      setFichasExcluidas((prev) => (prev ?? []).filter((x) => x.id !== f.id));
+      setFichas((prev) => (prev ? [f, ...prev] : [f]));
+    } catch (e) {
+      setErroRestaurar(e instanceof Error ? e.message : "Erro ao restaurar ficha.");
+    } finally {
+      setRestaurandoId(null);
+    }
+  };
 
   return (
     <div>
@@ -251,6 +287,63 @@ function ListaFichas() {
             </button>
           </div>
         )}
+
+        <div className="mt-8 pt-6 border-t border-painel-border">
+          <button
+            type="button"
+            onClick={alternarExcluidas}
+            className="flex items-center gap-1.5 text-sm text-painel-muted hover:text-painel-primary transition-colors"
+          >
+            {mostrarExcluidas ? (
+              <ChevronDown className="h-3.5 w-3.5" />
+            ) : (
+              <ChevronRight className="h-3.5 w-3.5" />
+            )}
+            <Archive className="h-3.5 w-3.5" />
+            Fichas excluídas{fichasExcluidas ? ` (${fichasExcluidas.length})` : ""}
+          </button>
+
+          {mostrarExcluidas && (
+            <div className="mt-3">
+              {erroExcluidas && <p className="text-sm text-painel-alert-text">{erroExcluidas}</p>}
+              {erroRestaurar && <p className="text-sm text-painel-alert-text">{erroRestaurar}</p>}
+              {fichasExcluidas === null && !erroExcluidas && (
+                <div className="flex justify-center py-6">
+                  <Loader2 className="h-5 w-5 animate-spin text-painel-muted" />
+                </div>
+              )}
+              {fichasExcluidas && fichasExcluidas.length === 0 && (
+                <p className="text-sm text-painel-muted">Nenhuma ficha excluída.</p>
+              )}
+              {fichasExcluidas && fichasExcluidas.length > 0 && (
+                <ul className="space-y-1.5">
+                  {fichasExcluidas.map((f) => (
+                    <li key={f.id} className="flex items-center gap-2 text-sm text-painel-muted-2">
+                      <span className="truncate">
+                        {f.nome} · {FICHAS[f.tipo]?.emoji ?? ""} {nomeTipo(f.tipo)}
+                        {f.telefone ? ` · ${f.telefone}` : ""}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => restaurar(f)}
+                        disabled={restaurandoId === f.id}
+                        title="Restaurar ficha"
+                        className="ml-auto shrink-0 inline-flex items-center gap-1 text-xs text-painel-primary hover:opacity-80 transition-colors disabled:opacity-40"
+                      >
+                        {restaurandoId === f.id ? (
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        ) : (
+                          <ArchiveRestore className="h-3.5 w-3.5" />
+                        )}
+                        Restaurar
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

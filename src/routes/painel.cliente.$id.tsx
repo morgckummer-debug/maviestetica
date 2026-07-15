@@ -58,7 +58,7 @@ function PaginaCliente() {
   const excluirUmaFicha = async (f: Ficha) => {
     if (
       !window.confirm(
-        `Excluir a ficha de ${nomeTipo(f.tipo)} desta cliente? Essa ação não pode ser desfeita.`,
+        `Excluir a ficha de ${nomeTipo(f.tipo)} desta cliente? Ela vai para "Fichas excluídas" na lista de clientes e pode ser restaurada depois.`,
       )
     )
       return;

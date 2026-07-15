@@ -27,6 +27,11 @@ export type Ficha = {
   medidas: Record<string, string>;
   relatorio: string | null;
   arquivada: boolean;
+  // Soft delete: "Excluir" marca a ficha como excluída em vez de apagar de
+  // verdade. Ela some das listas normais, mas fica recuperável em "Fichas
+  // excluídas". Diferente de `arquivada`, que é um selo manual de cliente
+  // inativa e continua aparecendo nas listas normalmente.
+  excluida: boolean;
   // Pacotes comprados por item, em ordem (ex.: "Axilas": [10, 10] = comprou
   // 10, completou, comprou mais 10), para a barra de progresso do histórico
   // de sessões. Aceita também um número só, formato salvo antes de suportar
@@ -173,8 +178,16 @@ async function apiRest(path: string, init: RequestInit = {}): Promise<Response> 
 }
 
 export async function listarFichas(): Promise<Ficha[]> {
-  const res = await apiRest("fichas?select=*&order=created_at.desc");
+  const res = await apiRest("fichas?select=*&excluida=eq.false&order=created_at.desc");
   if (!res.ok) throw new Error("Não foi possível carregar as fichas.");
+  return (await res.json()) as Ficha[];
+}
+
+// Fichas excluídas (soft delete), para a seção "Fichas excluídas" — de
+// onde dá pra restaurar.
+export async function listarFichasExcluidas(): Promise<Ficha[]> {
+  const res = await apiRest("fichas?select=*&excluida=eq.true&order=created_at.desc");
+  if (!res.ok) throw new Error("Não foi possível carregar as fichas excluídas.");
   return (await res.json()) as Ficha[];
 }
 
@@ -294,7 +307,9 @@ export async function criarSessao(
   if (!res.ok) {
     const detalhe = await res.text().catch(() => "");
     if (/relation .*sessoes.* does not exist|does not exist/i.test(detalhe)) {
-      throw new Error("Rode a migração 0005_sessoes.sql no Supabase (SQL Editor) para ativar as sessões.");
+      throw new Error(
+        "Rode a migração 0005_sessoes.sql no Supabase (SQL Editor) para ativar as sessões.",
+      );
     }
     throw new Error("Não foi possível registrar a sessão.");
   }
@@ -354,18 +369,37 @@ export async function arquivarSessao(id: string, arquivado: boolean): Promise<vo
   }
 }
 
-export async function excluirFicha(id: string): Promise<void> {
+// Exclui (soft delete) ou restaura uma ficha — nunca apaga de verdade.
+// Ver migração 0009_arquivar_fichas.sql.
+async function marcarFichaExcluida(id: string, excluida: boolean): Promise<void> {
   const res = await apiRest(`fichas?id=eq.${encodeURIComponent(id)}`, {
-    method: "DELETE",
+    method: "PATCH",
     headers: { Prefer: "return=representation" },
+    body: JSON.stringify({ excluida }),
   });
-  if (!res.ok) throw new Error("Não foi possível excluir a ficha.");
-  // Se o banco não tem a policy de DELETE, ele responde OK mas não apaga
-  // nada. Detectamos isso pela lista vazia de linhas retornadas.
-  const apagadas = (await res.json().catch(() => [])) as unknown[];
-  if (!Array.isArray(apagadas) || apagadas.length === 0) {
+  if (!res.ok) {
+    const detalhe = await res.text().catch(() => "");
+    if (/column .*excluida.* does not exist/i.test(detalhe)) {
+      throw new Error(
+        "Rode a migração 0009_arquivar_fichas.sql no Supabase (SQL Editor) para ativar a exclusão recuperável.",
+      );
+    }
     throw new Error(
-      "Exclusão bloqueada pelo banco. Rode a migração 0004_delete.sql no Supabase (SQL Editor).",
+      excluida ? "Não foi possível excluir a ficha." : "Não foi possível restaurar a ficha.",
     );
   }
+  // Se o banco não tem a policy de UPDATE, ele responde OK mas não altera
+  // nada. Detectamos isso pela lista vazia de linhas retornadas.
+  const alteradas = (await res.json().catch(() => [])) as unknown[];
+  if (!Array.isArray(alteradas) || alteradas.length === 0) {
+    throw new Error("A alteração não foi salva no banco (permissão de atualizar fichas ausente).");
+  }
+}
+
+export async function excluirFicha(id: string): Promise<void> {
+  await marcarFichaExcluida(id, true);
+}
+
+export async function restaurarFicha(id: string): Promise<void> {
+  await marcarFichaExcluida(id, false);
 }
