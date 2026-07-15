@@ -1,18 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
-import { createFileRoute, Link, useParams, useNavigate } from "@tanstack/react-router";
-import {
-  ArrowLeft,
-  AlertTriangle,
-  Loader2,
-  Camera,
-  CameraOff,
-  Check,
-  ChevronRight,
-  Send,
-  Trash2,
-} from "lucide-react";
+import { createFileRoute, Link, useParams } from "@tanstack/react-router";
+import { ArrowLeft, AlertTriangle, Loader2, Send } from "lucide-react";
 import { FICHAS, TIPOS, nomeTipo, nomeCurto } from "@/data/anamnese";
-import { listarFichas, excluirFicha, type Ficha } from "@/lib/painel";
+import { listarFichas, type Ficha } from "@/lib/painel";
 import { clientePorFichaId, type Cliente } from "@/lib/clientes";
 import { mascaraTelefone } from "@/lib/mascaras";
 import { HistoricoSessoes, type Procedimento } from "@/components/HistoricoSessoes";
@@ -37,11 +27,8 @@ function formatarData(iso: string): string {
 
 function PaginaCliente() {
   const { id } = useParams({ from: "/painel/cliente/$id" });
-  const navigate = useNavigate();
   const [fichas, setFichas] = useState<Ficha[] | null>(null);
   const [erro, setErro] = useState<string | null>(null);
-  const [erroExcluir, setErroExcluir] = useState<string | null>(null);
-  const [excluindoId, setExcluindoId] = useState<string | null>(null);
   const [enviandoFicha, setEnviandoFicha] = useState(false);
 
   useEffect(() => {
@@ -54,29 +41,6 @@ function PaginaCliente() {
     () => (fichas ? clientePorFichaId(fichas, id) : null),
     [fichas, id],
   );
-
-  const excluirUmaFicha = async (f: Ficha) => {
-    if (
-      !window.confirm(
-        `Excluir a ficha de ${nomeTipo(f.tipo)} desta cliente? Ela vai para "Fichas excluídas" na lista de clientes e pode ser restaurada depois.`,
-      )
-    )
-      return;
-    setExcluindoId(f.id);
-    setErroExcluir(null);
-    try {
-      await excluirFicha(f.id);
-      setFichas((prev) => (prev ?? []).filter((x) => x.id !== f.id));
-      // Era a última ficha dessa cliente: não há mais o que mostrar aqui.
-      if (cliente && cliente.fichas.length === 1) {
-        navigate({ to: "/painel" });
-      }
-    } catch (e) {
-      setErroExcluir(e instanceof Error ? e.message : "Erro ao excluir ficha.");
-    } finally {
-      setExcluindoId(null);
-    }
-  };
 
   // Alertas de todas as fichas, sem repetir.
   const alertas = useMemo(() => {
@@ -213,69 +177,28 @@ function PaginaCliente() {
             />
           )}
 
-          {erroExcluir && <p className="text-sm text-painel-alert-text mb-4">{erroExcluir}</p>}
-          <div className="space-y-3">
+          <div
+            className={`flex flex-wrap gap-2 rounded-[14px] border ${bordaCard} bg-white p-5 sm:p-6`}
+          >
             {cliente.fichas.map((f) => (
-              <div
+              <Link
                 key={f.id}
-                className={`flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-[14px] border ${bordaCard} bg-white px-5 py-5 sm:px-6 transition-colors ${
-                  cliente.algumMasculino ? "hover:border-sky-700" : "hover:border-painel-primary/40"
+                to="/painel/$id"
+                params={{ id: f.id }}
+                title={`${nomeTipo(f.tipo)} · enviada em ${formatarData(f.created_at)}`}
+                className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[12px] font-medium transition-opacity hover:opacity-90 ${pillCliente} ${
+                  f.arquivada ? "opacity-60" : ""
                 }`}
               >
-                <Link to="/painel/$id" params={{ id: f.id }} className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className={`text-[11px] rounded-full px-2.5 py-0.5 ${pillCliente}`}>
-                      {FICHAS[f.tipo]?.emoji ?? ""} {nomeCurto(f.tipo)}
-                    </span>
-                    {f.arquivada && (
-                      <span className="text-xs rounded-full bg-painel-badge-bg px-2 py-0.5 text-painel-muted">
-                        arquivada
-                      </span>
-                    )}
-                    {f.alertas.length > 0 && (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-painel-alert-bg text-painel-alert-text px-2 py-0.5 text-xs font-medium">
-                        <AlertTriangle className="h-3 w-3" />
-                        {f.alertas.length}
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-[13px] text-painel-muted-2 mt-1.5">
-                    enviada em {formatarData(f.created_at)}
-                  </p>
-                </Link>
-                <div className="flex items-center gap-3.5 shrink-0">
-                  <span
-                    className={`inline-flex items-center gap-1 text-xs ${
-                      f.termo_aceito ? "text-painel-primary" : "text-painel-muted"
-                    }`}
-                  >
-                    <Check className="h-3.5 w-3.5" />
-                    Termo
+                <span>{FICHAS[f.tipo]?.emoji ?? ""}</span>
+                <span>{nomeCurto(f.tipo)}</span>
+                <span className="opacity-70">{formatarData(f.created_at).slice(0, 5)}</span>
+                {f.alertas.length > 0 && (
+                  <span className="inline-flex items-center justify-center h-4 min-w-4 rounded-full bg-white/90 px-1 text-[10px] font-bold text-painel-alert-text">
+                    {f.alertas.length}
                   </span>
-                  {f.autoriza_foto ? (
-                    <Camera className="h-4 w-4 text-painel-gold" />
-                  ) : (
-                    <CameraOff className="h-4 w-4 text-painel-icon-muted" />
-                  )}
-                  <button
-                    type="button"
-                    onClick={() => excluirUmaFicha(f)}
-                    disabled={excluindoId === f.id}
-                    title="Excluir ficha"
-                    className="inline-flex items-center gap-1.5 rounded-full border border-painel-alert-border bg-painel-alert-bg px-3 py-1.5 text-xs font-medium text-painel-alert-text hover:bg-painel-alert-bg/70 transition-colors disabled:opacity-40"
-                  >
-                    {excluindoId === f.id ? (
-                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                    ) : (
-                      <Trash2 className="h-3.5 w-3.5" />
-                    )}
-                    Excluir
-                  </button>
-                  <Link to="/painel/$id" params={{ id: f.id }} aria-label="Abrir ficha">
-                    <ChevronRight className="h-4 w-4 text-painel-icon-muted" />
-                  </Link>
-                </div>
-              </div>
+                )}
+              </Link>
             ))}
           </div>
         </div>
