@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as PowerReduxRouteImport } from './routes/power-redux'
 import { Route as PainelRouteImport } from './routes/painel'
 import { Route as ObrigadoRouteImport } from './routes/obrigado'
+import { Route as McpRouteImport } from './routes/mcp'
 import { Route as DrenagemLinfaticaRouteImport } from './routes/drenagem-linfatica'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as PainelIndexRouteImport } from './routes/painel.index'
@@ -22,7 +23,11 @@ import { Route as PainelPendentesRouteImport } from './routes/painel.pendentes'
 import { Route as PainelIdRouteImport } from './routes/painel.$id'
 import { Route as ConfirmarTokenRouteImport } from './routes/confirmar.$token'
 import { Route as AvaliacaoTipoRouteImport } from './routes/avaliacao.$tipo'
+import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
+import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]/list-tools'
 import { Route as PainelClienteIdRouteImport } from './routes/painel.cliente.$id'
+import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
+import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
 
 const PowerReduxRoute = PowerReduxRouteImport.update({
   id: '/power-redux',
@@ -37,6 +42,11 @@ const PainelRoute = PainelRouteImport.update({
 const ObrigadoRoute = ObrigadoRouteImport.update({
   id: '/obrigado',
   path: '/obrigado',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const McpRoute = McpRouteImport.update({
+  id: '/mcp',
+  path: '/mcp',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DrenagemLinfaticaRoute = DrenagemLinfaticaRouteImport.update({
@@ -89,18 +99,44 @@ const AvaliacaoTipoRoute = AvaliacaoTipoRouteImport.update({
   path: '/avaliacao/$tipo',
   getParentRoute: () => rootRouteImport,
 } as any)
+const Char91DotwellKnownChar93OauthProtectedResourceRoute =
+  Char91DotwellKnownChar93OauthProtectedResourceRouteImport.update({
+    id: '/.well-known/oauth-protected-resource',
+    path: '/.well-known/oauth-protected-resource',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const Char91DotmcpChar93ListToolsRoute =
+  Char91DotmcpChar93ListToolsRouteImport.update({
+    id: '/.mcp/list-tools',
+    path: '/.mcp/list-tools',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const PainelClienteIdRoute = PainelClienteIdRouteImport.update({
   id: '/cliente/$id',
   path: '/cliente/$id',
   getParentRoute: () => PainelRoute,
 } as any)
+const Char91DotmcpChar93InvokeToolToolRoute =
+  Char91DotmcpChar93InvokeToolToolRouteImport.update({
+    id: '/.mcp/invoke-tool/$tool',
+    path: '/.mcp/invoke-tool/$tool',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const DotlovableOauthConsentRoute = DotlovableOauthConsentRouteImport.update({
+  id: '/.lovable/oauth/consent',
+  path: '/.lovable/oauth/consent',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/drenagem-linfatica': typeof DrenagemLinfaticaRoute
+  '/mcp': typeof McpRoute
   '/obrigado': typeof ObrigadoRoute
   '/painel': typeof PainelRouteWithChildren
   '/power-redux': typeof PowerReduxRoute
+  '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/avaliacao/$tipo': typeof AvaliacaoTipoRoute
   '/confirmar/$token': typeof ConfirmarTokenRoute
   '/painel/$id': typeof PainelIdRoute
@@ -109,13 +145,18 @@ export interface FileRoutesByFullPath {
   '/servicos/$slug': typeof ServicosSlugRoute
   '/avaliacao/': typeof AvaliacaoIndexRoute
   '/painel/': typeof PainelIndexRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
+  '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/painel/cliente/$id': typeof PainelClienteIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/drenagem-linfatica': typeof DrenagemLinfaticaRoute
+  '/mcp': typeof McpRoute
   '/obrigado': typeof ObrigadoRoute
   '/power-redux': typeof PowerReduxRoute
+  '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/avaliacao/$tipo': typeof AvaliacaoTipoRoute
   '/confirmar/$token': typeof ConfirmarTokenRoute
   '/painel/$id': typeof PainelIdRoute
@@ -124,15 +165,20 @@ export interface FileRoutesByTo {
   '/servicos/$slug': typeof ServicosSlugRoute
   '/avaliacao': typeof AvaliacaoIndexRoute
   '/painel': typeof PainelIndexRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
+  '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/painel/cliente/$id': typeof PainelClienteIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/drenagem-linfatica': typeof DrenagemLinfaticaRoute
+  '/mcp': typeof McpRoute
   '/obrigado': typeof ObrigadoRoute
   '/painel': typeof PainelRouteWithChildren
   '/power-redux': typeof PowerReduxRoute
+  '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/avaliacao/$tipo': typeof AvaliacaoTipoRoute
   '/confirmar/$token': typeof ConfirmarTokenRoute
   '/painel/$id': typeof PainelIdRoute
@@ -141,6 +187,8 @@ export interface FileRoutesById {
   '/servicos/$slug': typeof ServicosSlugRoute
   '/avaliacao/': typeof AvaliacaoIndexRoute
   '/painel/': typeof PainelIndexRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
+  '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/painel/cliente/$id': typeof PainelClienteIdRoute
 }
 export interface FileRouteTypes {
@@ -148,9 +196,12 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/drenagem-linfatica'
+    | '/mcp'
     | '/obrigado'
     | '/painel'
     | '/power-redux'
+    | '/.mcp/list-tools'
+    | '/.well-known/oauth-protected-resource'
     | '/avaliacao/$tipo'
     | '/confirmar/$token'
     | '/painel/$id'
@@ -159,13 +210,18 @@ export interface FileRouteTypes {
     | '/servicos/$slug'
     | '/avaliacao/'
     | '/painel/'
+    | '/.lovable/oauth/consent'
+    | '/.mcp/invoke-tool/$tool'
     | '/painel/cliente/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/drenagem-linfatica'
+    | '/mcp'
     | '/obrigado'
     | '/power-redux'
+    | '/.mcp/list-tools'
+    | '/.well-known/oauth-protected-resource'
     | '/avaliacao/$tipo'
     | '/confirmar/$token'
     | '/painel/$id'
@@ -174,14 +230,19 @@ export interface FileRouteTypes {
     | '/servicos/$slug'
     | '/avaliacao'
     | '/painel'
+    | '/.lovable/oauth/consent'
+    | '/.mcp/invoke-tool/$tool'
     | '/painel/cliente/$id'
   id:
     | '__root__'
     | '/'
     | '/drenagem-linfatica'
+    | '/mcp'
     | '/obrigado'
     | '/painel'
     | '/power-redux'
+    | '/.mcp/list-tools'
+    | '/.well-known/oauth-protected-resource'
     | '/avaliacao/$tipo'
     | '/confirmar/$token'
     | '/painel/$id'
@@ -190,20 +251,27 @@ export interface FileRouteTypes {
     | '/servicos/$slug'
     | '/avaliacao/'
     | '/painel/'
+    | '/.lovable/oauth/consent'
+    | '/.mcp/invoke-tool/$tool'
     | '/painel/cliente/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   DrenagemLinfaticaRoute: typeof DrenagemLinfaticaRoute
+  McpRoute: typeof McpRoute
   ObrigadoRoute: typeof ObrigadoRoute
   PainelRoute: typeof PainelRouteWithChildren
   PowerReduxRoute: typeof PowerReduxRoute
+  Char91DotmcpChar93ListToolsRoute: typeof Char91DotmcpChar93ListToolsRoute
+  Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   AvaliacaoTipoRoute: typeof AvaliacaoTipoRoute
   ConfirmarTokenRoute: typeof ConfirmarTokenRoute
   ResultadosPowerReduxRoute: typeof ResultadosPowerReduxRoute
   ServicosSlugRoute: typeof ServicosSlugRoute
   AvaliacaoIndexRoute: typeof AvaliacaoIndexRoute
+  DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
+  Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -227,6 +295,13 @@ declare module '@tanstack/react-router' {
       path: '/obrigado'
       fullPath: '/obrigado'
       preLoaderRoute: typeof ObrigadoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mcp': {
+      id: '/mcp'
+      path: '/mcp'
+      fullPath: '/mcp'
+      preLoaderRoute: typeof McpRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/drenagem-linfatica': {
@@ -299,12 +374,40 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AvaliacaoTipoRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/.well-known/oauth-protected-resource': {
+      id: '/.well-known/oauth-protected-resource'
+      path: '/.well-known/oauth-protected-resource'
+      fullPath: '/.well-known/oauth-protected-resource'
+      preLoaderRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/.mcp/list-tools': {
+      id: '/.mcp/list-tools'
+      path: '/.mcp/list-tools'
+      fullPath: '/.mcp/list-tools'
+      preLoaderRoute: typeof Char91DotmcpChar93ListToolsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/painel/cliente/$id': {
       id: '/painel/cliente/$id'
       path: '/cliente/$id'
       fullPath: '/painel/cliente/$id'
       preLoaderRoute: typeof PainelClienteIdRouteImport
       parentRoute: typeof PainelRoute
+    }
+    '/.mcp/invoke-tool/$tool': {
+      id: '/.mcp/invoke-tool/$tool'
+      path: '/.mcp/invoke-tool/$tool'
+      fullPath: '/.mcp/invoke-tool/$tool'
+      preLoaderRoute: typeof Char91DotmcpChar93InvokeToolToolRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/.lovable/oauth/consent': {
+      id: '/.lovable/oauth/consent'
+      path: '/.lovable/oauth/consent'
+      fullPath: '/.lovable/oauth/consent'
+      preLoaderRoute: typeof DotlovableOauthConsentRouteImport
+      parentRoute: typeof rootRouteImport
     }
   }
 }
@@ -329,14 +432,20 @@ const PainelRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   DrenagemLinfaticaRoute: DrenagemLinfaticaRoute,
+  McpRoute: McpRoute,
   ObrigadoRoute: ObrigadoRoute,
   PainelRoute: PainelRouteWithChildren,
   PowerReduxRoute: PowerReduxRoute,
+  Char91DotmcpChar93ListToolsRoute: Char91DotmcpChar93ListToolsRoute,
+  Char91DotwellKnownChar93OauthProtectedResourceRoute:
+    Char91DotwellKnownChar93OauthProtectedResourceRoute,
   AvaliacaoTipoRoute: AvaliacaoTipoRoute,
   ConfirmarTokenRoute: ConfirmarTokenRoute,
   ResultadosPowerReduxRoute: ResultadosPowerReduxRoute,
   ServicosSlugRoute: ServicosSlugRoute,
   AvaliacaoIndexRoute: AvaliacaoIndexRoute,
+  DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
+  Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
