@@ -14,7 +14,13 @@ import {
   ChevronRight,
   Send,
 } from "lucide-react";
-import { listarFichas, listarFichasExcluidas, restaurarFicha, type Ficha } from "@/lib/painel";
+import {
+  listarFichas,
+  listarFichasExcluidas,
+  listarUltimasSessoesPorFicha,
+  restaurarFicha,
+  type Ficha,
+} from "@/lib/painel";
 import { agruparClientes, digitos, type Cliente } from "@/lib/clientes";
 import { TIPOS, FICHAS, nomeCurto, nomeTipo, type Tipo } from "@/data/anamnese";
 import { EnviarFicha } from "@/components/EnviarFicha";
@@ -26,6 +32,23 @@ export const Route = createFileRoute("/painel/")({
 
 const POR_PAGINA = 20;
 const CINCO_MINUTOS_MS = 5 * 60 * 1000;
+// Cliente sem nenhuma sessão (em nenhuma ficha) há mais tempo que isso
+// aparece automaticamente acinzentada na lista, sem precisar de ninguém
+// clicar em "Arquivar" — calculado toda vez que a lista carrega.
+const DIAS_INATIVA = 180;
+
+function hojeISO(): string {
+  const d = new Date();
+  const off = d.getTimezoneOffset() * 60000;
+  return new Date(d.getTime() - off).toISOString().slice(0, 10);
+}
+
+function diasEntre(dataAntigaISO: string, dataRecenteISO: string): number {
+  const [a1, m1, d1] = dataAntigaISO.split("-").map(Number);
+  const [a2, m2, d2] = dataRecenteISO.split("-").map(Number);
+  const ms = Date.UTC(a2, m2 - 1, d2) - Date.UTC(a1, m1 - 1, d1);
+  return Math.round(ms / 86400000);
+}
 
 function ListaFichas() {
   const [fichas, setFichas] = useState<Ficha[] | null>(null);
@@ -34,6 +57,12 @@ function ListaFichas() {
   const [filtroTipo, setFiltroTipo] = useState<Tipo | "todas">("todas");
   const [pagina, setPagina] = useState(1);
   const [enviandoFicha, setEnviandoFicha] = useState(false);
+  // Data da sessão mais recente de cada ficha (ficha_id -> "YYYY-MM-DD"),
+  // pra detectar cliente sem atividade há muito tempo. Se falhar, o app
+  // segue normal, só sem o acinzentado automático — não é crítico.
+  const [ultimaSessaoPorFicha, setUltimaSessaoPorFicha] = useState<Record<string, string> | null>(
+    null,
+  );
 
   // "Fichas excluídas": carregada só quando a seção é aberta pela primeira
   // vez — é um recurso raro, não vale buscar sempre que a lista carrega.
@@ -47,6 +76,9 @@ function ListaFichas() {
     listarFichas()
       .then(setFichas)
       .catch((e) => setErro(e instanceof Error ? e.message : "Erro ao carregar."));
+    listarUltimasSessoesPorFicha()
+      .then(setUltimaSessaoPorFicha)
+      .catch(() => {});
 
     // Auto-refresh: atualiza a lista sozinha a cada 5min (ex.: nova ficha
     // preenchida pela cliente), sem precisar recarregar a página. Falhas
@@ -56,12 +88,33 @@ function ListaFichas() {
       listarFichas()
         .then(setFichas)
         .catch(() => {});
+      listarUltimasSessoesPorFicha()
+        .then(setUltimaSessaoPorFicha)
+        .catch(() => {});
     }, CINCO_MINUTOS_MS);
     return () => clearInterval(intervalo);
   }, []);
 
   // Agrupa as fichas por pessoa (mesma cliente = mesmo WhatsApp/CPF).
   const clientes = useMemo(() => (fichas ? agruparClientes(fichas) : []), [fichas]);
+
+  // Dias desde a atividade mais recente da cliente (a sessão mais nova,
+  // entre TODAS as fichas dela — se ela ainda mexe em algum procedimento,
+  // não conta como inativa). Sem sessão nenhuma numa ficha, usa a data em
+  // que a ficha foi criada. null enquanto as datas de sessão não chegaram.
+  const diasSemAtividade = useMemo(() => {
+    const m = new Map<string, number>();
+    if (!ultimaSessaoPorFicha) return m;
+    const hoje = hojeISO();
+    for (const c of clientes) {
+      const maisRecente = c.fichas.reduce((acc, f) => {
+        const ref = ultimaSessaoPorFicha[f.id] ?? f.created_at.slice(0, 10);
+        return ref > acc ? ref : acc;
+      }, "");
+      if (maisRecente) m.set(c.id, diasEntre(maisRecente, hoje));
+    }
+    return m;
+  }, [clientes, ultimaSessaoPorFicha]);
 
   const filtrados = useMemo(() => {
     const q = busca.trim().toLowerCase();
@@ -207,66 +260,79 @@ function ListaFichas() {
         )}
 
         <div className="space-y-3">
-          {paginados.map((c: Cliente) => (
-            <Link
-              key={c.id}
-              to="/painel/cliente/$id"
-              params={{ id: c.id }}
-              className={[
-                "flex items-center justify-between gap-4 rounded-[14px] border bg-white px-6 py-5 transition-colors",
-                c.todasArquivadas
-                  ? "grayscale opacity-60 hover:opacity-90 border-painel-border"
-                  : c.algumMasculino
-                    ? "border-sky-600 hover:border-sky-700"
-                    : "border-painel-border hover:border-painel-primary/40",
-              ].join(" ")}
-            >
-              <div className="min-w-0">
-                <div className="flex items-center gap-2.5 flex-wrap mb-1.5">
-                  <span className="text-[15px] text-painel-title truncate">{c.nome}</span>
-                  {c.todasArquivadas && (
-                    <span className="text-[11px] rounded-full bg-painel-muted-2/20 text-painel-muted px-2.5 py-0.5">
-                      arquivada
+          {paginados.map((c: Cliente) => {
+            const dias = diasSemAtividade.get(c.id);
+            const inativaAutomatica = dias !== undefined && dias >= DIAS_INATIVA;
+            const inativa = c.todasArquivadas || inativaAutomatica;
+            return (
+              <Link
+                key={c.id}
+                to="/painel/cliente/$id"
+                params={{ id: c.id }}
+                className={[
+                  "flex items-center justify-between gap-4 rounded-[14px] border bg-white px-6 py-5 transition-colors",
+                  inativa
+                    ? "grayscale opacity-60 hover:opacity-90 border-painel-border"
+                    : c.algumMasculino
+                      ? "border-sky-600 hover:border-sky-700"
+                      : "border-painel-border hover:border-painel-primary/40",
+                ].join(" ")}
+              >
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2.5 flex-wrap mb-1.5">
+                    <span className="text-[15px] text-painel-title truncate">{c.nome}</span>
+                    {c.todasArquivadas && (
+                      <span className="text-[11px] rounded-full bg-painel-muted-2/20 text-painel-muted px-2.5 py-0.5">
+                        arquivada
+                      </span>
+                    )}
+                    {!c.todasArquivadas && inativaAutomatica && (
+                      <span
+                        title="Nenhuma sessão registrada nesse período, em nenhum procedimento"
+                        className="text-[11px] rounded-full bg-painel-muted-2/20 text-painel-muted px-2.5 py-0.5"
+                      >
+                        sem atividade há {dias}d
+                      </span>
+                    )}
+                    {c.tipos.map((t) => (
+                      <span
+                        key={t}
+                        className={[
+                          "text-[11px] rounded-full px-2.5 py-0.5",
+                          c.algumMasculino
+                            ? "bg-sky-600 text-white"
+                            : "bg-painel-badge-bg text-painel-primary",
+                        ].join(" ")}
+                      >
+                        {FICHAS[t]?.emoji ?? ""} {nomeCurto(t)}
+                      </span>
+                    ))}
+                  </div>
+                  <p className="text-[13px] text-painel-muted-2 truncate">
+                    {c.telefone || "sem telefone"}
+                    {c.fichas.length > 1 ? ` · ${c.fichas.length} fichas` : ""}
+                  </p>
+                </div>
+                <div className="flex items-center gap-3.5 shrink-0">
+                  {c.autorizaFoto ? (
+                    <span title="Autorizou uso de imagem">
+                      <Camera className="h-4 w-4 text-painel-gold" />
+                    </span>
+                  ) : (
+                    <span title="Não autorizou uso de imagem">
+                      <CameraOff className="h-4 w-4 text-painel-icon-muted" />
                     </span>
                   )}
-                  {c.tipos.map((t) => (
-                    <span
-                      key={t}
-                      className={[
-                        "text-[11px] rounded-full px-2.5 py-0.5",
-                        c.algumMasculino
-                          ? "bg-sky-600 text-white"
-                          : "bg-painel-badge-bg text-painel-primary",
-                      ].join(" ")}
-                    >
-                      {FICHAS[t]?.emoji ?? ""} {nomeCurto(t)}
+                  {c.alertas > 0 && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-painel-alert-bg text-painel-alert-text px-3 py-1.5 text-xs font-semibold">
+                      <AlertTriangle className="h-3.5 w-3.5" />
+                      {c.alertas}
                     </span>
-                  ))}
+                  )}
                 </div>
-                <p className="text-[13px] text-painel-muted-2 truncate">
-                  {c.telefone || "sem telefone"}
-                  {c.fichas.length > 1 ? ` · ${c.fichas.length} fichas` : ""}
-                </p>
-              </div>
-              <div className="flex items-center gap-3.5 shrink-0">
-                {c.autorizaFoto ? (
-                  <span title="Autorizou uso de imagem">
-                    <Camera className="h-4 w-4 text-painel-gold" />
-                  </span>
-                ) : (
-                  <span title="Não autorizou uso de imagem">
-                    <CameraOff className="h-4 w-4 text-painel-icon-muted" />
-                  </span>
-                )}
-                {c.alertas > 0 && (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-painel-alert-bg text-painel-alert-text px-3 py-1.5 text-xs font-semibold">
-                    <AlertTriangle className="h-3.5 w-3.5" />
-                    {c.alertas}
-                  </span>
-                )}
-              </div>
-            </Link>
-          ))}
+              </Link>
+            );
+          })}
         </div>
 
         {filtrados.length > POR_PAGINA && (
