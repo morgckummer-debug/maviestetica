@@ -301,7 +301,7 @@ function ListaFichas() {
                           "text-[11px] rounded-full px-2.5 py-0.5",
                           c.algumMasculino
                             ? "bg-painel-masculino text-white"
-                            : "bg-painel-badge-bg text-painel-primary",
+                            : "bg-painel-badge-bg text-painel-title",
                         ].join(" ")}
                       >
                         {FICHAS[t]?.emoji ?? ""} {nomeCurto(t)}

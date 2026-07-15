@@ -90,7 +90,7 @@ function PaginaPendentes() {
                   >
                     {s.ficha.nome}
                   </Link>
-                  <span className="text-[11px] rounded-full bg-painel-badge-bg text-painel-primary px-2.5 py-0.5">
+                  <span className="text-[11px] rounded-full bg-painel-badge-bg text-painel-title px-2.5 py-0.5">
                     {FICHAS[s.ficha.tipo]?.emoji ?? ""} {nomeCurto(s.ficha.tipo)}
                   </span>
                 </div>
