@@ -1,49 +1,34 @@
-## O que muda
 
-Na tela de login do painel (`/painel`), substituir o campo "Usuário" (texto livre de e-mail) por um **dropdown com os nomes** das usuárias. A senha continua digitada normalmente.
+## Objetivo
 
-Mapeamento fixo no código:
-- **Morgana** → `morgckummer@gmail.com`
-- **Marina** → `morganamavi26@gmail.com`
+Expor este app como um servidor MCP protegido por OAuth 2.1 do seu Supabase, para Morgana e Marina conectarem no ChatGPT/Claude/Codex e consultarem as fichas e as sessões pendentes usando a própria conta (RLS ativa — cada uma vê só o que já vê no painel).
 
-## Como fica a UI
+## Ferramentas (2, apenas leitura)
 
-```
-┌─────────────────────────────┐
-│  🔒 Painel MAVI             │
-│                             │
-│  Usuária                    │
-│  ┌───────────────────────┐  │
-│  │ Selecione…         ▾  │  │  ← dropdown
-│  └───────────────────────┘  │
-│                             │
-│  Senha                      │
-│  ┌───────────────────────┐  │
-│  │ ••••••••              │  │
-│  └───────────────────────┘  │
-│                             │
-│  [        Entrar        ]   │
-└─────────────────────────────┘
-```
+1. **`listar_fichas`** — busca fichas por nome ou telefone (ou lista as N mais recentes). Retorna: nome, telefone, tipo, data de criação, arquivada.
+   - Input: `{ busca?: string, limite?: number (default 20, max 50) }`
+2. **`sessoes_pendentes_confirmacao`** — lista sessões realizadas há 15+ dias ainda sem confirmação da cliente (mesmo critério do painel "Pendentes"). Retorna: nome da cliente, telefone, data, áreas.
+   - Input: `{}`
 
-Dropdown com duas opções: **Morgana** e **Marina**. Sem campo de e-mail visível, sem "usar outro e-mail". Se um dia surgir uma terceira usuária, é só adicionar uma linha na lista.
+Nenhuma ferramenta de escrita, nada de dados clínicos (respostas de anamnese, alertas de saúde) — só o que precisa pra "quantas fichas tenho da Fulana?" e "quem falta confirmar?".
 
-## Detalhes técnicos
+## Arquitetura
 
-- Editar apenas `LoginForm` em `src/routes/painel.tsx`.
-- Criar constante local:
-  ```ts
-  const USUARIAS = [
-    { nome: "Morgana", email: "morgckummer@gmail.com" },
-    { nome: "Marina",  email: "morganamavi26@gmail.com" },
-  ] as const;
-  ```
-- Trocar `<input type="email">` por um `<select>` estilizado no mesmo padrão visual dos outros campos (mesma classe de borda/arredondamento/foco).
-- Estado passa a guardar o `email` selecionado; `entrar(email, senha)` continua igual — nada muda no `painel.ts`, no Supabase, nem no fluxo de sessão.
-- Validação: botão "Entrar" desabilitado enquanto nenhuma usuária estiver selecionada.
-- Mensagem de erro atual ("E-mail ou senha inválidos") continua servindo.
+- Pacote `@lovable.dev/mcp-js` + Vite plugin. Endpoint em `/mcp`.
+- `defineMcp` com `auth.oauth.issuer({ issuer: "https://jjkmgkorqzbroebhksca.supabase.co/auth/v1", acceptedAudiences: "authenticated" })`.
+- Rota de consentimento em `src/routes/[.]lovable.oauth.consent.tsx`, que reaproveita o login existente do painel (dropdown Morgana/Marina em `/painel`) — se não estiver logada, manda pra `/painel` preservando o `authorization_id`, e volta pra tela de consentir depois do login.
+- Cada tool cria um cliente Supabase por-request usando o `ctx.getToken()`, então o PostgREST aplica as políticas RLS existentes das fichas/sessões como a usuária logada (Morgana ou Marina). Nada de service-role.
 
-## Fora do escopo
+## Arquivos
 
-- Não mexer no Supabase (usuárias continuam sendo criadas por e-mail lá).
-- Não mexer no menu do usuário logado, troca de senha, ou nomes de exibição — `nomeExibicao(email)` já deriva "Morgana Kummer" / "Morgana Mavi" a partir do e-mail e segue funcionando.
+- `bunfig.toml` — adicionar `@lovable.dev/mcp-js` nos excludes do supply-chain guard.
+- `vite.config.ts` — adicionar `mcpPlugin()`.
+- `src/lib/mcp/index.ts` — `defineMcp` com auth OAuth + as 2 tools.
+- `src/lib/mcp/tools/listar-fichas.ts`
+- `src/lib/mcp/tools/sessoes-pendentes.ts`
+- `src/routes/[.]lovable.oauth.consent.tsx` — tela de consentimento, integrada ao login existente.
+- `src/routes/painel.tsx` — pequeno ajuste: se a URL trouxer `?next=/.lovable/oauth/consent?...`, redirecionar pra lá após login bem-sucedido.
+
+## O que muda pra você
+
+Depois de publicar, você vai poder adicionar este site como conector MCP no ChatGPT/Claude/Codex. Ao conectar, o cliente abre a tela de login do painel, você escolhe Morgana ou Marina, aprova, e a partir daí o assistente pode chamar as 2 ferramentas acima como você. Nada fica exposto publicamente.
