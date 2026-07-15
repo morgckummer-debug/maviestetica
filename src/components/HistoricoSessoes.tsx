@@ -394,17 +394,17 @@ function LinhaSessaoView({
   }
 
   return (
-    <li className="flex items-center gap-2 text-sm">
-      {confirmado && (
-        <Check className="h-3.5 w-3.5 shrink-0 text-emerald-600 dark:text-emerald-500" />
-      )}
+    <li className="flex items-center gap-2.5 text-sm">
+      <span
+        aria-hidden="true"
+        className={[
+          "h-1.5 w-1.5 rounded-full shrink-0",
+          confirmado ? "bg-painel-muted-2" : "bg-painel-gold",
+        ].join(" ")}
+      />
       <span
         title={confirmadoEm ? `Confirmado em ${confirmadaEm(confirmadoEm)}` : undefined}
-        className={
-          confirmado
-            ? "text-emerald-700 dark:text-emerald-400"
-            : "text-amber-600 dark:text-amber-500"
-        }
+        className={confirmado ? "text-painel-chip-text" : "text-painel-gold font-medium"}
       >
         {texto}
       </span>
@@ -1215,7 +1215,7 @@ export function HistoricoSessoes({
         <p className="text-sm text-painel-muted py-2">Nenhuma sessão registrada ainda.</p>
       )}
 
-      <div>
+      <div className="flex flex-col gap-3">
         {grupos.map((g) => {
           const pacotes = pacotesDoItem(g.fichaId, g.item);
           const segmentos = segmentarPorPacote(g.linhas, pacotes);
@@ -1224,45 +1224,28 @@ export function HistoricoSessoes({
           // "fechar pacote" (encaixando o que já foi feito como 1ª sessão).
           const semPacoteAtivo = g.linhas.length >= somaPacotes(g.fichaId, g.item);
           return (
-            <div key={g.chave} className="mb-5 last:mb-0">
-              <div className="flex items-center gap-2 mb-2 flex-wrap">
-                <h4 className="text-base sm:text-lg font-semibold text-painel-primary-deep">
-                  {g.item}
-                </h4>
-                {multi && (
-                  <span className="text-xs text-painel-muted">
-                    {FICHAS[g.tipo]?.emoji ?? ""} {nomeCurto(g.tipo)}
-                  </span>
-                )}
+            <div
+              key={g.chave}
+              className="rounded-2xl border border-painel-border bg-painel-badge-bg/30 p-4"
+            >
+              <div className="flex items-baseline justify-between gap-2 mb-2.5">
+                <div className="flex items-baseline gap-2 flex-wrap min-w-0">
+                  <h4 className="text-lg font-semibold text-painel-title truncate">{g.item}</h4>
+                  {multi && (
+                    <span className="text-xs text-painel-muted-2 shrink-0">
+                      {FICHAS[g.tipo]?.emoji ?? ""} {nomeCurto(g.tipo)}
+                    </span>
+                  )}
+                </div>
                 {pacotes.length === 0 && (
-                  <span className="text-xs text-painel-muted">
-                    · {g.linhas.length} sessõe{g.linhas.length === 1 ? "" : "s"} registrada
-                    {g.linhas.length === 1 ? "" : "s"}
+                  <span className="text-xs text-painel-muted-2 shrink-0 tabular-nums">
+                    {g.linhas.length} sessõe{g.linhas.length === 1 ? "" : "s"}
                   </span>
-                )}
-                {semPacoteAtivo && editandoPacoteChave !== g.chave && (
-                  <button
-                    type="button"
-                    onClick={() => iniciarEdicaoPacote(g.chave)}
-                    className="text-xs text-painel-primary underline underline-offset-2"
-                  >
-                    {pacotes.length === 0 ? "Fechou um pacote?" : "+ Novo pacote"}
-                  </button>
-                )}
-                {pacotes.length > 0 && editandoPacoteChave !== g.chave && (
-                  <button
-                    type="button"
-                    onClick={() => removerPacote(g.fichaId, g.item, g.chave)}
-                    disabled={removendoPacoteChave === g.chave}
-                    className="text-xs text-painel-alert-text underline underline-offset-2 disabled:opacity-40"
-                  >
-                    {removendoPacoteChave === g.chave ? "Cancelando…" : "Cancelar pacote"}
-                  </button>
                 )}
               </div>
 
               {editandoPacoteChave === g.chave && (
-                <div className="flex flex-wrap items-center gap-2 mb-3 rounded-lg border border-painel-border bg-painel-badge-bg/40 p-2.5">
+                <div className="flex flex-wrap items-center gap-2 mb-3 rounded-lg border border-painel-border bg-white p-2.5">
                   <label className="text-xs text-painel-muted">
                     {pacotes.length === 0
                       ? "Pacote de quantas sessões? (o que já foi feito vira a 1ª)"
@@ -1394,12 +1377,36 @@ export function HistoricoSessoes({
                   );
                 })}
               </div>
+
+              {(semPacoteAtivo || pacotes.length > 0) && editandoPacoteChave !== g.chave && (
+                <div className="flex items-center gap-4 mt-3 pt-2.5 border-t border-painel-border/70">
+                  {semPacoteAtivo && (
+                    <button
+                      type="button"
+                      onClick={() => iniciarEdicaoPacote(g.chave)}
+                      className="text-xs font-medium text-painel-primary"
+                    >
+                      {pacotes.length === 0 ? "Fechou um pacote?" : "+ Novo pacote"}
+                    </button>
+                  )}
+                  {pacotes.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => removerPacote(g.fichaId, g.item, g.chave)}
+                      disabled={removendoPacoteChave === g.chave}
+                      className="text-xs font-medium text-painel-alert-text disabled:opacity-40"
+                    >
+                      {removendoPacoteChave === g.chave ? "Cancelando…" : "Cancelar pacote"}
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
           );
         })}
 
         {semItem.length > 0 && (
-          <div className="mb-5 last:mb-0">
+          <div>
             <h4 className="text-sm font-medium text-painel-title mb-1.5">Outras sessões</h4>
             <ul className="space-y-1">
               {semItem.map((s) => (
