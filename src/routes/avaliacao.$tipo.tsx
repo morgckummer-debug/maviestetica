@@ -18,18 +18,32 @@ import { RamosWatermark } from "@/components/RamosWatermark";
 import { ICONES_FICHA } from "@/data/icones-ficha";
 
 export const Route = createFileRoute("/avaliacao/$tipo")({
-  head: () => ({
-    meta: [
-      { title: "Ficha de Avaliação | MAVI Centro de Estética" },
-      {
-        name: "description",
-        content:
-          "Responda antes do seu atendimento na MAVI. Leva poucos minutos e ajuda a gente a te receber com mais cuidado e segurança.",
-      },
-      { name: "robots", content: "noindex, nofollow" },
-    ],
-    links: [{ rel: "canonical", href: `${SITE_URL}/avaliacao` }],
-  }),
+  head: ({ params }) => {
+    const def = getFicha(params.tipo);
+    const nome = def?.nome ?? "Ficha de Avaliação";
+    const descricao =
+      "Responda antes do seu atendimento na MAVI. Leva poucos minutos e ajuda a gente a te receber com mais cuidado e segurança.";
+    return {
+      meta: [
+        { title: `${nome} | MAVI Centro de Estética` },
+        { name: "description", content: descricao },
+        { name: "robots", content: "noindex, nofollow" },
+        { property: "og:title", content: `${nome} | MAVI Centro de Estética` },
+        { property: "og:description", content: descricao },
+        { property: "og:type", content: "website" },
+        ...(def
+          ? [
+              { property: "og:image", content: `${SITE_URL}/og/ficha-${def.tipo}.png` },
+              { property: "og:image:width", content: "1200" },
+              { property: "og:image:height", content: "630" },
+              { name: "twitter:card", content: "summary_large_image" },
+              { name: "twitter:image", content: `${SITE_URL}/og/ficha-${def.tipo}.png` },
+            ]
+          : []),
+      ],
+      links: [{ rel: "canonical", href: `${SITE_URL}/avaliacao` }],
+    };
+  },
   component: FichaPage,
 });
 
