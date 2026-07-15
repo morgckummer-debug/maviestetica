@@ -26,6 +26,9 @@ export const Route = createFileRoute("/painel")({
     meta: [{ title: "Painel | MAVI" }, { name: "robots", content: "noindex, nofollow" }],
     links: [{ rel: "canonical", href: `${SITE_URL}/painel` }],
   }),
+  validateSearch: (s: Record<string, unknown>): { next?: string } => ({
+    next: typeof s.next === "string" && s.next.startsWith("/") ? s.next : undefined,
+  }),
   component: PainelLayout,
 });
 
@@ -315,6 +318,16 @@ function PainelLayout() {
   const [email, setEmail] = useState<string | undefined>();
   const [trocandoSenha, setTrocandoSenha] = useState(false);
   const navigate = useNavigate();
+  const { next } = Route.useSearch();
+
+  // Depois que a sessão ficar válida (login novo ou já tinha sessão), se a URL
+  // trouxer ?next=/caminho relativo, redireciona pra lá — usado pela tela de
+  // consentimento OAuth em /.lovable/oauth/consent.
+  useEffect(() => {
+    if (estado === "logado" && next) {
+      window.location.assign(next);
+    }
+  }, [estado, next]);
 
   useEffect(() => {
     let ativo = true;
