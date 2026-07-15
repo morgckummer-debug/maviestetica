@@ -99,9 +99,9 @@ function PaginaCliente() {
     );
   }
 
-  const bordaCard = cliente.algumMasculino ? "border-sky-600" : "border-painel-border";
+  const bordaCard = cliente.algumMasculino ? "border-painel-masculino" : "border-painel-border";
   const pillCliente = cliente.algumMasculino
-    ? "bg-sky-600 text-white"
+    ? "bg-painel-masculino text-white"
     : "bg-painel-badge-bg text-painel-primary";
 
   return (

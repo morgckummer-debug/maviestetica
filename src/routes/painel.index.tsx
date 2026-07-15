@@ -274,7 +274,7 @@ function ListaFichas() {
                   inativa
                     ? "grayscale opacity-60 hover:opacity-90 border-painel-border"
                     : c.algumMasculino
-                      ? "border-sky-600 hover:border-sky-700"
+                      ? "border-painel-masculino hover:border-painel-masculino-hover"
                       : "border-painel-border hover:border-painel-primary/40",
                 ].join(" ")}
               >
@@ -300,7 +300,7 @@ function ListaFichas() {
                         className={[
                           "text-[11px] rounded-full px-2.5 py-0.5",
                           c.algumMasculino
-                            ? "bg-sky-600 text-white"
+                            ? "bg-painel-masculino text-white"
                             : "bg-painel-badge-bg text-painel-primary",
                         ].join(" ")}
                       >
