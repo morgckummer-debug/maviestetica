@@ -15,6 +15,7 @@ import {
 import { salvarFicha } from "@/lib/api/fichas.functions";
 import { aplicarMascara } from "@/lib/mascaras";
 import { RamosWatermark } from "@/components/RamosWatermark";
+import { ICONES_FICHA } from "@/data/icones-ficha";
 
 export const Route = createFileRoute("/avaliacao/$tipo")({
   head: () => ({
@@ -299,8 +300,9 @@ function FichaPage() {
           <p className="text-xs tracking-[0.3em] uppercase text-muted-foreground mb-4">
             Antes do seu atendimento
           </p>
+          <img src={ICONES_FICHA[def.tipo]} alt="" className="mx-auto h-16 w-16 mb-4" />
           <h1 className="font-display text-4xl lg:text-5xl text-primary leading-tight">
-            {def.emoji} Ficha{" "}
+            Ficha{" "}
             <em className="italic font-normal">
               {def.nome.replace(/^Anamnese\s*/i, "").toLowerCase() || def.nome}
             </em>

@@ -1,16 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight } from "lucide-react";
 import { SITE_URL } from "@/data/services";
-import { TIPOS, FICHAS, type Tipo } from "@/data/anamnese";
-import iconeCorporal from "@/assets/icone-corporal.png";
-import iconeFacial from "@/assets/icone-facial.png";
-import iconeLaser from "@/assets/icone-laser.png";
-
-const ICONES: Record<Tipo, string> = {
-  corporal: iconeCorporal,
-  facial: iconeFacial,
-  laser: iconeLaser,
-};
+import { TIPOS, FICHAS } from "@/data/anamnese";
+import { ICONES_FICHA } from "@/data/icones-ficha";
 
 export const Route = createFileRoute("/avaliacao/")({
   head: () => ({
@@ -45,7 +37,7 @@ function EscolherFicha() {
                 className="flex items-center justify-between gap-4 rounded-2xl border border-border bg-card px-6 py-5 hover:border-primary/40 transition-colors"
               >
                 <span className="flex items-center gap-4">
-                  <img src={ICONES[t]} alt="" className="h-14 w-14 shrink-0" />
+                  <img src={ICONES_FICHA[t]} alt="" className="h-14 w-14 shrink-0" />
                   <span className="font-medium text-foreground">{f.nome}</span>
                 </span>
                 <ArrowRight className="h-4 w-4 text-muted-foreground" />
