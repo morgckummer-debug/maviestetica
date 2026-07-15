@@ -281,7 +281,7 @@ function MenuUsuario({
       </button>
 
       {aberto && (
-        <div className="absolute right-0 top-full mt-2 w-48 rounded-xl border border-painel-border bg-white shadow-lg py-1.5 z-10">
+        <div className="absolute right-0 top-full mt-2 w-48 rounded-xl border border-painel-border bg-white shadow-lg py-1.5 z-20">
           <button
             type="button"
             onClick={() => {
