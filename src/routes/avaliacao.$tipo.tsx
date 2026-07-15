@@ -15,20 +15,35 @@ import {
 import { salvarFicha } from "@/lib/api/fichas.functions";
 import { aplicarMascara } from "@/lib/mascaras";
 import { RamosWatermark } from "@/components/RamosWatermark";
+import { ICONES_FICHA } from "@/data/icones-ficha";
 
 export const Route = createFileRoute("/avaliacao/$tipo")({
-  head: () => ({
-    meta: [
-      { title: "Ficha de Avaliação | MAVI Centro de Estética" },
-      {
-        name: "description",
-        content:
-          "Responda antes do seu atendimento na MAVI. Leva poucos minutos e ajuda a gente a te receber com mais cuidado e segurança.",
-      },
-      { name: "robots", content: "noindex, nofollow" },
-    ],
-    links: [{ rel: "canonical", href: `${SITE_URL}/avaliacao` }],
-  }),
+  head: ({ params }) => {
+    const def = getFicha(params.tipo);
+    const nome = def?.nome ?? "Ficha de Avaliação";
+    const descricao =
+      "Responda antes do seu atendimento na MAVI. Leva poucos minutos e ajuda a gente a te receber com mais cuidado e segurança.";
+    return {
+      meta: [
+        { title: `${nome} | MAVI Centro de Estética` },
+        { name: "description", content: descricao },
+        { name: "robots", content: "noindex, nofollow" },
+        { property: "og:title", content: `${nome} | MAVI Centro de Estética` },
+        { property: "og:description", content: descricao },
+        { property: "og:type", content: "website" },
+        ...(def
+          ? [
+              { property: "og:image", content: `${SITE_URL}/og/ficha-${def.tipo}.png` },
+              { property: "og:image:width", content: "1200" },
+              { property: "og:image:height", content: "630" },
+              { name: "twitter:card", content: "summary_large_image" },
+              { name: "twitter:image", content: `${SITE_URL}/og/ficha-${def.tipo}.png` },
+            ]
+          : []),
+      ],
+      links: [{ rel: "canonical", href: `${SITE_URL}/avaliacao` }],
+    };
+  },
   component: FichaPage,
 });
 
@@ -299,8 +314,9 @@ function FichaPage() {
           <p className="text-xs tracking-[0.3em] uppercase text-muted-foreground mb-4">
             Antes do seu atendimento
           </p>
+          <img src={ICONES_FICHA[def.tipo]} alt="" className="mx-auto h-16 w-16 mb-4" />
           <h1 className="font-display text-4xl lg:text-5xl text-primary leading-tight">
-            {def.emoji} Ficha{" "}
+            Ficha{" "}
             <em className="italic font-normal">
               {def.nome.replace(/^Anamnese\s*/i, "").toLowerCase() || def.nome}
             </em>
