@@ -214,14 +214,21 @@ function ListaFichas() {
               params={{ id: c.id }}
               className={[
                 "flex items-center justify-between gap-4 rounded-[14px] border bg-white px-6 py-5 transition-colors",
-                c.algumMasculino
-                  ? "border-sky-600 hover:border-sky-700"
-                  : "border-painel-border hover:border-painel-primary/40",
+                c.todasArquivadas
+                  ? "grayscale opacity-60 hover:opacity-90 border-painel-border"
+                  : c.algumMasculino
+                    ? "border-sky-600 hover:border-sky-700"
+                    : "border-painel-border hover:border-painel-primary/40",
               ].join(" ")}
             >
               <div className="min-w-0">
                 <div className="flex items-center gap-2.5 flex-wrap mb-1.5">
                   <span className="text-[15px] text-painel-title truncate">{c.nome}</span>
+                  {c.todasArquivadas && (
+                    <span className="text-[11px] rounded-full bg-painel-muted-2/20 text-painel-muted px-2.5 py-0.5">
+                      arquivada
+                    </span>
+                  )}
                   {c.tipos.map((t) => (
                     <span
                       key={t}
