@@ -290,6 +290,22 @@ export async function listarSessoesPendentes(): Promise<SessaoPendente[]> {
   return (await res.json()) as SessaoPendente[];
 }
 
+// Data (YYYY-MM-DD) da sessão mais recente de cada ficha — só entre as não
+// arquivadas, que é o que de fato conta como "procedimento feito". Usado
+// pra detectar clientes sem atividade há muito tempo (ver clientes.ts).
+export async function listarUltimasSessoesPorFicha(): Promise<Record<string, string>> {
+  const res = await apiRest("sessoes?select=ficha_id,data&arquivado=eq.false&order=data.desc");
+  if (!res.ok) throw new Error("Não foi possível carregar as datas de sessão.");
+  const linhas = (await res.json()) as { ficha_id: string; data: string }[];
+  const ultima: Record<string, string> = {};
+  // Já vem ordenado da mais recente pra mais antiga — a 1ª ocorrência de
+  // cada ficha_id é a data mais recente dela.
+  for (const l of linhas) {
+    if (!(l.ficha_id in ultima)) ultima[l.ficha_id] = l.data;
+  }
+  return ultima;
+}
+
 export async function criarSessao(
   fichaId: string,
   dados: { data: string; areas: string[]; observacao: string },
