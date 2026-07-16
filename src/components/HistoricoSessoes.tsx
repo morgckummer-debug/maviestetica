@@ -12,7 +12,14 @@ import {
   Plus,
   X,
 } from "lucide-react";
-import { FICHAS, OPCOES_SESSAO, rotuloItensSessao, nomeCurto, type Tipo } from "@/data/anamnese";
+import {
+  FICHAS,
+  OPCOES_SESSAO,
+  TIPOS,
+  rotuloItensSessao,
+  nomeCurto,
+  type Tipo,
+} from "@/data/anamnese";
 import {
   listarSessoesDeFichas,
   criarSessao,
@@ -23,6 +30,7 @@ import {
   type PacoteItem,
 } from "@/lib/painel";
 import { linkConfirmacao, linkWhatsappConfirmacao } from "@/lib/whatsapp";
+import { EnviarFicha } from "@/components/EnviarFicha";
 
 const CINCO_MINUTOS_MS = 5 * 60 * 1000;
 
@@ -586,12 +594,17 @@ export function HistoricoSessoes({
   const [salvandoPacote, setSalvandoPacote] = useState(false);
   const [erroPacote, setErroPacote] = useState<string | null>(null);
   // Bônus da promoção anexados ao pacote sendo cadastrado (ex.: "compre 10
-  // sessões de laser e ganhe uma limpeza de pele"). Cada linha pode apontar
-  // pra um item de QUALQUER ficha da cliente, não só a do pacote pago — por
-  // isso guarda fichaId junto do item.
+  // sessões de laser e ganhe uma limpeza de pele"). O dropdown oferece os 3
+  // tipos de procedimento sempre, mesmo os que a cliente ainda não tem ficha
+  // — por isso guarda `tipo` (não fichaId direto, que só existe se a ficha
+  // já existir; resolvido na hora de salvar).
   const [bonusForm, setBonusForm] = useState<
-    { chave: string; fichaId: string; item: string; quantidade: string }[]
+    { chave: string; tipo: Tipo | ""; item: string; quantidade: string }[]
   >([]);
+  // Quando ela tenta salvar um bônus de um tipo sem ficha, bloqueia o salvar
+  // e mostra o convite de anamnese desse tipo (em vez de criar uma ficha sem
+  // nenhuma pergunta de saúde respondida).
+  const [tipoFaltandoAnamnese, setTipoFaltandoAnamnese] = useState<Tipo | null>(null);
   // "Cancelar pacote": remove só a última definição de pacote de um item
   // (ex.: cliente desistiu do pacote, ou foi marcado por engano). As sessões
   // que estavam nele não são apagadas — voltam a contar como avulsas.
@@ -624,20 +637,22 @@ export function HistoricoSessoes({
 
   const multi = fichas.length > 1;
 
-  // Opções pro dropdown de bônus: os itens de TODAS as fichas da cliente
-  // (não só a do pacote sendo pago) — ex.: promoção de laser que dá uma
-  // limpeza de pele de brinde precisa oferecer os itens da ficha facial.
+  // Opções pro dropdown de bônus: os itens dos 3 tipos de procedimento,
+  // sempre — mesmo os que a cliente ainda não tem ficha (ex.: promoção de
+  // facial que dá sessões de laser de brinde pra apresentar o tratamento).
+  // Sem ficha do tipo ainda, `fichaId` fica null — resolvido/bloqueado na
+  // hora de salvar, não aqui.
   const opcoesBonus = useMemo(
     () =>
-      fichas.flatMap((f) =>
-        (OPCOES_SESSAO[f.tipo] ?? []).map((item) => ({
-          valor: `${f.id}::${item}`,
-          fichaId: f.id,
+      TIPOS.flatMap((tipo) =>
+        (OPCOES_SESSAO[tipo] ?? []).map((item) => ({
+          valor: `${tipo}::${item}`,
+          tipo,
           item,
-          rotulo: multi ? `${item} — ${nomeCurto(f.tipo)}` : item,
+          rotulo: `${item} — ${nomeCurto(tipo)}`,
         })),
       ),
-    [fichas, multi],
+    [],
   );
   const tipoPorFicha = useMemo(() => {
     const m = new Map<string, Tipo>();
@@ -993,7 +1008,13 @@ export function HistoricoSessoes({
   // numa promoção de laser, antes da cliente vir fazer).
   const bonusPendentes = useMemo(() => {
     const comSessao = new Set(grupos.map((g) => g.chave));
-    const lista: { chave: string; tipo: Tipo; item: string; quantidade: number }[] = [];
+    const lista: {
+      chave: string;
+      fichaId: string;
+      tipo: Tipo;
+      item: string;
+      quantidade: number;
+    }[] = [];
     fichas.forEach((f) => {
       (OPCOES_SESSAO[f.tipo] ?? []).forEach((item) => {
         const chave = `${f.id}::${item}`;
@@ -1001,12 +1022,37 @@ export function HistoricoSessoes({
         const quantidade = pacotesDoItem(f.id, item)
           .filter((p) => p.bonus)
           .reduce((total, p) => total + p.tamanho, 0);
-        if (quantidade > 0) lista.push({ chave, tipo: f.tipo, item, quantidade });
+        if (quantidade > 0) lista.push({ chave, fichaId: f.id, tipo: f.tipo, item, quantidade });
       });
     });
     return lista;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fichas, grupos, pacotesOverride]);
+
+  // "Check" de bônus usado: registra a sessão do dia em que a cliente
+  // usufruiu (a Marina escolhe a data — não tem agendamento no app, ela
+  // marca depois que já aconteceu). Uma data por linha pendente, guardada
+  // pela chave do item.
+  const [dataBonusPendente, setDataBonusPendente] = useState<Record<string, string>>({});
+  const [confirmandoBonusChave, setConfirmandoBonusChave] = useState<string | null>(null);
+  const [erroBonusPendente, setErroBonusPendente] = useState<string | null>(null);
+
+  const confirmarBonusPendente = async (b: { chave: string; fichaId: string; item: string }) => {
+    const data = dataBonusPendente[b.chave] || hojeISO();
+    setConfirmandoBonusChave(b.chave);
+    setErroBonusPendente(null);
+    try {
+      const nova = await criarSessao(b.fichaId, { data, areas: [b.item], observacao: "" });
+      setSessoes((prev) => [nova, ...(prev ?? [])]);
+      // Mesmo padrão de qualquer sessão registrada: abre o link de
+      // confirmação por WhatsApp na hora, em vez de deixar pendente.
+      window.open(whatsappDe(nova.token, nova.data), "_blank", "noreferrer");
+    } catch (e) {
+      setErroBonusPendente(e instanceof Error ? e.message : "Erro ao registrar o bônus usado.");
+    } finally {
+      setConfirmandoBonusChave(null);
+    }
+  };
 
   // Nº de sessões já registradas de cada item do procedimento escolhido no
   // formulário, para mostrar "Axilas · seria a 5ª sessão" antes de salvar.
@@ -1044,18 +1090,20 @@ export function HistoricoSessoes({
     setPacoteValor("");
     setBonusForm([]);
     setErroPacote(null);
+    setTipoFaltandoAnamnese(null);
   };
 
   const cancelarEdicaoPacote = () => {
     setEditandoPacoteChave(null);
     setBonusForm([]);
     setErroPacote(null);
+    setTipoFaltandoAnamnese(null);
   };
 
   const adicionarLinhaBonus = () =>
     setBonusForm((prev) => [
       ...prev,
-      { chave: crypto.randomUUID(), fichaId: "", item: "", quantidade: "1" },
+      { chave: crypto.randomUUID(), tipo: "", item: "", quantidade: "1" },
     ]);
 
   const removerLinhaBonus = (chave: string) =>
@@ -1063,20 +1111,39 @@ export function HistoricoSessoes({
 
   const atualizarLinhaBonus = (
     chave: string,
-    patch: Partial<{ fichaId: string; item: string; quantidade: string }>,
+    patch: Partial<{ tipo: Tipo | ""; item: string; quantidade: string }>,
   ) => setBonusForm((prev) => prev.map((b) => (b.chave === chave ? { ...b, ...patch } : b)));
 
   const salvarPacote = async (fId: string, item: string) => {
     const n = parseInt(pacoteValor, 10);
     if (!n || n <= 0) return;
+    const bonusValidos = bonusForm
+      .map((b) => ({ ...b, qtd: parseInt(b.quantidade, 10) }))
+      .filter((b) => b.tipo && b.item && b.qtd > 0);
+
+    // Um bônus pode ser de um tipo que a cliente ainda não tem ficha (ex.:
+    // laser de brinde pra quem só tem ficha facial). Sem anamnese respondida
+    // pra esse tipo não dá pra registrar com segurança — bloqueia e mostra o
+    // convite de anamnese em vez de criar a ficha sem nada preenchido.
+    const fichaPorTipo = new Map<Tipo, string>();
+    fichas.forEach((f) => {
+      if (!fichaPorTipo.has(f.tipo)) fichaPorTipo.set(f.tipo, f.id);
+    });
+    const semFicha = bonusValidos.find((b) => !fichaPorTipo.has(b.tipo as Tipo));
+    if (semFicha) {
+      const tipoFaltante = semFicha.tipo as Tipo;
+      setErroPacote(
+        `Essa cliente ainda não tem ficha de ${nomeCurto(tipoFaltante)} — manda a anamnese pra ela preencher antes de registrar esse bônus.`,
+      );
+      setTipoFaltandoAnamnese(tipoFaltante);
+      return;
+    }
+    setTipoFaltandoAnamnese(null);
+
     // Bônus podem apontar pra itens de fichas diferentes da do pacote pago
     // (ex.: limpeza de pele de brinde numa promoção de laser) — por isso
     // agrupa as mudanças por ficha antes de salvar, uma PATCH por ficha
     // afetada em vez de assumir que é sempre a mesma.
-    const bonusValidos = bonusForm
-      .map((b) => ({ ...b, qtd: parseInt(b.quantidade, 10) }))
-      .filter((b) => b.fichaId && b.item && b.qtd > 0);
-
     setSalvandoPacote(true);
     setErroPacote(null);
     try {
@@ -1098,7 +1165,9 @@ export function HistoricoSessoes({
       };
 
       adiciona(fId, item, { tamanho: n });
-      for (const b of bonusValidos) adiciona(b.fichaId, b.item, { tamanho: b.qtd, bonus: true });
+      for (const b of bonusValidos) {
+        adiciona(fichaPorTipo.get(b.tipo as Tipo)!, b.item, { tamanho: b.qtd, bonus: true });
+      }
 
       await Promise.all(
         [...merges.entries()].map(([fichaAlvo, pacotes]) => atualizarFicha(fichaAlvo, { pacotes })),
@@ -1123,7 +1192,7 @@ export function HistoricoSessoes({
     if (ultimo === undefined) return;
     if (
       !window.confirm(
-        `Cancelar o pacote de ${ultimo} sessões? As sessões que já foram feitas nele não são apagadas — voltam a contar como avulsas.`,
+        `Cancelar o pacote de ${ultimo.tamanho} sessões? As sessões que já foram feitas nele não são apagadas — voltam a contar como avulsas.`,
       )
     )
       return;
@@ -1165,14 +1234,49 @@ export function HistoricoSessoes({
           <p className="text-xs font-medium text-painel-gold mb-1.5">
             🎁 Bônus a usar (ainda sem sessão registrada)
           </p>
-          <ul className="space-y-0.5">
+          <p className="text-[11px] text-painel-muted mb-2">
+            Marque o check no dia em que a cliente usufruir — não tem agendamento aqui, é só
+            registrar depois que já aconteceu. Isso já manda o link de confirmação por WhatsApp,
+            igual a qualquer sessão.
+          </p>
+          <ul className="space-y-1.5">
             {bonusPendentes.map((b) => (
-              <li key={b.chave} className="text-xs text-painel-chip-text">
-                {b.quantidade}× {b.item}
-                {multi ? ` — ${nomeCurto(b.tipo)}` : ""}
+              <li
+                key={b.chave}
+                className="flex flex-wrap items-center gap-2 text-xs text-painel-chip-text"
+              >
+                <span className="flex-1 min-w-[140px]">
+                  {b.quantidade}× {b.item}
+                  {multi ? ` — ${nomeCurto(b.tipo)}` : ""}
+                </span>
+                <input
+                  type="date"
+                  value={dataBonusPendente[b.chave] ?? hojeISO()}
+                  onChange={(e) =>
+                    setDataBonusPendente((prev) => ({ ...prev, [b.chave]: e.target.value }))
+                  }
+                  className="rounded-lg border border-painel-border bg-white px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-painel-primary/40"
+                />
+                <button
+                  type="button"
+                  onClick={() => confirmarBonusPendente(b)}
+                  disabled={confirmandoBonusChave === b.chave}
+                  title="Marcar como usufruído nessa data e enviar link de confirmação"
+                  className="inline-flex items-center gap-1 rounded-full bg-painel-gold text-white px-2.5 py-1 text-xs font-medium hover:opacity-90 transition-colors disabled:opacity-40"
+                >
+                  {confirmandoBonusChave === b.chave ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <Check className="h-3.5 w-3.5" />
+                  )}
+                  Check
+                </button>
               </li>
             ))}
           </ul>
+          {erroBonusPendente && (
+            <p className="mt-2 text-xs text-painel-alert-text">{erroBonusPendente}</p>
+          )}
         </div>
       )}
 
@@ -1391,11 +1495,11 @@ export function HistoricoSessoes({
                         {bonusForm.map((b) => (
                           <div key={b.chave} className="flex flex-wrap items-center gap-1.5">
                             <select
-                              value={b.fichaId && b.item ? `${b.fichaId}::${b.item}` : ""}
+                              value={b.tipo && b.item ? `${b.tipo}::${b.item}` : ""}
                               onChange={(e) => {
-                                const [fichaAlvo, ...resto] = e.target.value.split("::");
+                                const [tipoAlvo, ...resto] = e.target.value.split("::");
                                 atualizarLinhaBonus(b.chave, {
-                                  fichaId: fichaAlvo ?? "",
+                                  tipo: (tipoAlvo as Tipo) || "",
                                   item: resto.join("::"),
                                 });
                               }}
@@ -1459,6 +1563,15 @@ export function HistoricoSessoes({
                     </button>
                   </div>
                   {erroPacote && <p className="text-xs text-painel-alert-text">{erroPacote}</p>}
+                  {tipoFaltandoAnamnese && (
+                    <EnviarFicha
+                      nomeInicial={nomeCliente}
+                      celularInicial={telefoneCliente}
+                      tipoInicial={tipoFaltandoAnamnese}
+                      convitePadrao
+                      onFechar={() => setTipoFaltandoAnamnese(null)}
+                    />
+                  )}
                 </div>
               )}
 
