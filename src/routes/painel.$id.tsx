@@ -13,7 +13,13 @@ import {
   X,
 } from "lucide-react";
 import { getFicha, nomeTipo, type Campo } from "@/data/anamnese";
-import { obterFicha, atualizarFicha, excluirFicha, type Ficha } from "@/lib/painel";
+import {
+  obterFicha,
+  atualizarFicha,
+  excluirFicha,
+  excluirFichaDefinitivamente,
+  type Ficha,
+} from "@/lib/painel";
 import { mascaraTelefone, mascaraCpf, formatarDataBR, aplicarMascara } from "@/lib/mascaras";
 import { RamosWatermark } from "@/components/RamosWatermark";
 
@@ -100,7 +106,8 @@ function DetalheFicha() {
   const [salvando, setSalvando] = useState(false);
   const [salvo, setSalvo] = useState(false);
   const [confirmandoExclusao, setConfirmandoExclusao] = useState(false);
-  const [excluindo, setExcluindo] = useState(false);
+  // null = nada em andamento; senão, qual das duas opções está sendo salva.
+  const [excluindo, setExcluindo] = useState<"arquivar" | "definitivo" | null>(null);
 
   const [editandoDados, setEditandoDados] = useState(false);
   const [dadosForm, setDadosForm] = useState<Record<string, string>>({});
@@ -208,15 +215,39 @@ function DetalheFicha() {
     }
   };
 
-  const excluir = async () => {
-    setExcluindo(true);
+  // "Arquivar" aqui é o soft delete de sempre (excluirFicha): some das
+  // listas normais, mas fica recuperável em "Fichas excluídas".
+  const arquivarNaExclusao = async () => {
+    setExcluindo("arquivar");
     setErro(null);
     try {
       await excluirFicha(id);
       navigate({ to: "/painel" });
     } catch (e) {
       setErro(e instanceof Error ? e.message : "Erro ao excluir.");
-      setExcluindo(false);
+      setExcluindo(null);
+      setConfirmandoExclusao(false);
+    }
+  };
+
+  // Exclusão de verdade — apaga a ficha (e as sessões dela) do banco, sem
+  // como desfazer. Pede uma 2ª confirmação bem explícita antes de seguir.
+  const excluirDefinitivamente = async () => {
+    if (
+      !window.confirm(
+        `Excluir "${ficha?.nome ?? "essa ficha"}" definitivamente? Essa ação não pode ser desfeita.`,
+      )
+    ) {
+      return;
+    }
+    setExcluindo("definitivo");
+    setErro(null);
+    try {
+      await excluirFichaDefinitivamente(id);
+      navigate({ to: "/painel" });
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : "Erro ao excluir definitivamente.");
+      setExcluindo(null);
       setConfirmandoExclusao(false);
     }
   };
@@ -315,32 +346,46 @@ function DetalheFicha() {
         </div>
 
         {confirmandoExclusao && (
-          <div className="flex flex-col sm:flex-row sm:items-center gap-3 rounded-xl border border-destructive/40 bg-destructive/10 px-4 py-3.5 mb-6">
-            <p className="text-sm text-destructive flex-1">
-              Excluir a ficha de <strong>{ficha.nome}</strong>? Ela vai para "Fichas excluídas" na
-              lista de clientes e pode ser restaurada depois.
+          <div className="flex flex-col gap-3 rounded-xl border border-destructive/40 bg-destructive/10 px-4 py-3.5 mb-6">
+            <p className="text-sm text-destructive">
+              Excluir a ficha de <strong>{ficha.nome}</strong>? Arquivar move ela para "Fichas
+              excluídas" (dá pra restaurar depois); excluir definitivamente apaga a ficha e as
+              sessões dela pra sempre.
             </p>
-            <div className="flex gap-2 shrink-0">
+            <div className="flex flex-wrap gap-2">
               <button
                 type="button"
                 onClick={() => setConfirmandoExclusao(false)}
-                disabled={excluindo}
+                disabled={excluindo !== null}
                 className="rounded-full border border-border bg-card px-4 py-2 text-sm font-medium text-foreground/70 hover:border-primary/40 transition-colors disabled:opacity-40"
               >
                 Cancelar
               </button>
               <button
                 type="button"
-                onClick={excluir}
-                disabled={excluindo}
+                onClick={arquivarNaExclusao}
+                disabled={excluindo !== null}
+                className="inline-flex items-center gap-1.5 rounded-full border border-destructive/40 px-4 py-2 text-sm font-medium text-destructive hover:bg-destructive/10 transition-colors disabled:opacity-40"
+              >
+                {excluindo === "arquivar" ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Archive className="h-4 w-4" />
+                )}
+                Arquivar
+              </button>
+              <button
+                type="button"
+                onClick={excluirDefinitivamente}
+                disabled={excluindo !== null}
                 className="inline-flex items-center gap-1.5 rounded-full bg-destructive px-4 py-2 text-sm font-medium text-destructive-foreground hover:bg-destructive/90 transition-colors disabled:opacity-40"
               >
-                {excluindo ? (
+                {excluindo === "definitivo" ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
                   <Trash2 className="h-4 w-4" />
                 )}
-                Sim, excluir
+                Excluir definitivamente
               </button>
             </div>
           </div>

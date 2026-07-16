@@ -424,3 +424,19 @@ export async function excluirFicha(id: string): Promise<void> {
 export async function restaurarFicha(id: string): Promise<void> {
   await marcarFichaExcluida(id, false);
 }
+
+// Exclui a ficha de verdade — ao contrário de excluirFicha (soft delete),
+// não fica em "Fichas excluídas" e não tem como desfazer. As sessões dela
+// somem junto (on delete cascade, migração 0005_sessoes.sql). A policy de
+// DELETE já existe desde a migração 0004_delete.sql.
+export async function excluirFichaDefinitivamente(id: string): Promise<void> {
+  const res = await apiRest(`fichas?id=eq.${encodeURIComponent(id)}`, {
+    method: "DELETE",
+    headers: { Prefer: "return=representation" },
+  });
+  if (!res.ok) throw new Error("Não foi possível excluir a ficha definitivamente.");
+  const apagadas = (await res.json().catch(() => [])) as unknown[];
+  if (!Array.isArray(apagadas) || apagadas.length === 0) {
+    throw new Error("A exclusão não foi salva no banco (permissão de excluir fichas ausente).");
+  }
+}
