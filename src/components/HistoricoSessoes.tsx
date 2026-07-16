@@ -748,7 +748,7 @@ export function HistoricoSessoes({
       if (entradas.length > 0) {
         try {
           for (const [item, n] of entradas) {
-            await aplicarPacote({ fichaId, item, tamanho: n }, bonusFormRegistro[item] ?? []);
+            await aplicarPacote({ fichaId, item }, n, bonusFormRegistro[item] ?? []);
           }
         } catch {
           setErro("Sessão registrada, mas não foi possível salvar o tamanho do pacote.");
@@ -1329,14 +1329,17 @@ export function HistoricoSessoes({
     return (semFicha?.tipo as Tipo) ?? null;
   };
 
-  // Salva um pacote pago + os bônus anexados a ele numa única leva de
-  // PATCHes (uma por ficha afetada — bônus podem ser de fichas diferentes
-  // da do pacote pago, ex.: limpeza de pele de brinde numa promoção de
-  // laser). Assume que já foi checado com `tipoBonusSemFicha` que nenhum
-  // bônus está sem ficha; chamar sem checar arrisca salvar o pacote pago
-  // sem o bônus prometido.
+  // Salva um pacote pago (opcional) + os bônus anexados a ele numa única
+  // leva de PATCHes (uma por ficha afetada — bônus podem ser de fichas
+  // diferentes da do pacote pago, ex.: limpeza de pele de brinde numa
+  // promoção de laser). `pagoTamanho` nulo serve pra anexar só um bônus a um
+  // item que já tem pacote em andamento (a Marina esqueceu de registrar o
+  // brinde na hora). Assume que já foi checado com `tipoBonusSemFicha` que
+  // nenhum bônus está sem ficha; chamar sem checar arrisca salvar o pacote
+  // pago sem o bônus prometido.
   const aplicarPacote = async (
-    pago: { fichaId: string; item: string; tamanho: number },
+    origem: { fichaId: string; item: string },
+    pagoTamanho: number | null,
     bonusLinhas: LinhaBonus[],
   ) => {
     const bonusValidos = bonusLinhas
@@ -1364,13 +1367,13 @@ export function HistoricoSessoes({
       overrides.set(chave, nova);
     };
 
-    adiciona(pago.fichaId, pago.item, { tamanho: pago.tamanho });
+    if (pagoTamanho) adiciona(origem.fichaId, origem.item, { tamanho: pagoTamanho });
     for (const b of bonusValidos) {
       adiciona(fichaPorTipo.get(b.tipo as Tipo)!, b.item, {
         tamanho: b.qtd,
         bonus: true,
-        origemFichaId: pago.fichaId,
-        origemItem: pago.item,
+        origemFichaId: origem.fichaId,
+        origemItem: origem.item,
       });
     }
 
@@ -1385,8 +1388,11 @@ export function HistoricoSessoes({
   };
 
   const salvarPacote = async (fId: string, item: string) => {
-    const n = parseInt(pacoteValor, 10);
-    if (!n || n <= 0) return;
+    const n = parseInt(pacoteValor, 10) || 0;
+    const temBonusValido = bonusForm.some(
+      (b) => b.tipo && b.item && parseInt(b.quantidade, 10) > 0,
+    );
+    if (n <= 0 && !temBonusValido) return;
 
     const tipoFaltante = tipoBonusSemFicha(bonusForm);
     if (tipoFaltante) {
@@ -1401,7 +1407,7 @@ export function HistoricoSessoes({
     setSalvandoPacote(true);
     setErroPacote(null);
     try {
-      await aplicarPacote({ fichaId: fId, item, tamanho: n }, bonusForm);
+      await aplicarPacote({ fichaId: fId, item }, n > 0 ? n : null, bonusForm);
       setEditandoPacoteChave(null);
       setBonusForm([]);
     } catch (e) {
@@ -1797,7 +1803,7 @@ export function HistoricoSessoes({
                     <label className="text-xs text-painel-muted">
                       {pacotes.length === 0
                         ? "Pacote de quantas sessões? (o que já foi feito vira a 1ª)"
-                        : "Novo pacote de quantas sessões?"}
+                        : "Novo pacote de quantas sessões? (deixe em branco pra só adicionar um bônus)"}
                     </label>
                     <input
                       type="number"
@@ -1874,7 +1880,11 @@ export function HistoricoSessoes({
                     <button
                       type="button"
                       onClick={() => salvarPacote(g.fichaId, g.item)}
-                      disabled={salvandoPacote || !pacoteValor.trim()}
+                      disabled={
+                        salvandoPacote ||
+                        (!pacoteValor.trim() &&
+                          !bonusForm.some((b) => b.tipo && b.item && parseInt(b.quantidade, 10) > 0))
+                      }
                       className="rounded-full bg-painel-primary text-white px-3.5 py-1.5 text-xs font-medium hover:bg-painel-primary/90 transition-colors disabled:opacity-40"
                     >
                       Salvar
@@ -2080,6 +2090,15 @@ export function HistoricoSessoes({
                       className="text-xs font-medium text-painel-primary"
                     >
                       {pacotes.length === 0 ? "Fechou um pacote?" : "+ Novo pacote"}
+                    </button>
+                  )}
+                  {!semPacoteAtivo && pacotes.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => iniciarEdicaoPacote(g.chave)}
+                      className="text-xs font-medium text-painel-primary"
+                    >
+                      + Adicionar bônus
                     </button>
                   )}
                   {pacotes.length > 0 && (
