@@ -1520,8 +1520,7 @@ export function HistoricoSessoes({
               <li key={b.chave} className="flex items-center gap-1.5 text-xs text-painel-chip-text">
                 <Check className="h-3.5 w-3.5 text-painel-gold shrink-0" />
                 <span>
-                  Bônus {b.item}
-                  {multi ? ` — ${nomeCurto(b.tipo)}` : ""} — realizado em {dataBR(b.data)}
+                  Bônus {b.item} — realizado em {dataBR(b.data)}
                 </span>
               </li>
             ))}
@@ -2025,8 +2024,7 @@ export function HistoricoSessoes({
                   <div className="mt-3 pt-2.5 border-t border-painel-border/70 space-y-1.5">
                     {bonusAninhado.realizados.map((b) => (
                       <p key={b.chave} className="text-xs text-painel-gold">
-                        🎁 Bônus: {b.item}
-                        {multi ? ` — ${nomeCurto(b.tipo)}` : ""} — realizado em {dataBR(b.data)}
+                        🎁 Bônus: {b.item} — realizado em {dataBR(b.data)}
                       </p>
                     ))}
                     {bonusAninhado.pendentes.map((b) => (
