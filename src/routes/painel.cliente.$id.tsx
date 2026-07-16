@@ -1,8 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
-import { createFileRoute, Link, useParams } from "@tanstack/react-router";
-import { ArrowLeft, AlertTriangle, Loader2, Send } from "lucide-react";
+import { createFileRoute, Link, useParams, useNavigate } from "@tanstack/react-router";
+import { ArrowLeft, AlertTriangle, Archive, Loader2, Send, Trash2 } from "lucide-react";
 import { FICHAS, TIPOS, nomeTipo, nomeCurto } from "@/data/anamnese";
-import { listarFichas, type Ficha } from "@/lib/painel";
+import {
+  listarFichas,
+  excluirFicha,
+  excluirFichaDefinitivamente,
+  type Ficha,
+} from "@/lib/painel";
 import { clientePorFichaId, type Cliente } from "@/lib/clientes";
 import { mascaraTelefone } from "@/lib/mascaras";
 import { HistoricoSessoes, type Procedimento } from "@/components/HistoricoSessoes";
@@ -27,9 +32,14 @@ function formatarData(iso: string): string {
 
 function PaginaCliente() {
   const { id } = useParams({ from: "/painel/cliente/$id" });
+  const navigate = useNavigate();
   const [fichas, setFichas] = useState<Ficha[] | null>(null);
   const [erro, setErro] = useState<string | null>(null);
   const [enviandoFicha, setEnviandoFicha] = useState(false);
+  const [confirmandoExclusao, setConfirmandoExclusao] = useState(false);
+  // null = nada em andamento; senão, qual das duas opções está sendo salva.
+  const [excluindo, setExcluindo] = useState<"arquivar" | "definitivo" | null>(null);
+  const [erroExclusao, setErroExclusao] = useState<string | null>(null);
 
   useEffect(() => {
     listarFichas()
@@ -68,6 +78,45 @@ function PaginaCliente() {
   const tipoSugerido = cliente
     ? (TIPOS.find((t) => !cliente.tipos.includes(t)) ?? TIPOS[0])
     : TIPOS[0];
+
+  // Excluir aqui vale pra cliente inteira: todas as fichas dela (laser,
+  // facial, corporal...), não só uma. "Arquivar" é o soft delete de sempre
+  // (some das listas, recuperável em "Fichas excluídas" — uma por uma,
+  // como sempre foi); "Excluir definitivamente" apaga tudo pra sempre.
+  const arquivarCliente = async () => {
+    if (!cliente) return;
+    setExcluindo("arquivar");
+    setErroExclusao(null);
+    try {
+      await Promise.all(cliente.fichas.map((f) => excluirFicha(f.id)));
+      navigate({ to: "/painel" });
+    } catch (e) {
+      setErroExclusao(e instanceof Error ? e.message : "Erro ao excluir.");
+      setExcluindo(null);
+      setConfirmandoExclusao(false);
+    }
+  };
+
+  const excluirClienteDefinitivamente = async () => {
+    if (!cliente) return;
+    if (
+      !window.confirm(
+        `Excluir "${cliente.nome}" definitivamente — todas as fichas e sessões dela? Essa ação não pode ser desfeita.`,
+      )
+    ) {
+      return;
+    }
+    setExcluindo("definitivo");
+    setErroExclusao(null);
+    try {
+      await Promise.all(cliente.fichas.map((f) => excluirFichaDefinitivamente(f.id)));
+      navigate({ to: "/painel" });
+    } catch (e) {
+      setErroExclusao(e instanceof Error ? e.message : "Erro ao excluir definitivamente.");
+      setExcluindo(null);
+      setConfirmandoExclusao(false);
+    }
+  };
 
   if (!fichas && !erro) {
     return (
@@ -115,24 +164,83 @@ function PaginaCliente() {
         </Link>
 
         {/* Cabeçalho da cliente */}
-        <div className="mb-6">
-          <div className="flex flex-wrap items-center gap-2 mb-2.5">
-            {cliente.tipos.map((t) => (
-              <span
-                key={t}
-                className={`inline-block text-[11px] rounded-full px-3 py-0.5 ${pillCliente}`}
-              >
-                {FICHAS[t]?.emoji ?? ""} {nomeTipo(t)}
-              </span>
-            ))}
+        <div className="flex flex-wrap items-start justify-between gap-3 mb-6">
+          <div>
+            <div className="flex flex-wrap items-center gap-2 mb-2.5">
+              {cliente.tipos.map((t) => (
+                <span
+                  key={t}
+                  className={`inline-block text-[11px] rounded-full px-3 py-0.5 ${pillCliente}`}
+                >
+                  {FICHAS[t]?.emoji ?? ""} {nomeTipo(t)}
+                </span>
+              ))}
+            </div>
+            <h2 className="font-display text-4xl text-painel-title">{cliente.nome}</h2>
+            <p className="text-[13px] text-painel-muted mt-2">
+              {cliente.telefone ? mascaraTelefone(cliente.telefone) : "sem telefone"}
+              {" · "}
+              {cliente.fichas.length} ficha(s)
+            </p>
           </div>
-          <h2 className="font-display text-4xl text-painel-title">{cliente.nome}</h2>
-          <p className="text-[13px] text-painel-muted mt-2">
-            {cliente.telefone ? mascaraTelefone(cliente.telefone) : "sem telefone"}
-            {" · "}
-            {cliente.fichas.length} ficha(s)
-          </p>
+          {!confirmandoExclusao && (
+            <button
+              type="button"
+              onClick={() => setConfirmandoExclusao(true)}
+              className="inline-flex items-center gap-1.5 rounded-full border border-painel-alert-border px-4 py-2 text-sm font-medium text-painel-alert-text hover:bg-painel-alert-bg transition-colors shrink-0"
+            >
+              <Trash2 className="h-4 w-4" />
+              Excluir
+            </button>
+          )}
         </div>
+
+        {confirmandoExclusao && (
+          <div className="flex flex-col gap-3 rounded-xl border border-painel-alert-border bg-painel-alert-bg px-4 py-3.5 mb-6">
+            <p className="text-sm text-painel-alert-text">
+              Excluir <strong>{cliente.nome}</strong>? São {cliente.fichas.length} ficha(s).
+              Arquivar move todas para "Fichas excluídas" (dá pra restaurar depois); excluir
+              definitivamente apaga tudo — fichas e sessões — pra sempre.
+            </p>
+            {erroExclusao && <p className="text-sm text-painel-alert-text">{erroExclusao}</p>}
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => setConfirmandoExclusao(false)}
+                disabled={excluindo !== null}
+                className="rounded-full border border-painel-border bg-white px-4 py-2 text-sm font-medium text-painel-chip-text hover:border-painel-primary/40 transition-colors disabled:opacity-40"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={arquivarCliente}
+                disabled={excluindo !== null}
+                className="inline-flex items-center gap-1.5 rounded-full border border-painel-alert-border px-4 py-2 text-sm font-medium text-painel-alert-text hover:bg-white transition-colors disabled:opacity-40"
+              >
+                {excluindo === "arquivar" ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Archive className="h-4 w-4" />
+                )}
+                Arquivar
+              </button>
+              <button
+                type="button"
+                onClick={excluirClienteDefinitivamente}
+                disabled={excluindo !== null}
+                className="inline-flex items-center gap-1.5 rounded-full bg-painel-alert-text text-white px-4 py-2 text-sm font-medium hover:opacity-90 transition-colors disabled:opacity-40"
+              >
+                {excluindo === "definitivo" ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Trash2 className="h-4 w-4" />
+                )}
+                Excluir definitivamente
+              </button>
+            </div>
+          </div>
+        )}
 
         {alertas.length > 0 && (
           <div className="flex gap-3 rounded-[14px] border border-painel-alert-border bg-painel-alert-bg px-[22px] py-[18px] text-sm text-painel-alert-text mb-8">
