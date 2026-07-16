@@ -1177,6 +1177,12 @@ export function HistoricoSessoes({
 
   const confirmarBonusPendente = async (b: { chave: string; fichaId: string; item: string }) => {
     const data = dataBonusPendente[b.chave] || hojeISO();
+    if (
+      !window.confirm(
+        `Confirma que a cliente usou o bônus de ${b.item} em ${dataBR(data)}? Isso registra a sessão e abre o link de confirmação por WhatsApp.`,
+      )
+    )
+      return;
     setConfirmandoBonusChave(b.chave);
     setErroBonusPendente(null);
     try {
