@@ -1143,6 +1143,19 @@ export function HistoricoSessoes({
     return mapa;
   }, [bonusPendentes, bonusRealizados]);
 
+  // Bônus sem origem conhecida (cadastrados antes de existir esse vínculo)
+  // não têm em qual card aninhar — são a única coisa que ainda cai no card
+  // "🎁 Bônus" avulso, como fallback. Some sozinho conforme esses bônus
+  // antigos forem recadastrados (aí passam a ter origem e a aninhar certo).
+  const bonusPendentesSemOrigem = useMemo(
+    () => bonusPendentes.filter((b) => !b.origemFichaId || !b.origemItem),
+    [bonusPendentes],
+  );
+  const bonusRealizadosSemOrigem = useMemo(
+    () => bonusRealizados.filter((b) => !b.origemFichaId || !b.origemItem),
+    [bonusRealizados],
+  );
+
   // "Check" de bônus usado: registra a sessão do dia em que a cliente
   // usufruiu (a Marina escolhe a data — não tem agendamento no app, ela
   // marca depois que já aconteceu). Uma data por linha pendente, guardada
@@ -1394,17 +1407,17 @@ export function HistoricoSessoes({
         Registre o atendimento e envie o link para a cliente confirmar.
       </p>
 
-      {(bonusPendentes.length > 0 || bonusRealizados.length > 0) && (
+      {(bonusPendentesSemOrigem.length > 0 || bonusRealizadosSemOrigem.length > 0) && (
         <div className="mb-5 rounded-xl border border-painel-gold/40 bg-painel-gold/10 p-3.5">
           <p className="text-xs font-medium text-painel-gold mb-1.5">🎁 Bônus</p>
-          {bonusPendentes.length > 0 && (
+          {bonusPendentesSemOrigem.length > 0 && (
             <p className="text-[11px] text-painel-muted mb-2">
               Marque o check no dia em que a cliente usufruir e envie o link de confirmação. A
               quantidade abaixo já desconta o que ela usou.
             </p>
           )}
           <ul className="space-y-1.5">
-            {bonusPendentes.map((b) => (
+            {bonusPendentesSemOrigem.map((b) => (
               <li
                 key={b.chave}
                 className="flex flex-wrap items-center gap-2 text-xs text-painel-chip-text"
@@ -1437,7 +1450,7 @@ export function HistoricoSessoes({
                 </button>
               </li>
             ))}
-            {bonusRealizados.map((b) => (
+            {bonusRealizadosSemOrigem.map((b) => (
               <li
                 key={b.chave}
                 className="flex items-center gap-1.5 text-xs text-painel-chip-text"
@@ -1932,7 +1945,7 @@ export function HistoricoSessoes({
               </div>
 
               {bonusAninhado && (bonusAninhado.pendentes.length > 0 || bonusAninhado.realizados.length > 0) && (
-                <div className="mt-3 pt-2.5 border-t border-painel-border/70 space-y-1">
+                <div className="mt-3 pt-2.5 border-t border-painel-border/70 space-y-1.5">
                   {bonusAninhado.realizados.map((b) => (
                     <p key={b.chave} className="text-xs text-painel-gold">
                       🎁 Bônus: {b.item}
@@ -1940,12 +1953,41 @@ export function HistoricoSessoes({
                     </p>
                   ))}
                   {bonusAninhado.pendentes.map((b) => (
-                    <p key={b.chave} className="text-xs text-painel-gold">
-                      🎁 Bônus: {b.quantidade}× {b.item}
-                      {multi ? ` — ${nomeCurto(b.tipo)}` : ""} — por usar (marque o check no card
-                      "Bônus" acima)
-                    </p>
+                    <div
+                      key={b.chave}
+                      className="flex flex-wrap items-center gap-2 text-xs text-painel-gold"
+                    >
+                      <span className="flex-1 min-w-[140px]">
+                        🎁 Bônus: {b.quantidade}× {b.item}
+                        {multi ? ` — ${nomeCurto(b.tipo)}` : ""}
+                      </span>
+                      <input
+                        type="date"
+                        value={dataBonusPendente[b.chave] ?? hojeISO()}
+                        onChange={(e) =>
+                          setDataBonusPendente((prev) => ({ ...prev, [b.chave]: e.target.value }))
+                        }
+                        className="rounded-lg border border-painel-border bg-white px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-painel-primary/40"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => confirmarBonusPendente(b)}
+                        disabled={confirmandoBonusChave === b.chave}
+                        title="Marcar como usufruído nessa data e enviar link de confirmação"
+                        className="inline-flex items-center gap-1 rounded-full bg-painel-gold text-white px-2.5 py-1 text-xs font-medium hover:opacity-90 transition-colors disabled:opacity-40"
+                      >
+                        {confirmandoBonusChave === b.chave ? (
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        ) : (
+                          <Check className="h-3.5 w-3.5" />
+                        )}
+                        Check
+                      </button>
+                    </div>
                   ))}
+                  {bonusAninhado.pendentes.length > 0 && erroBonusPendente && (
+                    <p className="text-xs text-painel-alert-text">{erroBonusPendente}</p>
+                  )}
                 </div>
               )}
 
