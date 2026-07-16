@@ -95,28 +95,30 @@
 
 :root {
   --radius: 1rem;
-  /* MAVI palette: warm off-white, lavender, deep plum, rose accent */
+  /* MAVI palette: warm off-white, lavender, roxo (do ícone de laser), rose
+     accent. Hue 296 = roxo vívido da marca (extraído de icone-laser.png),
+     no lugar do 310 antigo (lia mais bordô/ameixa que roxo). */
   --background: oklch(0.985 0.005 60);
-  --foreground: oklch(0.32 0.06 310);
+  --foreground: oklch(0.32 0.09 296);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.32 0.06 310);
+  --card-foreground: oklch(0.32 0.09 296);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.32 0.06 310);
-  --primary: oklch(0.38 0.08 310);
+  --popover-foreground: oklch(0.32 0.09 296);
+  --primary: oklch(0.38 0.13 296);
   --primary-foreground: oklch(0.98 0.005 60);
-  --secondary: oklch(0.93 0.04 310);
-  --secondary-foreground: oklch(0.32 0.06 310);
+  --secondary: oklch(0.93 0.05 296);
+  --secondary-foreground: oklch(0.32 0.09 296);
   --muted: oklch(0.95 0.015 60);
-  --muted-foreground: oklch(0.52 0.04 310);
+  --muted-foreground: oklch(0.52 0.05 296);
   --accent: oklch(0.7 0.12 10);
   --accent-foreground: oklch(0.98 0.005 60);
   --destructive: oklch(0.577 0.245 27.325);
   --destructive-foreground: oklch(0.984 0.003 247.858);
-  --border: oklch(0.9 0.02 310);
-  --input: oklch(0.9 0.02 310);
-  --ring: oklch(0.6 0.08 310);
-  --lavender: oklch(0.78 0.07 310);
-  --lavender-soft: oklch(0.93 0.04 310);
+  --border: oklch(0.9 0.03 296);
+  --input: oklch(0.9 0.03 296);
+  --ring: oklch(0.6 0.1 296);
+  --lavender: oklch(0.78 0.09 296);
+  --lavender-soft: oklch(0.93 0.05 296);
   --rose: oklch(0.7 0.12 10);
   --cream: oklch(0.97 0.012 70);
   --chart-1: oklch(0.646 0.222 41.116);
