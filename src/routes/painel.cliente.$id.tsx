@@ -171,20 +171,6 @@ function PaginaCliente() {
           />
           <div className="relative flex flex-wrap items-start justify-between gap-3">
             <div>
-              <div className="flex flex-wrap items-center gap-2 mb-2.5">
-                {cliente.tipos.map((t) => (
-                  <span
-                    key={t}
-                    className="inline-block text-[11px] rounded-full px-3 py-0.5 text-painel-title"
-                    style={{
-                      backgroundImage:
-                        "linear-gradient(90deg, var(--painel-lilac-soft), var(--painel-gold-soft))",
-                    }}
-                  >
-                    {FICHAS[t]?.emoji ?? ""} {nomeTipo(t)}
-                  </span>
-                ))}
-              </div>
               <h2 className="font-display text-4xl text-white">{cliente.nome}</h2>
               <p className="text-[13px] text-white/60 mt-2">
                 {cliente.telefone ? mascaraTelefone(cliente.telefone) : "sem telefone"}
