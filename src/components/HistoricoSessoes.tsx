@@ -1174,6 +1174,7 @@ export function HistoricoSessoes({
   const [dataBonusPendente, setDataBonusPendente] = useState<Record<string, string>>({});
   const [confirmandoBonusChave, setConfirmandoBonusChave] = useState<string | null>(null);
   const [erroBonusPendente, setErroBonusPendente] = useState<string | null>(null);
+  const [removendoBonusChave, setRemovendoBonusChave] = useState<string | null>(null);
 
   const confirmarBonusPendente = async (b: { chave: string; fichaId: string; item: string }) => {
     const data = dataBonusPendente[b.chave] || hojeISO();
@@ -1195,6 +1196,35 @@ export function HistoricoSessoes({
       setErroBonusPendente(e instanceof Error ? e.message : "Erro ao registrar o bônus usado.");
     } finally {
       setConfirmandoBonusChave(null);
+    }
+  };
+
+  // Remove o bônus pendente mais recente desse item (ex.: o pacote pago que
+  // deu origem a ele foi cancelado por engano, ou a promoção não vale mais).
+  // Não mexe nas sessões já registradas — só tira o "crédito" de bônus ainda
+  // não usado.
+  const removerBonus = async (fId: string, item: string, chave: string) => {
+    const atuais = pacotesDoItem(fId, item);
+    const idx = atuais.map((p) => p.bonus === true).lastIndexOf(true);
+    if (idx === -1) return;
+    const alvo = atuais[idx];
+    if (
+      !window.confirm(
+        `Remover o bônus de ${alvo.tamanho}× ${item}? Se alguma sessão já foi registrada com ele, ela não é apagada — volta a contar como avulsa.`,
+      )
+    )
+      return;
+    setRemovendoBonusChave(chave);
+    setErroBonusPendente(null);
+    try {
+      const nova = atuais.filter((_, i) => i !== idx);
+      const merge = { ...(fichaPorId.get(fId)?.pacotes ?? {}), [item]: nova };
+      await atualizarFicha(fId, { pacotes: merge });
+      setPacotesOverride((prev) => ({ ...prev, [`${fId}::${item}`]: nova }));
+    } catch (e) {
+      setErroBonusPendente(e instanceof Error ? e.message : "Erro ao remover o bônus.");
+    } finally {
+      setRemovendoBonusChave(null);
     }
   };
 
@@ -1464,6 +1494,19 @@ export function HistoricoSessoes({
                     <Check className="h-3.5 w-3.5" />
                   )}
                   Check
+                </button>
+                <button
+                  type="button"
+                  onClick={() => removerBonus(b.fichaId, b.item, b.chave)}
+                  disabled={removendoBonusChave === b.chave}
+                  title="Remover bônus"
+                  className="text-painel-muted/60 hover:text-painel-alert-text transition-colors disabled:opacity-40"
+                >
+                  {removendoBonusChave === b.chave ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <X className="h-3.5 w-3.5" />
+                  )}
                 </button>
               </li>
             ))}
@@ -2006,6 +2049,19 @@ export function HistoricoSessoes({
                             <Check className="h-3.5 w-3.5" />
                           )}
                           Check
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => removerBonus(b.fichaId, b.item, b.chave)}
+                          disabled={removendoBonusChave === b.chave}
+                          title="Remover bônus"
+                          className="text-painel-gold/70 hover:text-painel-alert-text transition-colors disabled:opacity-40"
+                        >
+                          {removendoBonusChave === b.chave ? (
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          ) : (
+                            <X className="h-3.5 w-3.5" />
+                          )}
                         </button>
                       </div>
                     ))}
