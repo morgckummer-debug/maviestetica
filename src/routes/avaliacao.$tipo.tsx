@@ -310,40 +310,68 @@ function FichaPage() {
     <section className="min-h-[80vh] py-14 lg:py-20 overflow-x-hidden">
       <RamosWatermark className="fixed left-1/2 top-1/2 hidden h-[70vh] max-h-[600px] w-auto -translate-x-1/2 -translate-y-1/2 opacity-[0.05] sm:block" />
       <div className="mx-auto max-w-2xl px-6">
-        <div className="text-center mb-10">
-          <p className="text-xs tracking-[0.3em] uppercase text-muted-foreground mb-4">
-            Antes do seu atendimento
-          </p>
-          <h1 className="font-display text-4xl lg:text-5xl text-primary leading-tight flex items-center justify-center gap-3">
-            <img src={ICONES_FICHA[def.tipo]} alt="" className="h-11 w-11 lg:h-14 lg:w-14 shrink-0" />
-            <span>
-              Ficha{" "}
-              <em className="italic font-normal">
-                {def.nome.replace(/^Anamnese\s*/i, "").toLowerCase() || def.nome}
-              </em>
-            </span>
-          </h1>
-          <p className="mt-4 text-muted-foreground max-w-md mx-auto leading-relaxed">
-            Leva poucos minutos. Isso nos ajuda a te receber com mais cuidado e segurança.
+        <div className="relative -mt-14 lg:-mt-20 mb-8 overflow-hidden rounded-[2rem] bg-painel-hero-bg px-6 py-10 sm:px-10 sm:py-12">
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0"
+            style={{
+              background:
+                "radial-gradient(circle at 90% 0%, rgba(179,146,76,.4), transparent 50%), radial-gradient(circle at 5% 100%, rgba(154,111,176,.5), transparent 55%)",
+            }}
+          />
+          <div className="relative text-center mb-10">
+            <p className="text-xs tracking-[0.3em] uppercase text-white/50 mb-4">
+              Antes do seu atendimento
+            </p>
+            <h1 className="font-display text-4xl lg:text-5xl leading-tight flex items-center justify-center gap-3 text-white">
+              <img
+                src={ICONES_FICHA[def.tipo]}
+                alt=""
+                className="h-11 w-11 lg:h-14 lg:w-14 shrink-0"
+              />
+              <span>
+                Ficha{" "}
+                <em
+                  className="italic font-normal"
+                  style={{
+                    backgroundImage:
+                      "linear-gradient(90deg, var(--painel-lilac-soft), var(--painel-gold-soft))",
+                    WebkitBackgroundClip: "text",
+                    backgroundClip: "text",
+                    color: "transparent",
+                  }}
+                >
+                  {def.nome.replace(/^Anamnese\s*/i, "").toLowerCase() || def.nome}
+                </em>
+              </span>
+            </h1>
+            <p className="mt-4 text-white/60 max-w-md mx-auto leading-relaxed">
+              Leva poucos minutos. Isso nos ajuda a te receber com mais cuidado e segurança.
+            </p>
+          </div>
+
+          <div className="relative flex gap-2 mb-2">
+            {stepLabels.map((_, i) => (
+              <div
+                key={i}
+                className="h-1.5 flex-1 rounded-full transition-colors"
+                style={{
+                  background:
+                    i < step
+                      ? "linear-gradient(90deg, var(--painel-lilac-soft), var(--painel-gold-soft))"
+                      : i === step
+                        ? "var(--painel-gold-soft)"
+                        : "rgba(255,255,255,.18)",
+                }}
+              />
+            ))}
+          </div>
+          <p className="relative text-xs uppercase tracking-widest text-white/50">
+            Etapa {step + 1} de {totalEtapas} — {stepLabels[step]}
           </p>
         </div>
 
-        <div className="flex gap-2 mb-2">
-          {stepLabels.map((_, i) => (
-            <div
-              key={i}
-              className={[
-                "h-1.5 flex-1 rounded-full transition-colors",
-                i < step ? "bg-lavender" : i === step ? "bg-rose" : "bg-border",
-              ].join(" ")}
-            />
-          ))}
-        </div>
-        <p className="text-xs uppercase tracking-widest text-muted-foreground mb-8">
-          Etapa {step + 1} de {totalEtapas} — {stepLabels[step]}
-        </p>
-
-        <div className="relative overflow-hidden bg-card border border-border rounded-[2rem] p-6 sm:p-8 lg:p-10 min-h-[420px] flex flex-col">
+        <div className="relative overflow-hidden bg-card border border-border rounded-[2rem] p-6 sm:p-8 lg:p-10 min-h-[420px] flex flex-col shadow-[0_30px_60px_-30px_rgba(0,0,0,.25)]">
           <AnimatePresence mode="wait">
             <motion.div
               key={step}
