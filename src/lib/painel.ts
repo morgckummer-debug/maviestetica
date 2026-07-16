@@ -14,6 +14,11 @@ export type Sessao = {
   email?: string;
 };
 
+// Uma entrada de pacote comprado (ou ganho de bônus) para um item. `bonus:
+// true` marca sessões dadas de brinde numa promoção (não pagas) — usado pra
+// exibir o selo "Bônus" e não confundir com o que a cliente pagou.
+export type PacoteItem = { tamanho: number; bonus?: boolean };
+
 export type Ficha = {
   id: string;
   created_at: string;
@@ -32,11 +37,11 @@ export type Ficha = {
   // excluídas". Diferente de `arquivada`, que é um selo manual de cliente
   // inativa e continua aparecendo nas listas normalmente.
   excluida: boolean;
-  // Pacotes comprados por item, em ordem (ex.: "Axilas": [10, 10] = comprou
-  // 10, completou, comprou mais 10), para a barra de progresso do histórico
-  // de sessões. Aceita também um número só, formato salvo antes de suportar
-  // múltiplos pacotes por item.
-  pacotes: Record<string, number | number[]>;
+  // Pacotes comprados (ou ganhos de bônus) por item, em ordem, ex.:
+  // "Axilas": [{tamanho:10}, {tamanho:2, bonus:true}] = comprou 10, completou,
+  // ganhou mais 2 de brinde numa promoção. Aceita também os formatos antigos
+  // (um número só, ou uma lista de números), salvos antes de existir bônus.
+  pacotes: Record<string, number | number[] | PacoteItem[]>;
 };
 
 function agora(): number {

@@ -10,6 +10,7 @@ import {
   MessageCircle,
   Pencil,
   Plus,
+  X,
 } from "lucide-react";
 import { FICHAS, OPCOES_SESSAO, rotuloItensSessao, nomeCurto, type Tipo } from "@/data/anamnese";
 import {
@@ -19,6 +20,7 @@ import {
   atualizarSessao,
   atualizarFicha,
   type SessaoAtendimento,
+  type PacoteItem,
 } from "@/lib/painel";
 import { linkConfirmacao, linkWhatsappConfirmacao } from "@/lib/whatsapp";
 
@@ -26,21 +28,24 @@ const CINCO_MINUTOS_MS = 5 * 60 * 1000;
 
 // Uma opção de procedimento = uma ficha da cliente (depilação, facial...).
 // `pacotes` traz, por item, a lista de pacotes comprados em ordem (ex.:
-// [10, 10] = comprou um pacote de 10, completou, e comprou mais 10).
-// Aceita também o formato antigo (um único número), por compatibilidade.
+// [{tamanho:10}, {tamanho:10}] = comprou um pacote de 10, completou, e
+// comprou mais 10). Aceita também os formatos antigos (um único número, ou
+// uma lista de números), salvos antes de existir bônus.
 export type Procedimento = {
   id: string;
   tipo: Tipo;
   nome: string;
-  pacotes: Record<string, number | number[]>;
+  pacotes: Record<string, number | number[] | PacoteItem[]>;
 };
 
-// Normaliza o valor salvo (pode ser o formato antigo — um número só — ou
-// já uma lista de pacotes) para sempre trabalhar com uma lista.
-function normalizarPacotes(v: number | number[] | undefined): number[] {
-  if (Array.isArray(v)) return v.filter((n) => typeof n === "number" && n > 0);
-  if (typeof v === "number" && v > 0) return [v];
-  return [];
+// Normaliza o valor salvo (formato antigo — um número, ou uma lista de
+// números — ou já uma lista de pacotes) para sempre trabalhar com uma lista
+// de PacoteItem.
+function normalizarPacotes(v: number | number[] | PacoteItem[] | undefined): PacoteItem[] {
+  if (!Array.isArray(v)) return typeof v === "number" && v > 0 ? [{ tamanho: v }] : [];
+  return v
+    .map((x) => (typeof x === "number" ? { tamanho: x } : x))
+    .filter((p): p is PacoteItem => typeof p?.tamanho === "number" && p.tamanho > 0);
 }
 
 // Data de hoje em "YYYY-MM-DD" no fuso local (para o <input type="date">).
@@ -100,6 +105,7 @@ type Segmento = {
   numero: number;
   linhas: LinhaSessao[];
   pacoteTotal?: number;
+  bonus?: boolean;
   completo: boolean;
 };
 
@@ -108,17 +114,18 @@ type Segmento = {
 // pertencem ao 1º pacote, as próximas M ao 2º, e assim por diante. O que
 // sobrar depois do último pacote (ou tudo, se nunca houve pacote) vira um
 // segmento avulso, sem número de pacote.
-function segmentarPorPacote(linhas: LinhaSessao[], pacotes: number[]): Segmento[] {
+function segmentarPorPacote(linhas: LinhaSessao[], pacotes: PacoteItem[]): Segmento[] {
   const segmentos: Segmento[] = [];
   let indice = 0;
-  pacotes.forEach((tamanho, i) => {
+  pacotes.forEach((p, i) => {
     if (indice >= linhas.length) return;
-    const fatia = linhas.slice(indice, indice + tamanho);
+    const fatia = linhas.slice(indice, indice + p.tamanho);
     segmentos.push({
       numero: i + 1,
       linhas: fatia,
-      pacoteTotal: tamanho,
-      completo: fatia.length >= tamanho,
+      pacoteTotal: p.tamanho,
+      bonus: p.bonus === true,
+      completo: fatia.length >= p.tamanho,
     });
     indice += fatia.length;
   });
@@ -564,7 +571,7 @@ export function HistoricoSessoes({
 
   // Pacotes salvos nesta sessão do painel (além dos que já vieram nas
   // fichas), pra refletir na hora sem precisar recarregar a página.
-  const [pacotesOverride, setPacotesOverride] = useState<Record<string, number[]>>({});
+  const [pacotesOverride, setPacotesOverride] = useState<Record<string, PacoteItem[]>>({});
 
   // Segmentos (pacotes) já concluídos que a Marina abriu manualmente pra
   // ver os detalhes, ou pacotes em aberto que ela recolheu.
@@ -578,6 +585,13 @@ export function HistoricoSessoes({
   const [pacoteValor, setPacoteValor] = useState("");
   const [salvandoPacote, setSalvandoPacote] = useState(false);
   const [erroPacote, setErroPacote] = useState<string | null>(null);
+  // Bônus da promoção anexados ao pacote sendo cadastrado (ex.: "compre 10
+  // sessões de laser e ganhe uma limpeza de pele"). Cada linha pode apontar
+  // pra um item de QUALQUER ficha da cliente, não só a do pacote pago — por
+  // isso guarda fichaId junto do item.
+  const [bonusForm, setBonusForm] = useState<
+    { chave: string; fichaId: string; item: string; quantidade: string }[]
+  >([]);
   // "Cancelar pacote": remove só a última definição de pacote de um item
   // (ex.: cliente desistiu do pacote, ou foi marcado por engano). As sessões
   // que estavam nele não são apagadas — voltam a contar como avulsas.
@@ -598,17 +612,33 @@ export function HistoricoSessoes({
     return m;
   }, [fichas]);
 
-  // Lista de pacotes comprados desse item, em ordem (ex.: [10, 10]).
-  const pacotesDoItem = (fId: string, item: string): number[] => {
+  // Lista de pacotes comprados (ou ganhos de bônus) desse item, em ordem.
+  const pacotesDoItem = (fId: string, item: string): PacoteItem[] => {
     const chave = `${fId}::${item}`;
     if (chave in pacotesOverride) return pacotesOverride[chave];
     return normalizarPacotes(fichaPorId.get(fId)?.pacotes[item]);
   };
 
   const somaPacotes = (fId: string, item: string): number =>
-    pacotesDoItem(fId, item).reduce((total, n) => total + n, 0);
+    pacotesDoItem(fId, item).reduce((total, p) => total + p.tamanho, 0);
 
   const multi = fichas.length > 1;
+
+  // Opções pro dropdown de bônus: os itens de TODAS as fichas da cliente
+  // (não só a do pacote sendo pago) — ex.: promoção de laser que dá uma
+  // limpeza de pele de brinde precisa oferecer os itens da ficha facial.
+  const opcoesBonus = useMemo(
+    () =>
+      fichas.flatMap((f) =>
+        (OPCOES_SESSAO[f.tipo] ?? []).map((item) => ({
+          valor: `${f.id}::${item}`,
+          fichaId: f.id,
+          item,
+          rotulo: multi ? `${item} — ${nomeCurto(f.tipo)}` : item,
+        })),
+      ),
+    [fichas, multi],
+  );
   const tipoPorFicha = useMemo(() => {
     const m = new Map<string, Tipo>();
     fichas.forEach((f) => m.set(f.id, f.tipo));
@@ -673,9 +703,9 @@ export function HistoricoSessoes({
       if (entradas.length > 0) {
         try {
           const merge = { ...(fichaPorId.get(fichaId)?.pacotes ?? {}) };
-          const novoOverride: Record<string, number[]> = {};
+          const novoOverride: Record<string, PacoteItem[]> = {};
           for (const [item, n] of entradas) {
-            const nova = [...pacotesDoItem(fichaId, item), n];
+            const nova = [...pacotesDoItem(fichaId, item), { tamanho: n }];
             merge[item] = nova;
             novoOverride[`${fichaId}::${item}`] = nova;
           }
@@ -956,6 +986,28 @@ export function HistoricoSessoes({
     [sessoesAtivas, tipoPorFicha],
   );
 
+  // Bônus de promoção pra itens que ainda não têm NENHUMA sessão registrada
+  // — esses não aparecem em `grupos` (que só existe a partir da 1ª sessão),
+  // então ficariam invisíveis até a Marina lembrar sozinha. Mostra um aviso
+  // à parte pra não perder o bônus de vista (ex.: limpeza de pele de brinde
+  // numa promoção de laser, antes da cliente vir fazer).
+  const bonusPendentes = useMemo(() => {
+    const comSessao = new Set(grupos.map((g) => g.chave));
+    const lista: { chave: string; tipo: Tipo; item: string; quantidade: number }[] = [];
+    fichas.forEach((f) => {
+      (OPCOES_SESSAO[f.tipo] ?? []).forEach((item) => {
+        const chave = `${f.id}::${item}`;
+        if (comSessao.has(chave)) return;
+        const quantidade = pacotesDoItem(f.id, item)
+          .filter((p) => p.bonus)
+          .reduce((total, p) => total + p.tamanho, 0);
+        if (quantidade > 0) lista.push({ chave, tipo: f.tipo, item, quantidade });
+      });
+    });
+    return lista;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fichas, grupos, pacotesOverride]);
+
   // Nº de sessões já registradas de cada item do procedimento escolhido no
   // formulário, para mostrar "Axilas · seria a 5ª sessão" antes de salvar.
   const contagemDoProcedimento = useMemo(() => {
@@ -980,7 +1032,7 @@ export function HistoricoSessoes({
   const proximaOrdinalLocal = (item: string): number => {
     const totalAtual = contagemDoProcedimento.get(item) ?? 0;
     let acumulado = 0;
-    for (const tamanho of pacotesDoItem(fichaId, item)) {
+    for (const { tamanho } of pacotesDoItem(fichaId, item)) {
       if (totalAtual < acumulado + tamanho) return totalAtual - acumulado + 1;
       acumulado += tamanho;
     }
@@ -990,25 +1042,74 @@ export function HistoricoSessoes({
   const iniciarEdicaoPacote = (chave: string) => {
     setEditandoPacoteChave(chave);
     setPacoteValor("");
+    setBonusForm([]);
     setErroPacote(null);
   };
 
   const cancelarEdicaoPacote = () => {
     setEditandoPacoteChave(null);
+    setBonusForm([]);
     setErroPacote(null);
   };
+
+  const adicionarLinhaBonus = () =>
+    setBonusForm((prev) => [
+      ...prev,
+      { chave: crypto.randomUUID(), fichaId: "", item: "", quantidade: "1" },
+    ]);
+
+  const removerLinhaBonus = (chave: string) =>
+    setBonusForm((prev) => prev.filter((b) => b.chave !== chave));
+
+  const atualizarLinhaBonus = (
+    chave: string,
+    patch: Partial<{ fichaId: string; item: string; quantidade: string }>,
+  ) => setBonusForm((prev) => prev.map((b) => (b.chave === chave ? { ...b, ...patch } : b)));
 
   const salvarPacote = async (fId: string, item: string) => {
     const n = parseInt(pacoteValor, 10);
     if (!n || n <= 0) return;
+    // Bônus podem apontar pra itens de fichas diferentes da do pacote pago
+    // (ex.: limpeza de pele de brinde numa promoção de laser) — por isso
+    // agrupa as mudanças por ficha antes de salvar, uma PATCH por ficha
+    // afetada em vez de assumir que é sempre a mesma.
+    const bonusValidos = bonusForm
+      .map((b) => ({ ...b, qtd: parseInt(b.quantidade, 10) }))
+      .filter((b) => b.fichaId && b.item && b.qtd > 0);
+
     setSalvandoPacote(true);
     setErroPacote(null);
     try {
-      const nova = [...pacotesDoItem(fId, item), n];
-      const merge = { ...(fichaPorId.get(fId)?.pacotes ?? {}), [item]: nova };
-      await atualizarFicha(fId, { pacotes: merge });
-      setPacotesOverride((prev) => ({ ...prev, [`${fId}::${item}`]: nova }));
+      const merges = new Map<string, Record<string, number | number[] | PacoteItem[]>>();
+      const overrides = new Map<string, PacoteItem[]>();
+      const mergeDe = (fichaAlvo: string) => {
+        let m = merges.get(fichaAlvo);
+        if (!m) {
+          m = { ...(fichaPorId.get(fichaAlvo)?.pacotes ?? {}) };
+          merges.set(fichaAlvo, m);
+        }
+        return m;
+      };
+      const adiciona = (fichaAlvo: string, itemAlvo: string, entrada: PacoteItem) => {
+        const chave = `${fichaAlvo}::${itemAlvo}`;
+        const nova = [...(overrides.get(chave) ?? pacotesDoItem(fichaAlvo, itemAlvo)), entrada];
+        mergeDe(fichaAlvo)[itemAlvo] = nova;
+        overrides.set(chave, nova);
+      };
+
+      adiciona(fId, item, { tamanho: n });
+      for (const b of bonusValidos) adiciona(b.fichaId, b.item, { tamanho: b.qtd, bonus: true });
+
+      await Promise.all(
+        [...merges.entries()].map(([fichaAlvo, pacotes]) => atualizarFicha(fichaAlvo, { pacotes })),
+      );
+      setPacotesOverride((prev) => {
+        const next = { ...prev };
+        overrides.forEach((v, k) => (next[k] = v));
+        return next;
+      });
       setEditandoPacoteChave(null);
+      setBonusForm([]);
     } catch (e) {
       setErroPacote(e instanceof Error ? e.message : "Erro ao salvar o pacote.");
     } finally {
@@ -1058,6 +1159,22 @@ export function HistoricoSessoes({
       <p className="text-sm text-painel-muted mb-5">
         Registre o atendimento e envie o link para a cliente confirmar.
       </p>
+
+      {bonusPendentes.length > 0 && (
+        <div className="mb-5 rounded-xl border border-painel-gold/40 bg-painel-gold/10 p-3.5">
+          <p className="text-xs font-medium text-painel-gold mb-1.5">
+            🎁 Bônus a usar (ainda sem sessão registrada)
+          </p>
+          <ul className="space-y-0.5">
+            {bonusPendentes.map((b) => (
+              <li key={b.chave} className="text-xs text-painel-chip-text">
+                {b.quantidade}× {b.item}
+                {multi ? ` — ${nomeCurto(b.tipo)}` : ""}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       {erro && <p className="text-sm text-painel-alert-text mb-4">{erro}</p>}
 
@@ -1245,41 +1362,103 @@ export function HistoricoSessoes({
               </div>
 
               {editandoPacoteChave === g.chave && (
-                <div className="flex flex-wrap items-center gap-2 mb-3 rounded-lg border border-painel-border bg-white p-2.5">
-                  <label className="text-xs text-painel-muted">
-                    {pacotes.length === 0
-                      ? "Pacote de quantas sessões? (o que já foi feito vira a 1ª)"
-                      : "Novo pacote de quantas sessões?"}
-                  </label>
-                  <input
-                    type="number"
-                    min={1}
-                    inputMode="numeric"
-                    autoFocus
-                    value={pacoteValor}
-                    onChange={(e) => setPacoteValor(e.target.value)}
-                    placeholder="nº de sessões"
-                    className="w-28 rounded-lg border border-painel-border bg-white px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-painel-primary/40"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => salvarPacote(g.fichaId, g.item)}
-                    disabled={salvandoPacote || !pacoteValor.trim()}
-                    className="rounded-full bg-painel-primary text-white px-3.5 py-1.5 text-xs font-medium hover:bg-painel-primary/90 transition-colors disabled:opacity-40"
-                  >
-                    Salvar
-                  </button>
-                  <button
-                    type="button"
-                    onClick={cancelarEdicaoPacote}
-                    disabled={salvandoPacote}
-                    className="rounded-full border border-painel-border px-3.5 py-1.5 text-xs font-medium text-painel-chip-text hover:border-painel-primary/40 transition-colors disabled:opacity-40"
-                  >
-                    Cancelar
-                  </button>
-                  {erroPacote && (
-                    <p className="w-full text-xs text-painel-alert-text">{erroPacote}</p>
-                  )}
+                <div className="flex flex-col gap-3 mb-3 rounded-lg border border-painel-border bg-white p-2.5">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <label className="text-xs text-painel-muted">
+                      {pacotes.length === 0
+                        ? "Pacote de quantas sessões? (o que já foi feito vira a 1ª)"
+                        : "Novo pacote de quantas sessões?"}
+                    </label>
+                    <input
+                      type="number"
+                      min={1}
+                      inputMode="numeric"
+                      autoFocus
+                      value={pacoteValor}
+                      onChange={(e) => setPacoteValor(e.target.value)}
+                      placeholder="nº de sessões"
+                      className="w-28 rounded-lg border border-painel-border bg-white px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-painel-primary/40"
+                    />
+                  </div>
+
+                  <div>
+                    <p className="text-xs text-painel-muted mb-1.5">
+                      Bônus da promoção (opcional) — sessões extras ou de outro procedimento, dadas
+                      de brinde
+                    </p>
+                    {bonusForm.length > 0 && (
+                      <div className="space-y-1.5 mb-1.5">
+                        {bonusForm.map((b) => (
+                          <div key={b.chave} className="flex flex-wrap items-center gap-1.5">
+                            <select
+                              value={b.fichaId && b.item ? `${b.fichaId}::${b.item}` : ""}
+                              onChange={(e) => {
+                                const [fichaAlvo, ...resto] = e.target.value.split("::");
+                                atualizarLinhaBonus(b.chave, {
+                                  fichaId: fichaAlvo ?? "",
+                                  item: resto.join("::"),
+                                });
+                              }}
+                              className="rounded-lg border border-painel-border bg-white px-2.5 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-painel-primary/40"
+                            >
+                              <option value="">Selecione o procedimento</option>
+                              {opcoesBonus.map((o) => (
+                                <option key={o.valor} value={o.valor}>
+                                  {o.rotulo}
+                                </option>
+                              ))}
+                            </select>
+                            <input
+                              type="number"
+                              min={1}
+                              inputMode="numeric"
+                              value={b.quantidade}
+                              onChange={(e) =>
+                                atualizarLinhaBonus(b.chave, { quantidade: e.target.value })
+                              }
+                              placeholder="qtd"
+                              className="w-16 rounded-lg border border-painel-border bg-white px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-painel-primary/40"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => removerLinhaBonus(b.chave)}
+                              title="Remover bônus"
+                              className="text-painel-muted/60 hover:text-painel-alert-text transition-colors"
+                            >
+                              <X className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    <button
+                      type="button"
+                      onClick={adicionarLinhaBonus}
+                      className="text-xs font-medium text-painel-primary"
+                    >
+                      + Adicionar bônus
+                    </button>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => salvarPacote(g.fichaId, g.item)}
+                      disabled={salvandoPacote || !pacoteValor.trim()}
+                      className="rounded-full bg-painel-primary text-white px-3.5 py-1.5 text-xs font-medium hover:bg-painel-primary/90 transition-colors disabled:opacity-40"
+                    >
+                      Salvar
+                    </button>
+                    <button
+                      type="button"
+                      onClick={cancelarEdicaoPacote}
+                      disabled={salvandoPacote}
+                      className="rounded-full border border-painel-border px-3.5 py-1.5 text-xs font-medium text-painel-chip-text hover:border-painel-primary/40 transition-colors disabled:opacity-40"
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                  {erroPacote && <p className="text-xs text-painel-alert-text">{erroPacote}</p>}
                 </div>
               )}
 
@@ -1336,6 +1515,11 @@ export function HistoricoSessoes({
                           Pacote {seg.numero}
                           {seg.completo ? " concluído" : ""}
                         </span>
+                        {seg.bonus && (
+                          <span className="rounded-full bg-painel-gold/15 text-painel-gold px-2 py-0.5 text-[10px] font-medium">
+                            🎁 Bônus
+                          </span>
+                        )}
                         <span className="text-xs text-painel-primary underline underline-offset-2">
                           {aberto ? "Ocultar" : "Detalhes"}
                         </span>
