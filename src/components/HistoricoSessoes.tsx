@@ -1031,7 +1031,10 @@ export function HistoricoSessoes({
   // bônus ainda não têm sessão registrada, em vez de só checar se o item já
   // tem QUALQUER sessão. Senão, ao marcar o 1º bônus de dois, o 2º bônus
   // "sumia" (o item inteiro saía da lista assim que ganhava sua 1ª sessão).
-  const linhasPorChave = useMemo(() => new Map(grupos.map((g) => [g.chave, g.linhas.length])), [grupos]);
+  const linhasPorChave = useMemo(
+    () => new Map(grupos.map((g) => [g.chave, g.linhas.length])),
+    [grupos],
+  );
   const grupoPorChave = useMemo(() => new Map(grupos.map((g) => [g.chave, g])), [grupos]);
 
   const bonusPendentes = useMemo(() => {
@@ -1068,7 +1071,15 @@ export function HistoricoSessoes({
           cumulativo += p.tamanho;
         }
         if (quantidade > 0) {
-          lista.push({ chave, fichaId: f.id, tipo: f.tipo, item, quantidade, origemFichaId, origemItem });
+          lista.push({
+            chave,
+            fichaId: f.id,
+            tipo: f.tipo,
+            item,
+            quantidade,
+            origemFichaId,
+            origemItem,
+          });
         }
       });
     });
@@ -1451,10 +1462,7 @@ export function HistoricoSessoes({
               </li>
             ))}
             {bonusRealizadosSemOrigem.map((b) => (
-              <li
-                key={b.chave}
-                className="flex items-center gap-1.5 text-xs text-painel-chip-text"
-              >
+              <li key={b.chave} className="flex items-center gap-1.5 text-xs text-painel-chip-text">
                 <Check className="h-3.5 w-3.5 text-painel-gold shrink-0" />
                 <span>
                   Bônus {b.item}
@@ -1879,44 +1887,53 @@ export function HistoricoSessoes({
                   }
 
                   // Segmento de um pacote comprado: colapsa quando concluído.
+                  const pct = Math.min(100, (seg.linhas.length / seg.pacoteTotal) * 100);
                   return (
                     <div key={chaveSeg}>
-                      <button
-                        type="button"
-                        onClick={() => setExpandidos((prev) => ({ ...prev, [chaveSeg]: !aberto }))}
-                        className="flex flex-wrap items-center gap-1.5 mb-1.5 text-left"
-                      >
-                        {aberto ? (
-                          <ChevronDown className="h-3.5 w-3.5 text-painel-muted shrink-0" />
-                        ) : (
-                          <ChevronRight className="h-3.5 w-3.5 text-painel-muted shrink-0" />
-                        )}
-                        <span
-                          className={`text-xs ${seg.completo ? "text-painel-gold font-medium" : "text-painel-muted"}`}
+                      <div className="flex items-start gap-3 mb-2">
+                        <div
+                          className="relative h-10 w-10 shrink-0 rounded-full"
+                          style={{
+                            background: `conic-gradient(var(--painel-gold) ${pct * 3.6}deg, var(--painel-border) ${pct * 3.6}deg 360deg)`,
+                          }}
                         >
-                          Pacote {seg.numero}
-                          {seg.completo ? " concluído" : ""}
-                        </span>
-                        {seg.bonus && (
-                          <span className="rounded-full bg-painel-gold/15 text-painel-gold px-2 py-0.5 text-[10px] font-medium">
-                            🎁 Bônus
+                          <div className="absolute inset-[3px] flex items-center justify-center rounded-full bg-white">
+                            <span className="text-[10px] font-semibold text-painel-title">
+                              {seg.linhas.length}/{seg.pacoteTotal}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setExpandidos((prev) => ({ ...prev, [chaveSeg]: !aberto }))
+                            }
+                            className="flex flex-wrap items-center gap-1.5 text-left"
+                          >
+                            {aberto ? (
+                              <ChevronDown className="h-3.5 w-3.5 text-painel-muted shrink-0" />
+                            ) : (
+                              <ChevronRight className="h-3.5 w-3.5 text-painel-muted shrink-0" />
+                            )}
+                            <span
+                              className={`text-xs ${seg.completo ? "text-painel-gold font-medium" : "text-painel-muted"}`}
+                            >
+                              Pacote {seg.numero}
+                              {seg.completo ? " concluído" : ""}
+                            </span>
+                            {seg.bonus && (
+                              <span className="rounded-full bg-painel-gold/15 text-painel-gold px-2 py-0.5 text-[10px] font-medium">
+                                🎁 Bônus
+                              </span>
+                            )}
+                            <span className="text-xs text-painel-primary underline underline-offset-2">
+                              {aberto ? "Ocultar" : "Detalhes"}
+                            </span>
+                          </button>
+                          <span className="text-xs text-painel-muted">
+                            {seg.linhas.length} de {seg.pacoteTotal} sessões
                           </span>
-                        )}
-                        <span className="text-xs text-painel-primary underline underline-offset-2">
-                          {aberto ? "Ocultar" : "Detalhes"}
-                        </span>
-                      </button>
-                      <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 mb-2">
-                        <span className="text-xs text-painel-muted shrink-0 order-2 sm:order-1">
-                          {seg.linhas.length} de {seg.pacoteTotal} sessões
-                        </span>
-                        <div className="order-1 sm:order-2 h-1.5 w-full max-w-[220px] rounded-full bg-painel-border overflow-hidden">
-                          <div
-                            className="h-full rounded-full bg-painel-gold transition-all"
-                            style={{
-                              width: `${Math.min(100, (seg.linhas.length / seg.pacoteTotal) * 100)}%`,
-                            }}
-                          />
                         </div>
                       </div>
                       {aberto && (
@@ -1944,52 +1961,53 @@ export function HistoricoSessoes({
                 })}
               </div>
 
-              {bonusAninhado && (bonusAninhado.pendentes.length > 0 || bonusAninhado.realizados.length > 0) && (
-                <div className="mt-3 pt-2.5 border-t border-painel-border/70 space-y-1.5">
-                  {bonusAninhado.realizados.map((b) => (
-                    <p key={b.chave} className="text-xs text-painel-gold">
-                      🎁 Bônus: {b.item}
-                      {multi ? ` — ${nomeCurto(b.tipo)}` : ""} — realizado em {dataBR(b.data)}
-                    </p>
-                  ))}
-                  {bonusAninhado.pendentes.map((b) => (
-                    <div
-                      key={b.chave}
-                      className="flex flex-wrap items-center gap-2 text-xs text-painel-gold"
-                    >
-                      <span className="flex-1 min-w-[140px]">
-                        🎁 Bônus: {b.quantidade}× {b.item}
-                        {multi ? ` — ${nomeCurto(b.tipo)}` : ""}
-                      </span>
-                      <input
-                        type="date"
-                        value={dataBonusPendente[b.chave] ?? hojeISO()}
-                        onChange={(e) =>
-                          setDataBonusPendente((prev) => ({ ...prev, [b.chave]: e.target.value }))
-                        }
-                        className="rounded-lg border border-painel-border bg-white px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-painel-primary/40"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => confirmarBonusPendente(b)}
-                        disabled={confirmandoBonusChave === b.chave}
-                        title="Marcar como usufruído nessa data e enviar link de confirmação"
-                        className="inline-flex items-center gap-1 rounded-full bg-painel-gold text-white px-2.5 py-1 text-xs font-medium hover:opacity-90 transition-colors disabled:opacity-40"
+              {bonusAninhado &&
+                (bonusAninhado.pendentes.length > 0 || bonusAninhado.realizados.length > 0) && (
+                  <div className="mt-3 pt-2.5 border-t border-painel-border/70 space-y-1.5">
+                    {bonusAninhado.realizados.map((b) => (
+                      <p key={b.chave} className="text-xs text-painel-gold">
+                        🎁 Bônus: {b.item}
+                        {multi ? ` — ${nomeCurto(b.tipo)}` : ""} — realizado em {dataBR(b.data)}
+                      </p>
+                    ))}
+                    {bonusAninhado.pendentes.map((b) => (
+                      <div
+                        key={b.chave}
+                        className="flex flex-wrap items-center gap-2 text-xs text-painel-gold"
                       >
-                        {confirmandoBonusChave === b.chave ? (
-                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                        ) : (
-                          <Check className="h-3.5 w-3.5" />
-                        )}
-                        Check
-                      </button>
-                    </div>
-                  ))}
-                  {bonusAninhado.pendentes.length > 0 && erroBonusPendente && (
-                    <p className="text-xs text-painel-alert-text">{erroBonusPendente}</p>
-                  )}
-                </div>
-              )}
+                        <span className="flex-1 min-w-[140px]">
+                          🎁 Bônus: {b.quantidade}× {b.item}
+                          {multi ? ` — ${nomeCurto(b.tipo)}` : ""}
+                        </span>
+                        <input
+                          type="date"
+                          value={dataBonusPendente[b.chave] ?? hojeISO()}
+                          onChange={(e) =>
+                            setDataBonusPendente((prev) => ({ ...prev, [b.chave]: e.target.value }))
+                          }
+                          className="rounded-lg border border-painel-border bg-white px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-painel-primary/40"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => confirmarBonusPendente(b)}
+                          disabled={confirmandoBonusChave === b.chave}
+                          title="Marcar como usufruído nessa data e enviar link de confirmação"
+                          className="inline-flex items-center gap-1 rounded-full bg-painel-gold text-white px-2.5 py-1 text-xs font-medium hover:opacity-90 transition-colors disabled:opacity-40"
+                        >
+                          {confirmandoBonusChave === b.chave ? (
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          ) : (
+                            <Check className="h-3.5 w-3.5" />
+                          )}
+                          Check
+                        </button>
+                      </div>
+                    ))}
+                    {bonusAninhado.pendentes.length > 0 && erroBonusPendente && (
+                      <p className="text-xs text-painel-alert-text">{erroBonusPendente}</p>
+                    )}
+                  </div>
+                )}
 
               {(semPacoteAtivo || pacotes.length > 0) && editandoPacoteChave !== g.chave && (
                 <div className="flex items-center gap-4 mt-3 pt-2.5 border-t border-painel-border/70">

@@ -177,77 +177,87 @@ function TrocarSenhaForm({ onFechar }: { onFechar: () => void }) {
   };
 
   return (
-    <div className="rounded-2xl border border-painel-border bg-painel-badge-bg/40 p-5 mb-8">
-      <div className="flex items-center justify-between gap-2 mb-4">
-        <div className="flex items-center gap-2">
-          <KeyRound className="h-4 w-4 text-painel-primary" />
-          <h3 className="font-medium text-painel-title">Trocar senha</h3>
-        </div>
-        <button
-          type="button"
-          onClick={onFechar}
-          title="Fechar"
-          className="text-painel-muted hover:text-painel-primary transition-colors"
-        >
-          <X className="h-4 w-4" />
-        </button>
-      </div>
-
-      {sucesso ? (
-        <p className="text-sm text-painel-primary">Senha alterada com sucesso.</p>
-      ) : (
-        <form onSubmit={submeter} className="space-y-3">
-          <div>
-            <label className="block text-xs font-medium text-painel-muted mb-1.5">Nova senha</label>
-            <input
-              type="password"
-              value={senha}
-              onChange={(e) => setSenha(e.target.value)}
-              required
-              minLength={6}
-              autoComplete="new-password"
-              className="w-full rounded-xl border border-painel-border bg-white px-4 py-2.5 text-sm text-painel-title focus:outline-none focus:ring-2 focus:ring-painel-primary/40"
-            />
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-painel-muted mb-1.5">
-              Confirmar nova senha
-            </label>
-            <input
-              type="password"
-              value={confirmar}
-              onChange={(e) => setConfirmar(e.target.value)}
-              required
-              minLength={6}
-              autoComplete="new-password"
-              className="w-full rounded-xl border border-painel-border bg-white px-4 py-2.5 text-sm text-painel-title focus:outline-none focus:ring-2 focus:ring-painel-primary/40"
-            />
-          </div>
-          {erro && <p className="text-sm text-painel-alert-text">{erro}</p>}
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4"
+      onClick={onFechar}
+    >
+      <div
+        className="w-full max-w-sm rounded-2xl border border-painel-border bg-white p-6 shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between gap-2 mb-4">
           <div className="flex items-center gap-2">
-            <button
-              type="submit"
-              disabled={salvando}
-              className="inline-flex items-center gap-1.5 rounded-full bg-painel-primary text-white px-4 py-2 text-sm font-medium hover:bg-painel-primary/90 transition-colors disabled:opacity-40"
-            >
-              {salvando ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Check className="h-4 w-4" />
-              )}
-              Salvar
-            </button>
-            <button
-              type="button"
-              onClick={onFechar}
-              disabled={salvando}
-              className="rounded-full border border-painel-border px-4 py-2 text-sm font-medium text-painel-muted hover:border-painel-primary/40 transition-colors disabled:opacity-40"
-            >
-              Cancelar
-            </button>
+            <KeyRound className="h-4 w-4 text-painel-primary" />
+            <h3 className="font-medium text-painel-title">Trocar senha</h3>
           </div>
-        </form>
-      )}
+          <button
+            type="button"
+            onClick={onFechar}
+            title="Fechar"
+            className="text-painel-muted hover:text-painel-primary transition-colors"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        {sucesso ? (
+          <p className="text-sm text-painel-primary">Senha alterada com sucesso.</p>
+        ) : (
+          <form onSubmit={submeter} className="space-y-3">
+            <div>
+              <label className="block text-xs font-medium text-painel-muted mb-1.5">
+                Nova senha
+              </label>
+              <input
+                type="password"
+                value={senha}
+                onChange={(e) => setSenha(e.target.value)}
+                required
+                minLength={6}
+                autoComplete="new-password"
+                className="w-full rounded-xl border border-painel-border bg-white px-4 py-2.5 text-sm text-painel-title focus:outline-none focus:ring-2 focus:ring-painel-primary/40"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-painel-muted mb-1.5">
+                Confirmar nova senha
+              </label>
+              <input
+                type="password"
+                value={confirmar}
+                onChange={(e) => setConfirmar(e.target.value)}
+                required
+                minLength={6}
+                autoComplete="new-password"
+                className="w-full rounded-xl border border-painel-border bg-white px-4 py-2.5 text-sm text-painel-title focus:outline-none focus:ring-2 focus:ring-painel-primary/40"
+              />
+            </div>
+            {erro && <p className="text-sm text-painel-alert-text">{erro}</p>}
+            <div className="flex items-center gap-2">
+              <button
+                type="submit"
+                disabled={salvando}
+                className="inline-flex items-center gap-1.5 rounded-full bg-painel-primary text-white px-4 py-2 text-sm font-medium hover:bg-painel-primary/90 transition-colors disabled:opacity-40"
+              >
+                {salvando ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Check className="h-4 w-4" />
+                )}
+                Salvar
+              </button>
+              <button
+                type="button"
+                onClick={onFechar}
+                disabled={salvando}
+                className="rounded-full border border-painel-border px-4 py-2 text-sm font-medium text-painel-muted hover:border-painel-primary/40 transition-colors disabled:opacity-40"
+              >
+                Cancelar
+              </button>
+            </div>
+          </form>
+        )}
+      </div>
     </div>
   );
 }
@@ -278,14 +288,14 @@ function MenuUsuario({
       <button
         type="button"
         onClick={() => setAberto((v) => !v)}
-        className="inline-flex items-center gap-2.5 rounded-full border border-painel-border pl-2 pr-4 py-[7px] text-sm font-medium text-painel-title hover:border-painel-primary/40 transition-colors"
+        className="inline-flex items-center gap-2.5 rounded-full border border-white/25 pl-2 pr-4 py-[7px] text-sm font-medium text-white hover:border-white/50 transition-colors"
       >
         <span className="flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded-full bg-painel-primary text-xs font-bold text-white">
           {nome.charAt(0).toUpperCase()}
         </span>
         <span className="hidden sm:inline text-[13px]">{nome}</span>
         <ChevronDown
-          className={`h-3 w-3 shrink-0 text-painel-muted transition-transform ${aberto ? "rotate-180" : ""}`}
+          className={`h-3 w-3 shrink-0 text-white/70 transition-transform ${aberto ? "rotate-180" : ""}`}
         />
       </button>
 
@@ -372,7 +382,7 @@ function PainelLayout() {
 
   return (
     <div className="min-h-screen bg-painel-bg">
-      <header className="relative overflow-hidden bg-painel-hero-bg">
+      <header className="relative bg-painel-hero-bg">
         <div
           aria-hidden="true"
           className="pointer-events-none absolute inset-0"
@@ -389,16 +399,16 @@ function PainelLayout() {
             <nav className="hidden sm:flex items-center gap-1 mr-2">
               <Link
                 to="/painel"
-                className="rounded-full px-3.5 py-2 text-[13px] font-medium text-painel-muted hover:text-painel-primary transition-colors"
-                activeProps={{ className: "text-painel-primary" }}
+                className="rounded-full px-3.5 py-2 text-[13px] font-medium text-white/70 hover:text-white transition-colors"
+                activeProps={{ className: "text-white" }}
                 activeOptions={{ exact: true }}
               >
                 Clientes
               </Link>
               <Link
                 to="/painel/pendentes"
-                className="rounded-full px-3.5 py-2 text-[13px] font-medium text-painel-muted hover:text-painel-primary transition-colors"
-                activeProps={{ className: "text-painel-primary" }}
+                className="rounded-full px-3.5 py-2 text-[13px] font-medium text-white/70 hover:text-white transition-colors"
+                activeProps={{ className: "text-white" }}
               >
                 Pendentes
               </Link>
