@@ -89,8 +89,6 @@
   --color-painel-alert-bg: var(--painel-alert-bg);
   --color-painel-alert-border: var(--painel-alert-border);
   --color-painel-alert-text: var(--painel-alert-text);
-  --color-painel-masculino: var(--painel-masculino);
-  --color-painel-masculino-hover: var(--painel-masculino-hover);
 }
 
 :root {
@@ -152,8 +150,6 @@
   --painel-alert-bg: #f6dde3;
   --painel-alert-border: #eabfca;
   --painel-alert-text: #a45d6f;
-  --painel-masculino: #409fb8;
-  --painel-masculino-hover: #36879c;
 }
 
 .dark {
