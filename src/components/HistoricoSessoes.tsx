@@ -1305,9 +1305,7 @@ export function HistoricoSessoes({
             🎁 Bônus a usar (ainda sem sessão registrada)
           </p>
           <p className="text-[11px] text-painel-muted mb-2">
-            Marque o check no dia em que a cliente usufruir — não tem agendamento aqui, é só
-            registrar depois que já aconteceu. Isso já manda o link de confirmação por WhatsApp,
-            igual a qualquer sessão.
+            Marque o check no dia em que a cliente usufruir e envie o link de confirmação.
           </p>
           <ul className="space-y-1.5">
             {bonusPendentes.map((b) => (
