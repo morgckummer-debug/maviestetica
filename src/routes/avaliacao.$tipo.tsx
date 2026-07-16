@@ -106,11 +106,13 @@ function CampoView({
   respostas,
   set,
   compacto,
+  mostrarErro,
 }: {
   campo: Campo;
   respostas: Respostas;
   set: (id: string, v: string | boolean | null) => void;
   compacto?: boolean;
+  mostrarErro?: boolean;
 }) {
   if (campo.tipo === "texto") {
     return (
@@ -196,16 +198,25 @@ function CampoView({
 
   // simnao
   const valor = respostas[campo.id] as boolean | null | undefined;
+  const invalido = Boolean(mostrarErro) && valor !== true && valor !== false;
   return (
     <div className={compacto ? "flex items-center justify-between gap-3" : ""}>
-      <label className={compacto ? "text-sm font-medium" : "block text-sm font-medium mb-2"}>
+      <label
+        className={[
+          compacto ? "text-sm font-medium" : "block text-sm font-medium mb-2",
+          invalido ? "text-rose" : "",
+        ].join(" ")}
+      >
         {campo.label}
       </label>
-      <YesNo
-        value={valor}
-        onChange={(v) => set(campo.id, v)}
-        alertOnYes={Boolean(campo.alertaSeSim)}
-      />
+      <div>
+        <YesNo
+          value={valor}
+          onChange={(v) => set(campo.id, v)}
+          alertOnYes={Boolean(campo.alertaSeSim)}
+        />
+        {invalido && <p className="mt-1 text-xs text-rose">Selecione uma opção</p>}
+      </div>
       {!compacto && campo.especifique && valor === true && (
         <textarea
           value={(respostas[`${campo.id}__detalhe`] as string) ?? ""}
@@ -229,7 +240,12 @@ function FichaPage() {
   const [autorizaFoto, setAutorizaFoto] = useState(false);
   const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
+  const [mostrarErros, setMostrarErros] = useState(false);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    setMostrarErros(false);
+  }, [step]);
 
   // Convite da Mavi: nome/celular já vêm no link (?nome=...&whatsapp=...),
   // só pré-preenche — nada é salvo até a cliente enviar a ficha no final.
@@ -402,7 +418,13 @@ function FichaPage() {
                         .filter((c) => campoVisivel(c, respostas))
                         .map((c) => (
                           <div key={c.id} className="border-b border-border/50 pb-3">
-                            <CampoView campo={c} respostas={respostas} set={set} compacto />
+                            <CampoView
+                              campo={c}
+                              respostas={respostas}
+                              set={set}
+                              compacto
+                              mostrarErro={mostrarErros}
+                            />
                           </div>
                         ))}
                     </div>
@@ -411,7 +433,13 @@ function FichaPage() {
                       {etapas[step].campos
                         .filter((c) => campoVisivel(c, respostas))
                         .map((c) => (
-                          <CampoView key={c.id} campo={c} respostas={respostas} set={set} />
+                          <CampoView
+                            key={c.id}
+                            campo={c}
+                            respostas={respostas}
+                            set={set}
+                            mostrarErro={mostrarErros}
+                          />
                         ))}
                     </div>
                   )}
@@ -420,7 +448,11 @@ function FichaPage() {
 
               {naTermo && (
                 <div className="space-y-5">
-                  <label className="flex gap-3 rounded-xl border border-border bg-background px-4 py-4 cursor-pointer">
+                  <label
+                    className={`flex gap-3 rounded-xl border bg-background px-4 py-4 cursor-pointer ${
+                      mostrarErros && !termoAceito ? "border-rose" : "border-border"
+                    }`}
+                  >
                     <input
                       type="checkbox"
                       checked={termoAceito}
@@ -487,9 +519,12 @@ function FichaPage() {
             {!naTermo ? (
               <button
                 type="button"
-                disabled={!podeAvancar}
-                onClick={() => setStep((s) => s + 1)}
-                className="ml-auto inline-flex items-center gap-2 rounded-full bg-primary text-primary-foreground px-6 py-3 text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-40"
+                aria-disabled={!podeAvancar}
+                onClick={() => {
+                  if (podeAvancar) setStep((s) => s + 1);
+                  else setMostrarErros(true);
+                }}
+                className={`ml-auto inline-flex items-center gap-2 rounded-full bg-primary text-primary-foreground px-6 py-3 text-sm font-medium hover:bg-primary/90 transition-colors ${podeAvancar ? "" : "opacity-40"}`}
               >
                 Continuar
                 <ArrowRight className="h-4 w-4" />
@@ -497,9 +532,13 @@ function FichaPage() {
             ) : (
               <button
                 type="button"
-                disabled={!podeAvancar}
-                onClick={enviar}
-                className="ml-auto inline-flex items-center gap-2 rounded-full bg-rose text-accent-foreground px-6 py-3 text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-40"
+                disabled={enviando}
+                aria-disabled={!podeAvancar}
+                onClick={() => {
+                  if (podeAvancar) enviar();
+                  else setMostrarErros(true);
+                }}
+                className={`ml-auto inline-flex items-center gap-2 rounded-full bg-rose text-accent-foreground px-6 py-3 text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-40 ${podeAvancar ? "" : "opacity-40"}`}
               >
                 {enviando ? (
                   <>
@@ -515,6 +554,13 @@ function FichaPage() {
               </button>
             )}
           </div>
+          {mostrarErros && !podeAvancar && !enviando && (
+            <p className="mt-3 text-sm text-rose text-right">
+              {naTermo
+                ? "Aceite o termo de responsabilidade para enviar."
+                : "Responda todas as perguntas para continuar."}
+            </p>
+          )}
         </div>
       </div>
     </section>
