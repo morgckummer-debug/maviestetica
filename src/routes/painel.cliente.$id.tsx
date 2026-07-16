@@ -99,10 +99,8 @@ function PaginaCliente() {
     );
   }
 
-  const bordaCard = cliente.algumMasculino ? "border-painel-masculino" : "border-painel-border";
-  const pillCliente = cliente.algumMasculino
-    ? "bg-painel-masculino text-white"
-    : "bg-painel-badge-bg text-painel-title";
+  const bordaCard = "border-painel-border";
+  const pillCliente = "bg-painel-badge-bg text-painel-title";
 
   return (
     <div>

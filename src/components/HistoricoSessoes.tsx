@@ -46,6 +46,12 @@ export type Procedimento = {
   pacotes: Record<string, number | number[] | PacoteItem[]>;
 };
 
+// Uma linha de bônus de promoção sendo montada num formulário (ainda não
+// salva). `tipo` fica separado de `fichaId` porque o dropdown oferece os 3
+// tipos de procedimento sempre, mesmo os que a cliente ainda não tem ficha —
+// a ficha (se existir) só é resolvida na hora de salvar.
+type LinhaBonus = { chave: string; tipo: Tipo | ""; item: string; quantidade: string };
+
 // Normaliza o valor salvo (formato antigo — um número, ou uma lista de
 // números — ou já uma lista de pacotes) para sempre trabalhar com uma lista
 // de PacoteItem.
@@ -559,6 +565,13 @@ export function HistoricoSessoes({
   const [observacao, setObservacao] = useState("");
   const [pacotesForm, setPacotesForm] = useState<Record<string, string>>({});
   const [salvando, setSalvando] = useState(false);
+  // Bônus anexados a um pacote sendo declarado pela 1ª vez, junto da 1ª
+  // sessão do item (ver `itensSemPacote` no JSX). Uma lista por item, pois
+  // esse formulário pode declarar pacotes de vários itens de uma vez.
+  const [bonusFormRegistro, setBonusFormRegistro] = useState<Record<string, LinhaBonus[]>>({});
+  const [tipoFaltandoAnamneseRegistro, setTipoFaltandoAnamneseRegistro] = useState<Tipo | null>(
+    null,
+  );
 
   const [copiadoId, setCopiadoId] = useState<string | null>(null);
 
@@ -598,9 +611,7 @@ export function HistoricoSessoes({
   // tipos de procedimento sempre, mesmo os que a cliente ainda não tem ficha
   // — por isso guarda `tipo` (não fichaId direto, que só existe se a ficha
   // já existir; resolvido na hora de salvar).
-  const [bonusForm, setBonusForm] = useState<
-    { chave: string; tipo: Tipo | ""; item: string; quantidade: string }[]
-  >([]);
+  const [bonusForm, setBonusForm] = useState<LinhaBonus[]>([]);
   // Quando ela tenta salvar um bônus de um tipo sem ficha, bloqueia o salvar
   // e mostra o convite de anamnese desse tipo (em vez de criar uma ficha sem
   // nenhuma pergunta de saúde respondida).
@@ -697,35 +708,47 @@ export function HistoricoSessoes({
     setItens([]);
     setObservacao("");
     setPacotesForm({});
+    setBonusFormRegistro({});
+    setTipoFaltandoAnamneseRegistro(null);
     setData(hojeISO());
     setAbrindo(true);
   };
 
   const registrar = async () => {
+    // Adiciona o pacote informado à lista de pacotes desse item (pode já ter
+    // pacotes anteriores concluídos).
+    const entradas = Object.entries(pacotesForm)
+      .filter(([item, v]) => itens.includes(item) && v.trim())
+      .map(([item, v]) => [item, parseInt(v, 10)] as const)
+      .filter(([, n]) => n > 0);
+
+    // Checa TODOS os bônus antes de criar a sessão — se algum for de um tipo
+    // sem ficha, bloqueia tudo em vez de criar a sessão e só travar no meio
+    // do salvamento dos pacotes (deixaria a promessa de bônus pra trás).
+    for (const [item] of entradas) {
+      const tipoFaltante = tipoBonusSemFicha(bonusFormRegistro[item] ?? []);
+      if (tipoFaltante) {
+        setErro(
+          `Essa cliente ainda não tem ficha de ${nomeCurto(tipoFaltante)} — manda a anamnese pra ela preencher antes de registrar esse bônus.`,
+        );
+        setTipoFaltandoAnamneseRegistro(tipoFaltante);
+        return;
+      }
+    }
+    setTipoFaltandoAnamneseRegistro(null);
+
     setSalvando(true);
     setErro(null);
     try {
       const nova = await criarSessao(fichaId, { data, areas: itens, observacao });
       setSessoes((prev) => [nova, ...(prev ?? [])]);
 
-      // Adiciona o pacote informado à lista de pacotes desse item (pode já
-      // ter pacotes anteriores concluídos). Erro aqui não desfaz a sessão
-      // já registrada — só avisa à parte.
-      const entradas = Object.entries(pacotesForm)
-        .filter(([item, v]) => itens.includes(item) && v.trim())
-        .map(([item, v]) => [item, parseInt(v, 10)] as const)
-        .filter(([, n]) => n > 0);
+      // Erro aqui não desfaz a sessão já registrada — só avisa à parte.
       if (entradas.length > 0) {
         try {
-          const merge = { ...(fichaPorId.get(fichaId)?.pacotes ?? {}) };
-          const novoOverride: Record<string, PacoteItem[]> = {};
           for (const [item, n] of entradas) {
-            const nova = [...pacotesDoItem(fichaId, item), { tamanho: n }];
-            merge[item] = nova;
-            novoOverride[`${fichaId}::${item}`] = nova;
+            await aplicarPacote({ fichaId, item, tamanho: n }, bonusFormRegistro[item] ?? []);
           }
-          await atualizarFicha(fichaId, { pacotes: merge });
-          setPacotesOverride((prev) => ({ ...prev, ...novoOverride }));
         } catch {
           setErro("Sessão registrada, mas não foi possível salvar o tamanho do pacote.");
         }
@@ -735,6 +758,7 @@ export function HistoricoSessoes({
       setItens([]);
       setObservacao("");
       setPacotesForm({});
+      setBonusFormRegistro({});
       setData(hojeISO());
     } catch (e) {
       setErro(e instanceof Error ? e.message : "Erro ao registrar sessão.");
@@ -1114,24 +1138,103 @@ export function HistoricoSessoes({
     patch: Partial<{ tipo: Tipo | ""; item: string; quantidade: string }>,
   ) => setBonusForm((prev) => prev.map((b) => (b.chave === chave ? { ...b, ...patch } : b)));
 
-  const salvarPacote = async (fId: string, item: string) => {
-    const n = parseInt(pacoteValor, 10);
-    if (!n || n <= 0) return;
-    const bonusValidos = bonusForm
+  // Mesmo formulário de bônus, mas usado dentro de "Registrar sessão" — ali
+  // dá pra declarar pacote de mais de um item ao mesmo tempo, então guarda
+  // uma lista de linhas por item pago em vez de uma lista só.
+  const adicionarLinhaBonusRegistro = (itemPago: string) =>
+    setBonusFormRegistro((prev) => ({
+      ...prev,
+      [itemPago]: [
+        ...(prev[itemPago] ?? []),
+        { chave: crypto.randomUUID(), tipo: "", item: "", quantidade: "1" },
+      ],
+    }));
+
+  const removerLinhaBonusRegistro = (itemPago: string, chave: string) =>
+    setBonusFormRegistro((prev) => ({
+      ...prev,
+      [itemPago]: (prev[itemPago] ?? []).filter((b) => b.chave !== chave),
+    }));
+
+  const atualizarLinhaBonusRegistro = (
+    itemPago: string,
+    chave: string,
+    patch: Partial<{ tipo: Tipo | ""; item: string; quantidade: string }>,
+  ) =>
+    setBonusFormRegistro((prev) => ({
+      ...prev,
+      [itemPago]: (prev[itemPago] ?? []).map((b) => (b.chave === chave ? { ...b, ...patch } : b)),
+    }));
+
+  // Um bônus pode ser de um tipo que a cliente ainda não tem ficha (ex.:
+  // laser de brinde pra quem só tem ficha facial). Sem anamnese respondida
+  // pra esse tipo não dá pra registrar com segurança — retorna o tipo
+  // faltante pra quem chamou bloquear e mostrar o convite de anamnese, em
+  // vez de criar a ficha sem nenhuma pergunta de saúde respondida.
+  const tipoBonusSemFicha = (linhas: LinhaBonus[]): Tipo | null => {
+    const tiposComFicha = new Set(fichas.map((f) => f.tipo));
+    const semFicha = linhas
+      .map((b) => ({ ...b, qtd: parseInt(b.quantidade, 10) }))
+      .find((b) => b.tipo && b.item && b.qtd > 0 && !tiposComFicha.has(b.tipo as Tipo));
+    return (semFicha?.tipo as Tipo) ?? null;
+  };
+
+  // Salva um pacote pago + os bônus anexados a ele numa única leva de
+  // PATCHes (uma por ficha afetada — bônus podem ser de fichas diferentes
+  // da do pacote pago, ex.: limpeza de pele de brinde numa promoção de
+  // laser). Assume que já foi checado com `tipoBonusSemFicha` que nenhum
+  // bônus está sem ficha; chamar sem checar arrisca salvar o pacote pago
+  // sem o bônus prometido.
+  const aplicarPacote = async (
+    pago: { fichaId: string; item: string; tamanho: number },
+    bonusLinhas: LinhaBonus[],
+  ) => {
+    const bonusValidos = bonusLinhas
       .map((b) => ({ ...b, qtd: parseInt(b.quantidade, 10) }))
       .filter((b) => b.tipo && b.item && b.qtd > 0);
-
-    // Um bônus pode ser de um tipo que a cliente ainda não tem ficha (ex.:
-    // laser de brinde pra quem só tem ficha facial). Sem anamnese respondida
-    // pra esse tipo não dá pra registrar com segurança — bloqueia e mostra o
-    // convite de anamnese em vez de criar a ficha sem nada preenchido.
     const fichaPorTipo = new Map<Tipo, string>();
     fichas.forEach((f) => {
       if (!fichaPorTipo.has(f.tipo)) fichaPorTipo.set(f.tipo, f.id);
     });
-    const semFicha = bonusValidos.find((b) => !fichaPorTipo.has(b.tipo as Tipo));
-    if (semFicha) {
-      const tipoFaltante = semFicha.tipo as Tipo;
+
+    const merges = new Map<string, Record<string, number | number[] | PacoteItem[]>>();
+    const overrides = new Map<string, PacoteItem[]>();
+    const mergeDe = (fichaAlvo: string) => {
+      let m = merges.get(fichaAlvo);
+      if (!m) {
+        m = { ...(fichaPorId.get(fichaAlvo)?.pacotes ?? {}) };
+        merges.set(fichaAlvo, m);
+      }
+      return m;
+    };
+    const adiciona = (fichaAlvo: string, itemAlvo: string, entrada: PacoteItem) => {
+      const chave = `${fichaAlvo}::${itemAlvo}`;
+      const nova = [...(overrides.get(chave) ?? pacotesDoItem(fichaAlvo, itemAlvo)), entrada];
+      mergeDe(fichaAlvo)[itemAlvo] = nova;
+      overrides.set(chave, nova);
+    };
+
+    adiciona(pago.fichaId, pago.item, { tamanho: pago.tamanho });
+    for (const b of bonusValidos) {
+      adiciona(fichaPorTipo.get(b.tipo as Tipo)!, b.item, { tamanho: b.qtd, bonus: true });
+    }
+
+    await Promise.all(
+      [...merges.entries()].map(([fichaAlvo, pacotes]) => atualizarFicha(fichaAlvo, { pacotes })),
+    );
+    setPacotesOverride((prev) => {
+      const next = { ...prev };
+      overrides.forEach((v, k) => (next[k] = v));
+      return next;
+    });
+  };
+
+  const salvarPacote = async (fId: string, item: string) => {
+    const n = parseInt(pacoteValor, 10);
+    if (!n || n <= 0) return;
+
+    const tipoFaltante = tipoBonusSemFicha(bonusForm);
+    if (tipoFaltante) {
       setErroPacote(
         `Essa cliente ainda não tem ficha de ${nomeCurto(tipoFaltante)} — manda a anamnese pra ela preencher antes de registrar esse bônus.`,
       );
@@ -1140,43 +1243,10 @@ export function HistoricoSessoes({
     }
     setTipoFaltandoAnamnese(null);
 
-    // Bônus podem apontar pra itens de fichas diferentes da do pacote pago
-    // (ex.: limpeza de pele de brinde numa promoção de laser) — por isso
-    // agrupa as mudanças por ficha antes de salvar, uma PATCH por ficha
-    // afetada em vez de assumir que é sempre a mesma.
     setSalvandoPacote(true);
     setErroPacote(null);
     try {
-      const merges = new Map<string, Record<string, number | number[] | PacoteItem[]>>();
-      const overrides = new Map<string, PacoteItem[]>();
-      const mergeDe = (fichaAlvo: string) => {
-        let m = merges.get(fichaAlvo);
-        if (!m) {
-          m = { ...(fichaPorId.get(fichaAlvo)?.pacotes ?? {}) };
-          merges.set(fichaAlvo, m);
-        }
-        return m;
-      };
-      const adiciona = (fichaAlvo: string, itemAlvo: string, entrada: PacoteItem) => {
-        const chave = `${fichaAlvo}::${itemAlvo}`;
-        const nova = [...(overrides.get(chave) ?? pacotesDoItem(fichaAlvo, itemAlvo)), entrada];
-        mergeDe(fichaAlvo)[itemAlvo] = nova;
-        overrides.set(chave, nova);
-      };
-
-      adiciona(fId, item, { tamanho: n });
-      for (const b of bonusValidos) {
-        adiciona(fichaPorTipo.get(b.tipo as Tipo)!, b.item, { tamanho: b.qtd, bonus: true });
-      }
-
-      await Promise.all(
-        [...merges.entries()].map(([fichaAlvo, pacotes]) => atualizarFicha(fichaAlvo, { pacotes })),
-      );
-      setPacotesOverride((prev) => {
-        const next = { ...prev };
-        overrides.forEach((v, k) => (next[k] = v));
-        return next;
-      });
+      await aplicarPacote({ fichaId: fId, item, tamanho: n }, bonusForm);
       setEditandoPacoteChave(null);
       setBonusForm([]);
     } catch (e) {
@@ -1367,24 +1437,91 @@ export function HistoricoSessoes({
                 Deixe em branco se for sessão avulsa. Pode informar aqui ou mais tarde, quando ela
                 decidir comprar o pacote.
               </p>
-              <div className="space-y-2">
+              <div className="space-y-3">
                 {itensSemPacote.map((item) => (
-                  <div key={item} className="flex items-center gap-2">
-                    <span className="text-sm text-painel-chip-text flex-1 truncate">{item}</span>
-                    <input
-                      type="number"
-                      min={1}
-                      inputMode="numeric"
-                      value={pacotesForm[item] ?? ""}
-                      onChange={(e) =>
-                        setPacotesForm((prev) => ({ ...prev, [item]: e.target.value }))
-                      }
-                      placeholder="nº de sessões"
-                      className="w-32 rounded-lg border border-painel-border bg-painel-bg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-painel-primary/40"
-                    />
+                  <div key={item}>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-painel-chip-text flex-1 truncate">{item}</span>
+                      <input
+                        type="number"
+                        min={1}
+                        inputMode="numeric"
+                        value={pacotesForm[item] ?? ""}
+                        onChange={(e) =>
+                          setPacotesForm((prev) => ({ ...prev, [item]: e.target.value }))
+                        }
+                        placeholder="nº de sessões"
+                        className="w-32 rounded-lg border border-painel-border bg-painel-bg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-painel-primary/40"
+                      />
+                    </div>
+                    {pacotesForm[item]?.trim() && (
+                      <div className="mt-1.5 pl-1">
+                        {(bonusFormRegistro[item] ?? []).map((b) => (
+                          <div key={b.chave} className="flex flex-wrap items-center gap-1.5 mb-1.5">
+                            <select
+                              value={b.tipo && b.item ? `${b.tipo}::${b.item}` : ""}
+                              onChange={(e) => {
+                                const [tipoAlvo, ...resto] = e.target.value.split("::");
+                                atualizarLinhaBonusRegistro(item, b.chave, {
+                                  tipo: (tipoAlvo as Tipo) || "",
+                                  item: resto.join("::"),
+                                });
+                              }}
+                              className="rounded-lg border border-painel-border bg-painel-bg px-2.5 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-painel-primary/40"
+                            >
+                              <option value="">Bônus da promoção (opcional)</option>
+                              {opcoesBonus.map((o) => (
+                                <option key={o.valor} value={o.valor}>
+                                  {o.rotulo}
+                                </option>
+                              ))}
+                            </select>
+                            <input
+                              type="number"
+                              min={1}
+                              inputMode="numeric"
+                              value={b.quantidade}
+                              onChange={(e) =>
+                                atualizarLinhaBonusRegistro(item, b.chave, {
+                                  quantidade: e.target.value,
+                                })
+                              }
+                              placeholder="qtd"
+                              className="w-16 rounded-lg border border-painel-border bg-painel-bg px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-painel-primary/40"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => removerLinhaBonusRegistro(item, b.chave)}
+                              title="Remover bônus"
+                              className="text-painel-muted/60 hover:text-painel-alert-text transition-colors"
+                            >
+                              <X className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                        ))}
+                        <button
+                          type="button"
+                          onClick={() => adicionarLinhaBonusRegistro(item)}
+                          className="text-xs font-medium text-painel-primary"
+                        >
+                          + Adicionar bônus
+                        </button>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
+              {tipoFaltandoAnamneseRegistro && (
+                <div className="mt-3">
+                  <EnviarFicha
+                    nomeInicial={nomeCliente}
+                    celularInicial={telefoneCliente}
+                    tipoInicial={tipoFaltandoAnamneseRegistro}
+                    convitePadrao
+                    onFechar={() => setTipoFaltandoAnamneseRegistro(null)}
+                  />
+                </div>
+              )}
             </div>
           )}
 

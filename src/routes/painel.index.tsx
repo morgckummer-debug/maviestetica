@@ -25,7 +25,13 @@ import { agruparClientes, digitos, type Cliente } from "@/lib/clientes";
 import { TIPOS, FICHAS, nomeCurto, nomeTipo, type Tipo } from "@/data/anamnese";
 import { EnviarFicha } from "@/components/EnviarFicha";
 import { RamosWatermark } from "@/components/RamosWatermark";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export const Route = createFileRoute("/painel/")({
   component: ListaFichas,
@@ -273,9 +279,7 @@ function ListaFichas() {
                   "flex items-center justify-between gap-4 rounded-[14px] border bg-white px-6 py-5 transition-colors",
                   inativa
                     ? "grayscale opacity-60 hover:opacity-90 border-painel-border"
-                    : c.algumMasculino
-                      ? "border-painel-masculino hover:border-painel-masculino-hover"
-                      : "border-painel-border hover:border-painel-primary/40",
+                    : "border-painel-border hover:border-painel-primary/40",
                 ].join(" ")}
               >
                 <div className="min-w-0">
@@ -297,12 +301,7 @@ function ListaFichas() {
                     {c.tipos.map((t) => (
                       <span
                         key={t}
-                        className={[
-                          "text-[11px] rounded-full px-2.5 py-0.5",
-                          c.algumMasculino
-                            ? "bg-painel-masculino text-white"
-                            : "bg-painel-badge-bg text-painel-title",
-                        ].join(" ")}
+                        className="text-[11px] rounded-full px-2.5 py-0.5 bg-painel-badge-bg text-painel-title"
                       >
                         {FICHAS[t]?.emoji ?? ""} {nomeCurto(t)}
                       </span>

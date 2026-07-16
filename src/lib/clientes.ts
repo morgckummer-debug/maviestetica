@@ -17,12 +17,7 @@ export function digitos(v: string | null | undefined): string {
 
 // Nome normalizado para comparar sem depender de acentos/maiúsculas/espaços.
 function normalizarNome(v: string): string {
-  return v
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
-    .trim()
-    .toLowerCase()
-    .replace(/\s+/g, " ");
+  return v.normalize("NFD").replace(/[̀-ͯ]/g, "").trim().toLowerCase().replace(/\s+/g, " ");
 }
 
 export type Cliente = {
@@ -34,7 +29,6 @@ export type Cliente = {
   tipos: Tipo[]; // tipos distintos, na ordem em que aparecem
   alertas: number; // total de alertas somando as fichas
   autorizaFoto: boolean; // alguma ficha autoriza imagem
-  algumMasculino: boolean;
   // Só considera a cliente inativa (visual acinzentado na lista) quando
   // TODAS as fichas dela estão arquivadas — se ela ainda tem um
   // procedimento ativo, continua com a aparência normal.
@@ -59,7 +53,6 @@ function paraCliente(fichas: Ficha[]): Cliente {
     tipos,
     alertas: fichas.reduce((n, f) => n + (f.alertas?.length ?? 0), 0),
     autorizaFoto: fichas.some((f) => f.autoriza_foto),
-    algumMasculino: fichas.some((f) => f.respostas?.sexo === "Masculino"),
     todasArquivadas: fichas.every((f) => f.arquivada),
   };
 }
