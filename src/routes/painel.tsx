@@ -6,6 +6,7 @@ import { supabaseConfigurado } from "@/lib/supabase";
 import { entrar, sair, sessaoValida, trocarSenha, type Sessao } from "@/lib/painel";
 import logo from "@/assets/logo-mavi.png";
 import { RamosWatermark } from "@/components/RamosWatermark";
+import { PainelModal } from "@/components/PainelModal";
 
 // Deriva um nome de exibição a partir do e-mail de login (ex.:
 // "marina.figueiredo@..." → "Marina Figueiredo"), já que o login continua
@@ -177,88 +178,78 @@ function TrocarSenhaForm({ onFechar }: { onFechar: () => void }) {
   };
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4"
-      onClick={onFechar}
-    >
-      <div
-        className="w-full max-w-sm rounded-2xl border border-painel-border bg-white p-6 shadow-2xl"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="flex items-center justify-between gap-2 mb-4">
-          <div className="flex items-center gap-2">
-            <KeyRound className="h-4 w-4 text-painel-primary" />
-            <h3 className="font-medium text-painel-title">Trocar senha</h3>
-          </div>
-          <button
-            type="button"
-            onClick={onFechar}
-            title="Fechar"
-            className="text-painel-muted hover:text-painel-primary transition-colors"
-          >
-            <X className="h-4 w-4" />
-          </button>
+    <PainelModal onFechar={onFechar}>
+      <div className="flex items-center justify-between gap-2 mb-4">
+        <div className="flex items-center gap-2">
+          <KeyRound className="h-4 w-4 text-painel-lilac-soft" />
+          <h3 className="font-medium text-white">Trocar senha</h3>
         </div>
-
-        {sucesso ? (
-          <p className="text-sm text-painel-primary">Senha alterada com sucesso.</p>
-        ) : (
-          <form onSubmit={submeter} className="space-y-3">
-            <div>
-              <label className="block text-xs font-medium text-painel-muted mb-1.5">
-                Nova senha
-              </label>
-              <input
-                type="password"
-                value={senha}
-                onChange={(e) => setSenha(e.target.value)}
-                required
-                minLength={6}
-                autoComplete="new-password"
-                className="w-full rounded-xl border border-painel-border bg-white px-4 py-2.5 text-sm text-painel-title focus:outline-none focus:ring-2 focus:ring-painel-primary/40"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-painel-muted mb-1.5">
-                Confirmar nova senha
-              </label>
-              <input
-                type="password"
-                value={confirmar}
-                onChange={(e) => setConfirmar(e.target.value)}
-                required
-                minLength={6}
-                autoComplete="new-password"
-                className="w-full rounded-xl border border-painel-border bg-white px-4 py-2.5 text-sm text-painel-title focus:outline-none focus:ring-2 focus:ring-painel-primary/40"
-              />
-            </div>
-            {erro && <p className="text-sm text-painel-alert-text">{erro}</p>}
-            <div className="flex items-center gap-2">
-              <button
-                type="submit"
-                disabled={salvando}
-                className="inline-flex items-center gap-1.5 rounded-full bg-painel-primary text-white px-4 py-2 text-sm font-medium hover:bg-painel-primary/90 transition-colors disabled:opacity-40"
-              >
-                {salvando ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Check className="h-4 w-4" />
-                )}
-                Salvar
-              </button>
-              <button
-                type="button"
-                onClick={onFechar}
-                disabled={salvando}
-                className="rounded-full border border-painel-border px-4 py-2 text-sm font-medium text-painel-muted hover:border-painel-primary/40 transition-colors disabled:opacity-40"
-              >
-                Cancelar
-              </button>
-            </div>
-          </form>
-        )}
+        <button
+          type="button"
+          onClick={onFechar}
+          title="Fechar"
+          className="text-white/50 hover:text-white transition-colors"
+        >
+          <X className="h-4 w-4" />
+        </button>
       </div>
-    </div>
+
+      {sucesso ? (
+        <p className="text-sm text-painel-lilac-soft">Senha alterada com sucesso.</p>
+      ) : (
+        <form onSubmit={submeter} className="space-y-3">
+          <div>
+            <label className="block text-xs font-medium text-white/60 mb-1.5">Nova senha</label>
+            <input
+              type="password"
+              value={senha}
+              onChange={(e) => setSenha(e.target.value)}
+              required
+              minLength={6}
+              autoComplete="new-password"
+              className="w-full rounded-xl border border-white/20 bg-white/10 px-4 py-2.5 text-sm text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-painel-lilac-soft/50"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-white/60 mb-1.5">
+              Confirmar nova senha
+            </label>
+            <input
+              type="password"
+              value={confirmar}
+              onChange={(e) => setConfirmar(e.target.value)}
+              required
+              minLength={6}
+              autoComplete="new-password"
+              className="w-full rounded-xl border border-white/20 bg-white/10 px-4 py-2.5 text-sm text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-painel-lilac-soft/50"
+            />
+          </div>
+          {erro && <p className="text-sm text-rose-300">{erro}</p>}
+          <div className="flex items-center gap-2">
+            <button
+              type="submit"
+              disabled={salvando}
+              className="inline-flex items-center gap-1.5 rounded-full bg-painel-primary text-white px-4 py-2 text-sm font-medium hover:bg-painel-primary/90 transition-colors disabled:opacity-40"
+            >
+              {salvando ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Check className="h-4 w-4" />
+              )}
+              Salvar
+            </button>
+            <button
+              type="button"
+              onClick={onFechar}
+              disabled={salvando}
+              className="rounded-full border border-white/20 px-4 py-2 text-sm font-medium text-white/70 hover:border-white/40 transition-colors disabled:opacity-40"
+            >
+              Cancelar
+            </button>
+          </div>
+        </form>
+      )}
+    </PainelModal>
   );
 }
 

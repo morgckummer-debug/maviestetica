@@ -8,6 +8,7 @@ import { mascaraTelefone } from "@/lib/mascaras";
 import { HistoricoSessoes, type Procedimento } from "@/components/HistoricoSessoes";
 import { EnviarFicha } from "@/components/EnviarFicha";
 import { RamosWatermark } from "@/components/RamosWatermark";
+import { PainelModal } from "@/components/PainelModal";
 
 export const Route = createFileRoute("/painel/cliente/$id")({
   component: PaginaCliente,
@@ -205,50 +206,55 @@ function PaginaCliente() {
         </div>
 
         {confirmandoExclusao && (
-          <div className="flex flex-col gap-3 rounded-xl border border-painel-alert-border bg-painel-alert-bg px-4 py-3.5 mb-6">
-            <p className="text-sm text-painel-alert-text">
-              Excluir <strong>{cliente.nome}</strong>? São {cliente.fichas.length} ficha(s).
-              Arquivar move todas para "Fichas excluídas" (dá pra restaurar depois); excluir
-              definitivamente apaga tudo — fichas e sessões — pra sempre.
-            </p>
-            {erroExclusao && <p className="text-sm text-painel-alert-text">{erroExclusao}</p>}
-            <div className="flex flex-wrap gap-2">
-              <button
-                type="button"
-                onClick={() => setConfirmandoExclusao(false)}
-                disabled={excluindo !== null}
-                className="rounded-full border border-painel-border bg-white px-4 py-2 text-sm font-medium text-painel-chip-text hover:border-painel-primary/40 transition-colors disabled:opacity-40"
-              >
-                Cancelar
-              </button>
-              <button
-                type="button"
-                onClick={arquivarCliente}
-                disabled={excluindo !== null}
-                className="inline-flex items-center gap-1.5 rounded-full border border-painel-alert-border px-4 py-2 text-sm font-medium text-painel-alert-text hover:bg-white transition-colors disabled:opacity-40"
-              >
-                {excluindo === "arquivar" ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Archive className="h-4 w-4" />
-                )}
-                Arquivar
-              </button>
-              <button
-                type="button"
-                onClick={excluirClienteDefinitivamente}
-                disabled={excluindo !== null}
-                className="inline-flex items-center gap-1.5 rounded-full bg-painel-alert-text text-white px-4 py-2 text-sm font-medium hover:opacity-90 transition-colors disabled:opacity-40"
-              >
-                {excluindo === "definitivo" ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Trash2 className="h-4 w-4" />
-                )}
-                Excluir definitivamente
-              </button>
+          <PainelModal
+            onFechar={excluindo === null ? () => setConfirmandoExclusao(false) : undefined}
+          >
+            <div className="flex flex-col gap-3">
+              <p className="text-sm text-white/80">
+                Excluir <strong className="text-white">{cliente.nome}</strong>? São{" "}
+                {cliente.fichas.length} ficha(s). Arquivar move todas para "Fichas excluídas" (dá
+                pra restaurar depois); excluir definitivamente apaga tudo — fichas e sessões — pra
+                sempre.
+              </p>
+              {erroExclusao && <p className="text-sm text-rose-300">{erroExclusao}</p>}
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => setConfirmandoExclusao(false)}
+                  disabled={excluindo !== null}
+                  className="rounded-full border border-white/20 px-4 py-2 text-sm font-medium text-white/70 hover:border-white/40 transition-colors disabled:opacity-40"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  onClick={arquivarCliente}
+                  disabled={excluindo !== null}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-rose-300/40 px-4 py-2 text-sm font-medium text-rose-300 hover:bg-white/5 transition-colors disabled:opacity-40"
+                >
+                  {excluindo === "arquivar" ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Archive className="h-4 w-4" />
+                  )}
+                  Arquivar
+                </button>
+                <button
+                  type="button"
+                  onClick={excluirClienteDefinitivamente}
+                  disabled={excluindo !== null}
+                  className="inline-flex items-center gap-1.5 rounded-full bg-rose-600 text-white px-4 py-2 text-sm font-medium hover:opacity-90 transition-colors disabled:opacity-40"
+                >
+                  {excluindo === "definitivo" ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Trash2 className="h-4 w-4" />
+                  )}
+                  Excluir definitivamente
+                </button>
+              </div>
             </div>
-          </div>
+          </PainelModal>
         )}
 
         {alertas.length > 0 && (
