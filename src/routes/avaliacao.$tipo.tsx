@@ -278,6 +278,12 @@ function FichaPage() {
       if (c.tipo === "selecao" && c.obrigatorio) {
         return String(respostas[c.id] ?? "").trim().length > 0;
       }
+      if (c.tipo === "multi" && c.obrigatorio) {
+        return String(respostas[c.id] ?? "").trim().length > 0;
+      }
+      if (c.tipo === "simnao") {
+        return respostas[c.id] === true || respostas[c.id] === false;
+      }
       return true;
     });
   })();
@@ -328,6 +334,10 @@ function FichaPage() {
                 src={ICONES_FICHA[def.tipo]}
                 alt=""
                 className="h-11 w-11 lg:h-14 lg:w-14 shrink-0"
+                style={{
+                  filter:
+                    "brightness(0) saturate(100%) invert(74%) sepia(16%) saturate(3701%) hue-rotate(204deg) brightness(121%) contrast(88%)",
+                }}
               />
               <span>
                 Ficha{" "}

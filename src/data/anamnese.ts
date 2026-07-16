@@ -53,6 +53,7 @@ export type CampoMulti = {
   id: string;
   label: string;
   opcoes: string[];
+  obrigatorio?: boolean;
   ocultarSe?: CondicaoCampo;
 };
 
@@ -116,7 +117,13 @@ const ETAPA_DADOS: Etapa = {
       obrigatorio: true,
     },
     { tipo: "texto", id: "nascimento", label: "Data de nascimento", inputMode: "date" },
-    { tipo: "selecao", id: "sexo", label: "Gênero", opcoes: ["Feminino", "Masculino"] },
+    {
+      tipo: "selecao",
+      id: "sexo",
+      label: "Gênero",
+      opcoes: ["Feminino", "Masculino"],
+      obrigatorio: true,
+    },
     {
       tipo: "texto",
       id: "whatsapp",
@@ -136,10 +143,11 @@ const ETAPA_DADOS: Etapa = {
     {
       tipo: "texto",
       id: "cpf",
-      label: "CPF (opcional)",
+      label: "CPF",
       placeholder: "254.654.325-86",
       inputMode: "numeric",
       mascara: "cpf",
+      obrigatorio: true,
     },
     {
       tipo: "texto",
@@ -611,9 +619,16 @@ const ETAPA_DADOS_DEPILACAO: Etapa = {
       placeholder: "254.654.325-86",
       inputMode: "numeric",
       mascara: "cpf",
+      obrigatorio: true,
     },
     { tipo: "texto", id: "nascimento", label: "Data de nascimento", inputMode: "date" },
-    { tipo: "selecao", id: "sexo", label: "Gênero", opcoes: ["Feminino", "Masculino"] },
+    {
+      tipo: "selecao",
+      id: "sexo",
+      label: "Gênero",
+      opcoes: ["Feminino", "Masculino"],
+      obrigatorio: true,
+    },
     { tipo: "texto", id: "endereco", label: "Endereço", placeholder: "Rua, número, bairro" },
     { tipo: "texto", id: "cidade", label: "Cidade", placeholder: "Sete Lagoas" },
     {
@@ -787,6 +802,7 @@ const LASER: DefinicaoFicha = {
           tipo: "multi",
           id: "areas",
           label: "Área(s) a depilar",
+          obrigatorio: true,
           opcoes: [
             "Axilas",
             "Seios e/ou abdômen",
