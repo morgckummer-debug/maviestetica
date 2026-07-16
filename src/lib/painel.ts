@@ -17,7 +17,16 @@ export type Sessao = {
 // Uma entrada de pacote comprado (ou ganho de bônus) para um item. `bonus:
 // true` marca sessões dadas de brinde numa promoção (não pagas) — usado pra
 // exibir o selo "Bônus" e não confundir com o que a cliente pagou.
-export type PacoteItem = { tamanho: number; bonus?: boolean };
+// `origemFichaId`/`origemItem` (só em bônus) guardam de qual item comprado
+// esse bônus veio (ex.: comprou pacote de Virilha, ganhou Hidragloss de
+// brinde) — usado pra mostrar o bônus dentro do card do item comprado, em
+// vez de um card próprio separado.
+export type PacoteItem = {
+  tamanho: number;
+  bonus?: boolean;
+  origemFichaId?: string;
+  origemItem?: string;
+};
 
 export type Ficha = {
   id: string;
