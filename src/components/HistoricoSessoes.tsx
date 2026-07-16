@@ -652,7 +652,8 @@ export function HistoricoSessoes({
   // sempre — mesmo os que a cliente ainda não tem ficha (ex.: promoção de
   // facial que dá sessões de laser de brinde pra apresentar o tratamento).
   // Sem ficha do tipo ainda, `fichaId` fica null — resolvido/bloqueado na
-  // hora de salvar, não aqui.
+  // hora de salvar, não aqui. Sem categoria no rótulo — lista única em
+  // ordem alfabética, em vez de agrupada por tipo.
   const opcoesBonus = useMemo(
     () =>
       TIPOS.flatMap((tipo) =>
@@ -660,9 +661,9 @@ export function HistoricoSessoes({
           valor: `${tipo}::${item}`,
           tipo,
           item,
-          rotulo: `${item} — ${nomeCurto(tipo)}`,
+          rotulo: item,
         })),
-      ),
+      ).sort((a, b) => a.item.localeCompare(b.item, "pt-BR")),
     [],
   );
   const tipoPorFicha = useMemo(() => {
@@ -1031,6 +1032,7 @@ export function HistoricoSessoes({
   // tem QUALQUER sessão. Senão, ao marcar o 1º bônus de dois, o 2º bônus
   // "sumia" (o item inteiro saía da lista assim que ganhava sua 1ª sessão).
   const linhasPorChave = useMemo(() => new Map(grupos.map((g) => [g.chave, g.linhas.length])), [grupos]);
+  const grupoPorChave = useMemo(() => new Map(grupos.map((g) => [g.chave, g])), [grupos]);
 
   const bonusPendentes = useMemo(() => {
     const lista: {
@@ -1057,6 +1059,29 @@ export function HistoricoSessoes({
     return lista;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fichas, linhasPorChave, pacotesOverride]);
+
+  // Bônus já usufruídos: usa a mesma segmentação por pacote do histórico
+  // (segmentarPorPacote) pra achar, dentro das sessões já registradas de
+  // cada item, quais caem num pacote marcado como bônus — com a data de
+  // cada uma. Ficam listadas no mesmo card dos bônus pendentes, no lugar do
+  // "Check", em vez de sumir só pro histórico geral.
+  const bonusRealizados = useMemo(() => {
+    const lista: { chave: string; tipo: Tipo; item: string; data: string }[] = [];
+    fichas.forEach((f) => {
+      (OPCOES_SESSAO[f.tipo] ?? []).forEach((item) => {
+        const chave = `${f.id}::${item}`;
+        const linhas = grupoPorChave.get(chave)?.linhas ?? [];
+        segmentarPorPacote(linhas, pacotesDoItem(f.id, item)).forEach((seg) => {
+          if (!seg.bonus) return;
+          seg.linhas.forEach((l) =>
+            lista.push({ chave: `${chave}::${l.sessaoId}`, tipo: f.tipo, item, data: l.data }),
+          );
+        });
+      });
+    });
+    return lista.sort((a, b) => b.data.localeCompare(a.data));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fichas, grupoPorChave, pacotesOverride]);
 
   // "Check" de bônus usado: registra a sessão do dia em que a cliente
   // usufruiu (a Marina escolhe a data — não tem agendamento no app, ela
@@ -1304,13 +1329,15 @@ export function HistoricoSessoes({
         Registre o atendimento e envie o link para a cliente confirmar.
       </p>
 
-      {bonusPendentes.length > 0 && (
+      {(bonusPendentes.length > 0 || bonusRealizados.length > 0) && (
         <div className="mb-5 rounded-xl border border-painel-gold/40 bg-painel-gold/10 p-3.5">
-          <p className="text-xs font-medium text-painel-gold mb-1.5">🎁 Bônus por usar</p>
-          <p className="text-[11px] text-painel-muted mb-2">
-            Marque o check no dia em que a cliente usufruir e envie o link de confirmação. A
-            quantidade abaixo já desconta o que ela usou.
-          </p>
+          <p className="text-xs font-medium text-painel-gold mb-1.5">🎁 Bônus</p>
+          {bonusPendentes.length > 0 && (
+            <p className="text-[11px] text-painel-muted mb-2">
+              Marque o check no dia em que a cliente usufruir e envie o link de confirmação. A
+              quantidade abaixo já desconta o que ela usou.
+            </p>
+          )}
           <ul className="space-y-1.5">
             {bonusPendentes.map((b) => (
               <li
@@ -1343,6 +1370,18 @@ export function HistoricoSessoes({
                   )}
                   Check
                 </button>
+              </li>
+            ))}
+            {bonusRealizados.map((b) => (
+              <li
+                key={b.chave}
+                className="flex items-center gap-1.5 text-xs text-painel-chip-text"
+              >
+                <Check className="h-3.5 w-3.5 text-painel-gold shrink-0" />
+                <span>
+                  Bônus {b.item}
+                  {multi ? ` — ${nomeCurto(b.tipo)}` : ""} — realizado em {dataBR(b.data)}
+                </span>
               </li>
             ))}
           </ul>
