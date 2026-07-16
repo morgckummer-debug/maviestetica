@@ -200,19 +200,7 @@ function ListaFichas() {
           </button>
         </div>
 
-        {enviandoFicha && (
-          <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4 py-8"
-            onClick={() => setEnviandoFicha(false)}
-          >
-            <div
-              className="w-full max-w-lg max-h-[90vh] overflow-y-auto"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <EnviarFicha convitePadrao onFechar={() => setEnviandoFicha(false)} />
-            </div>
-          </div>
-        )}
+        {enviandoFicha && <EnviarFicha convitePadrao onFechar={() => setEnviandoFicha(false)} />}
 
         <div className="mb-5 flex items-baseline justify-between gap-3">
           <h2 className="font-display text-[34px] text-painel-title">Clientes</h2>
