@@ -1041,6 +1041,11 @@ export function HistoricoSessoes({
       tipo: Tipo;
       item: string;
       quantidade: number;
+      // De qual item comprado esse bônus veio (se algum pacote pendente
+      // tiver essa informação) — usado pra aninhar dentro do card de
+      // origem, em vez de um card próprio separado.
+      origemFichaId?: string;
+      origemItem?: string;
     }[] = [];
     fichas.forEach((f) => {
       (OPCOES_SESSAO[f.tipo] ?? []).forEach((item) => {
@@ -1048,12 +1053,23 @@ export function HistoricoSessoes({
         const totalSessoes = linhasPorChave.get(chave) ?? 0;
         let cumulativo = 0;
         let quantidade = 0;
+        let origemFichaId: string | undefined;
+        let origemItem: string | undefined;
         for (const p of pacotesDoItem(f.id, item)) {
           const usadosNestePacote = Math.max(0, Math.min(p.tamanho, totalSessoes - cumulativo));
-          if (p.bonus) quantidade += p.tamanho - usadosNestePacote;
+          if (p.bonus) {
+            const restante = p.tamanho - usadosNestePacote;
+            quantidade += restante;
+            if (restante > 0 && p.origemFichaId && p.origemItem) {
+              origemFichaId = p.origemFichaId;
+              origemItem = p.origemItem;
+            }
+          }
           cumulativo += p.tamanho;
         }
-        if (quantidade > 0) lista.push({ chave, fichaId: f.id, tipo: f.tipo, item, quantidade });
+        if (quantidade > 0) {
+          lista.push({ chave, fichaId: f.id, tipo: f.tipo, item, quantidade, origemFichaId, origemItem });
+        }
       });
     });
     return lista;
@@ -1066,15 +1082,31 @@ export function HistoricoSessoes({
   // cada uma. Ficam listadas no mesmo card dos bônus pendentes, no lugar do
   // "Check", em vez de sumir só pro histórico geral.
   const bonusRealizados = useMemo(() => {
-    const lista: { chave: string; tipo: Tipo; item: string; data: string }[] = [];
+    const lista: {
+      chave: string;
+      tipo: Tipo;
+      item: string;
+      data: string;
+      origemFichaId?: string;
+      origemItem?: string;
+    }[] = [];
     fichas.forEach((f) => {
       (OPCOES_SESSAO[f.tipo] ?? []).forEach((item) => {
         const chave = `${f.id}::${item}`;
         const linhas = grupoPorChave.get(chave)?.linhas ?? [];
-        segmentarPorPacote(linhas, pacotesDoItem(f.id, item)).forEach((seg) => {
+        const pacotesItem = pacotesDoItem(f.id, item);
+        segmentarPorPacote(linhas, pacotesItem).forEach((seg) => {
           if (!seg.bonus) return;
+          const pacote = pacotesItem[seg.numero - 1];
           seg.linhas.forEach((l) =>
-            lista.push({ chave: `${chave}::${l.sessaoId}`, tipo: f.tipo, item, data: l.data }),
+            lista.push({
+              chave: `${chave}::${l.sessaoId}`,
+              tipo: f.tipo,
+              item,
+              data: l.data,
+              origemFichaId: pacote?.origemFichaId,
+              origemItem: pacote?.origemItem,
+            }),
           );
         });
       });
@@ -1082,6 +1114,34 @@ export function HistoricoSessoes({
     return lista.sort((a, b) => b.data.localeCompare(a.data));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fichas, grupoPorChave, pacotesOverride]);
+
+  // Agrupa os bônus pendentes/realizados que têm origem conhecida pelo
+  // card do item comprado (chave `${origemFichaId}::${origemItem}`) — pra
+  // exibir aninhados dentro desse card, em vez de um card próprio separado
+  // pro item do bônus.
+  const bonusAninhadoPorOrigem = useMemo(() => {
+    const mapa = new Map<
+      string,
+      { pendentes: typeof bonusPendentes; realizados: typeof bonusRealizados }
+    >();
+    const entradaDe = (chaveOrigem: string) => {
+      let e = mapa.get(chaveOrigem);
+      if (!e) {
+        e = { pendentes: [], realizados: [] };
+        mapa.set(chaveOrigem, e);
+      }
+      return e;
+    };
+    bonusPendentes.forEach((b) => {
+      if (!b.origemFichaId || !b.origemItem) return;
+      entradaDe(`${b.origemFichaId}::${b.origemItem}`).pendentes.push(b);
+    });
+    bonusRealizados.forEach((b) => {
+      if (!b.origemFichaId || !b.origemItem) return;
+      entradaDe(`${b.origemFichaId}::${b.origemItem}`).realizados.push(b);
+    });
+    return mapa;
+  }, [bonusPendentes, bonusRealizados]);
 
   // "Check" de bônus usado: registra a sessão do dia em que a cliente
   // usufruiu (a Marina escolhe a data — não tem agendamento no app, ela
@@ -1246,7 +1306,12 @@ export function HistoricoSessoes({
 
     adiciona(pago.fichaId, pago.item, { tamanho: pago.tamanho });
     for (const b of bonusValidos) {
-      adiciona(fichaPorTipo.get(b.tipo as Tipo)!, b.item, { tamanho: b.qtd, bonus: true });
+      adiciona(fichaPorTipo.get(b.tipo as Tipo)!, b.item, {
+        tamanho: b.qtd,
+        bonus: true,
+        origemFichaId: pago.fichaId,
+        origemItem: pago.item,
+      });
     }
 
     await Promise.all(
@@ -1622,6 +1687,19 @@ export function HistoricoSessoes({
           // concluiu todos os anteriores. É quando faz sentido oferecer
           // "fechar pacote" (encaixando o que já foi feito como 1ª sessão).
           const semPacoteAtivo = g.linhas.length >= somaPacotes(g.fichaId, g.item);
+
+          // Item inteiro é bônus de outro item comprado (todo pacote dele
+          // tem origem conhecida, sem nenhuma sessão avulsa por fora) — não
+          // tem card próprio aqui: aparece aninhado dentro do card de
+          // origem (ver bonusAninhadoPorOrigem), pra não duplicar.
+          const totalmenteBonusAninhado =
+            pacotes.length > 0 &&
+            pacotes.every((p) => p.bonus && p.origemFichaId && p.origemItem) &&
+            !segmentos.some((s) => s.pacoteTotal === undefined);
+          if (totalmenteBonusAninhado) return null;
+
+          const bonusAninhado = bonusAninhadoPorOrigem.get(g.chave);
+
           return (
             <div
               key={g.chave}
@@ -1852,6 +1930,24 @@ export function HistoricoSessoes({
                   );
                 })}
               </div>
+
+              {bonusAninhado && (bonusAninhado.pendentes.length > 0 || bonusAninhado.realizados.length > 0) && (
+                <div className="mt-3 pt-2.5 border-t border-painel-border/70 space-y-1">
+                  {bonusAninhado.realizados.map((b) => (
+                    <p key={b.chave} className="text-xs text-painel-gold">
+                      🎁 Bônus: {b.item}
+                      {multi ? ` — ${nomeCurto(b.tipo)}` : ""} — realizado em {dataBR(b.data)}
+                    </p>
+                  ))}
+                  {bonusAninhado.pendentes.map((b) => (
+                    <p key={b.chave} className="text-xs text-painel-gold">
+                      🎁 Bônus: {b.quantidade}× {b.item}
+                      {multi ? ` — ${nomeCurto(b.tipo)}` : ""} — por usar (marque o check no card
+                      "Bônus" acima)
+                    </p>
+                  ))}
+                </div>
+              )}
 
               {(semPacoteAtivo || pacotes.length > 0) && editandoPacoteChave !== g.chave && (
                 <div className="flex items-center gap-4 mt-3 pt-2.5 border-t border-painel-border/70">
