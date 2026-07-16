@@ -2,12 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link, useParams, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft, AlertTriangle, Archive, Loader2, Send, Trash2 } from "lucide-react";
 import { FICHAS, TIPOS, nomeTipo, nomeCurto } from "@/data/anamnese";
-import {
-  listarFichas,
-  excluirFicha,
-  excluirFichaDefinitivamente,
-  type Ficha,
-} from "@/lib/painel";
+import { listarFichas, excluirFicha, excluirFichaDefinitivamente, type Ficha } from "@/lib/painel";
 import { clientePorFichaId, type Cliente } from "@/lib/clientes";
 import { mascaraTelefone } from "@/lib/mascaras";
 import { HistoricoSessoes, type Procedimento } from "@/components/HistoricoSessoes";
@@ -164,35 +159,49 @@ function PaginaCliente() {
         </Link>
 
         {/* Cabeçalho da cliente */}
-        <div className="flex flex-wrap items-start justify-between gap-3 mb-6">
-          <div>
-            <div className="flex flex-wrap items-center gap-2 mb-2.5">
-              {cliente.tipos.map((t) => (
-                <span
-                  key={t}
-                  className={`inline-block text-[11px] rounded-full px-3 py-0.5 ${pillCliente}`}
-                >
-                  {FICHAS[t]?.emoji ?? ""} {nomeTipo(t)}
-                </span>
-              ))}
+        <div className="relative -mx-4 sm:-mx-6 mb-6 overflow-hidden rounded-b-2xl bg-painel-hero-bg px-4 py-7 sm:px-6">
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0"
+            style={{
+              background:
+                "radial-gradient(circle at 92% 0%, rgba(179,146,76,.4), transparent 50%), radial-gradient(circle at 4% 100%, rgba(154,111,176,.5), transparent 55%)",
+            }}
+          />
+          <div className="relative flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <div className="flex flex-wrap items-center gap-2 mb-2.5">
+                {cliente.tipos.map((t) => (
+                  <span
+                    key={t}
+                    className="inline-block text-[11px] rounded-full px-3 py-0.5 text-painel-title"
+                    style={{
+                      backgroundImage:
+                        "linear-gradient(90deg, var(--painel-lilac-soft), var(--painel-gold-soft))",
+                    }}
+                  >
+                    {FICHAS[t]?.emoji ?? ""} {nomeTipo(t)}
+                  </span>
+                ))}
+              </div>
+              <h2 className="font-display text-4xl text-white">{cliente.nome}</h2>
+              <p className="text-[13px] text-white/60 mt-2">
+                {cliente.telefone ? mascaraTelefone(cliente.telefone) : "sem telefone"}
+                {" · "}
+                {cliente.fichas.length} ficha(s)
+              </p>
             </div>
-            <h2 className="font-display text-4xl text-painel-title">{cliente.nome}</h2>
-            <p className="text-[13px] text-painel-muted mt-2">
-              {cliente.telefone ? mascaraTelefone(cliente.telefone) : "sem telefone"}
-              {" · "}
-              {cliente.fichas.length} ficha(s)
-            </p>
+            {!confirmandoExclusao && (
+              <button
+                type="button"
+                onClick={() => setConfirmandoExclusao(true)}
+                className="inline-flex items-center gap-1.5 rounded-full border border-painel-alert-border px-4 py-2 text-sm font-medium text-painel-alert-text hover:bg-painel-alert-bg transition-colors shrink-0"
+              >
+                <Trash2 className="h-4 w-4" />
+                Excluir
+              </button>
+            )}
           </div>
-          {!confirmandoExclusao && (
-            <button
-              type="button"
-              onClick={() => setConfirmandoExclusao(true)}
-              className="inline-flex items-center gap-1.5 rounded-full border border-painel-alert-border px-4 py-2 text-sm font-medium text-painel-alert-text hover:bg-painel-alert-bg transition-colors shrink-0"
-            >
-              <Trash2 className="h-4 w-4" />
-              Excluir
-            </button>
-          )}
         </div>
 
         {confirmandoExclusao && (

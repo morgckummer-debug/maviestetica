@@ -89,6 +89,9 @@
   --color-painel-alert-bg: var(--painel-alert-bg);
   --color-painel-alert-border: var(--painel-alert-border);
   --color-painel-alert-text: var(--painel-alert-text);
+  --color-painel-hero-bg: var(--painel-hero-bg);
+  --color-painel-gold-soft: var(--painel-gold-soft);
+  --color-painel-lilac-soft: var(--painel-lilac-soft);
 }
 
 :root {
@@ -150,6 +153,9 @@
   --painel-alert-bg: #f6dde3;
   --painel-alert-border: #eabfca;
   --painel-alert-text: #a45d6f;
+  --painel-hero-bg: #231a2c;
+  --painel-gold-soft: #f0d59a;
+  --painel-lilac-soft: #e0bdf0;
 }
 
 .dark {
@@ -199,7 +205,10 @@
     -webkit-font-smoothing: antialiased;
   }
 
-  h1, h2, h3, h4 {
+  h1,
+  h2,
+  h3,
+  h4 {
     font-family: var(--font-display);
     letter-spacing: -0.01em;
   }

@@ -60,22 +60,24 @@ function LoginForm({ onEntrar }: { onEntrar: (s: Sessao) => void }) {
   };
 
   return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden px-6 py-16 bg-painel-bg">
-      <RamosWatermark className="absolute -right-16 top-1/2 h-[85vh] max-h-[700px] w-auto -translate-y-1/2 opacity-[0.08]" />
-      <RamosWatermark className="absolute -left-16 top-1/2 h-[85vh] max-h-[700px] w-auto -translate-y-1/2 scale-x-[-1] opacity-[0.08]" />
+    <section className="relative min-h-screen flex items-center justify-center overflow-hidden px-6 py-16 bg-painel-hero-bg">
       <div
         aria-hidden="true"
-        className="pointer-events-none select-none absolute left-1/2 top-[46%] h-20 w-20 -translate-x-1/2 -translate-y-1/2 rounded-full border"
-        style={{ borderColor: "rgba(196,169,64,.35)" }}
+        className="pointer-events-none select-none absolute inset-0"
+        style={{
+          background:
+            "radial-gradient(circle at 10% 0%, rgba(154,111,176,.55), transparent 55%), radial-gradient(circle at 95% 100%, rgba(179,146,76,.4), transparent 50%)",
+        }}
       />
-      <div
-        aria-hidden="true"
-        className="pointer-events-none select-none absolute left-1/2 top-[46%] h-[120px] w-[120px] -translate-x-1/2 -translate-y-1/2 rounded-full border"
-        style={{ borderColor: "rgba(196,169,64,.18)" }}
-      />
+      <RamosWatermark className="absolute -right-16 top-1/2 h-[85vh] max-h-[700px] w-auto -translate-y-1/2 opacity-[0.06]" />
+      <RamosWatermark className="absolute -left-16 top-1/2 h-[85vh] max-h-[700px] w-auto -translate-y-1/2 scale-x-[-1] opacity-[0.06]" />
 
       <div className="relative w-full max-w-sm text-center">
-        <img src={logo} alt="Clínica MAVI" className="mx-auto h-24 w-auto mb-10" />
+        <img
+          src={logo}
+          alt="Clínica MAVI"
+          className="mx-auto h-24 w-auto mb-10 brightness-0 invert"
+        />
 
         <div className="rounded-[20px] border border-painel-border bg-white p-9 text-left shadow-[0_24px_50px_-30px_rgba(120,80,150,0.25)]">
           {!supabaseConfigurado() && (
@@ -228,7 +230,11 @@ function TrocarSenhaForm({ onFechar }: { onFechar: () => void }) {
               disabled={salvando}
               className="inline-flex items-center gap-1.5 rounded-full bg-painel-primary text-white px-4 py-2 text-sm font-medium hover:bg-painel-primary/90 transition-colors disabled:opacity-40"
             >
-              {salvando ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+              {salvando ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Check className="h-4 w-4" />
+              )}
               Salvar
             </button>
             <button
@@ -366,10 +372,18 @@ function PainelLayout() {
 
   return (
     <div className="min-h-screen bg-painel-bg">
-      <div className="mx-auto max-w-5xl px-4 sm:px-6 py-8">
-        <header className="flex items-center justify-between gap-4 mb-8 pb-5 border-b border-painel-border">
+      <header className="relative overflow-hidden bg-painel-hero-bg">
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0"
+          style={{
+            background:
+              "radial-gradient(circle at 8% 0%, rgba(154,111,176,.5), transparent 55%), radial-gradient(circle at 96% 100%, rgba(179,146,76,.38), transparent 50%)",
+          }}
+        />
+        <div className="relative mx-auto max-w-5xl px-4 sm:px-6 py-6 flex items-center justify-between gap-4">
           <Link to="/painel">
-            <img src={logo} alt="Painel MAVI" className="h-12 w-auto" />
+            <img src={logo} alt="Painel MAVI" className="h-11 w-auto brightness-0 invert" />
           </Link>
           <div className="flex items-center gap-3 text-sm">
             <nav className="hidden sm:flex items-center gap-1 mr-2">
@@ -399,7 +413,9 @@ function PainelLayout() {
               }}
             />
           </div>
-        </header>
+        </div>
+      </header>
+      <div className="mx-auto max-w-5xl px-4 sm:px-6 py-8">
         {trocandoSenha && <TrocarSenhaForm onFechar={() => setTrocandoSenha(false)} />}
         <Outlet />
       </div>
