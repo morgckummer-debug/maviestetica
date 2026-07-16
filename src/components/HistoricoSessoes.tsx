@@ -1025,13 +1025,14 @@ export function HistoricoSessoes({
     [sessoesAtivas, tipoPorFicha],
   );
 
-  // Bônus de promoção pra itens que ainda não têm NENHUMA sessão registrada
-  // — esses não aparecem em `grupos` (que só existe a partir da 1ª sessão),
-  // então ficariam invisíveis até a Marina lembrar sozinha. Mostra um aviso
-  // à parte pra não perder o bônus de vista (ex.: limpeza de pele de brinde
-  // numa promoção de laser, antes da cliente vir fazer).
+  // Bônus de promoção ainda não totalmente usufruídos. Um item pode ter mais
+  // de um bônus (ou um bônus + pacote pago) — soma quantos "lugares" de
+  // bônus ainda não têm sessão registrada, em vez de só checar se o item já
+  // tem QUALQUER sessão. Senão, ao marcar o 1º bônus de dois, o 2º bônus
+  // "sumia" (o item inteiro saía da lista assim que ganhava sua 1ª sessão).
+  const linhasPorChave = useMemo(() => new Map(grupos.map((g) => [g.chave, g.linhas.length])), [grupos]);
+
   const bonusPendentes = useMemo(() => {
-    const comSessao = new Set(grupos.map((g) => g.chave));
     const lista: {
       chave: string;
       fichaId: string;
@@ -1042,16 +1043,20 @@ export function HistoricoSessoes({
     fichas.forEach((f) => {
       (OPCOES_SESSAO[f.tipo] ?? []).forEach((item) => {
         const chave = `${f.id}::${item}`;
-        if (comSessao.has(chave)) return;
-        const quantidade = pacotesDoItem(f.id, item)
-          .filter((p) => p.bonus)
-          .reduce((total, p) => total + p.tamanho, 0);
+        const totalSessoes = linhasPorChave.get(chave) ?? 0;
+        let cumulativo = 0;
+        let quantidade = 0;
+        for (const p of pacotesDoItem(f.id, item)) {
+          const usadosNestePacote = Math.max(0, Math.min(p.tamanho, totalSessoes - cumulativo));
+          if (p.bonus) quantidade += p.tamanho - usadosNestePacote;
+          cumulativo += p.tamanho;
+        }
         if (quantidade > 0) lista.push({ chave, fichaId: f.id, tipo: f.tipo, item, quantidade });
       });
     });
     return lista;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fichas, grupos, pacotesOverride]);
+  }, [fichas, linhasPorChave, pacotesOverride]);
 
   // "Check" de bônus usado: registra a sessão do dia em que a cliente
   // usufruiu (a Marina escolhe a data — não tem agendamento no app, ela
@@ -1301,11 +1306,10 @@ export function HistoricoSessoes({
 
       {bonusPendentes.length > 0 && (
         <div className="mb-5 rounded-xl border border-painel-gold/40 bg-painel-gold/10 p-3.5">
-          <p className="text-xs font-medium text-painel-gold mb-1.5">
-            🎁 Bônus a usar (ainda sem sessão registrada)
-          </p>
+          <p className="text-xs font-medium text-painel-gold mb-1.5">🎁 Bônus por usar</p>
           <p className="text-[11px] text-painel-muted mb-2">
-            Marque o check no dia em que a cliente usufruir e envie o link de confirmação.
+            Marque o check no dia em que a cliente usufruir e envie o link de confirmação. A
+            quantidade abaixo já desconta o que ela usou.
           </p>
           <ul className="space-y-1.5">
             {bonusPendentes.map((b) => (
