@@ -1176,15 +1176,21 @@ export function HistoricoSessoes({
   const [erroBonusPendente, setErroBonusPendente] = useState<string | null>(null);
   const [removendoBonusChave, setRemovendoBonusChave] = useState<string | null>(null);
 
-  const confirmarBonusPendente = async (b: { chave: string; fichaId: string; item: string }) => {
-    const data = dataBonusPendente[b.chave] || hojeISO();
+  // `subChave` identifica uma unidade específica do bônus (ex.: a 1ª ou a 2ª
+  // das 2× Axilas ganhas) — cada uma com sua própria data e seu próprio
+  // "Check", já que a cliente pode usufruir delas em dias diferentes.
+  const confirmarBonusPendente = async (
+    b: { fichaId: string; item: string },
+    subChave: string,
+  ) => {
+    const data = dataBonusPendente[subChave] || hojeISO();
     if (
       !window.confirm(
         `Confirma que a cliente usou o bônus de ${b.item} em ${dataBR(data)}? Isso registra a sessão e abre o link de confirmação por WhatsApp.`,
       )
     )
       return;
-    setConfirmandoBonusChave(b.chave);
+    setConfirmandoBonusChave(subChave);
     setErroBonusPendente(null);
     try {
       const nova = await criarSessao(b.fichaId, { data, areas: [b.item], observacao: "" });
@@ -1471,49 +1477,55 @@ export function HistoricoSessoes({
           )}
           <ul className="space-y-1.5">
             {bonusPendentesSemOrigem.map((b) => (
-              <li
-                key={b.chave}
-                className="flex flex-wrap items-center gap-2 text-xs text-painel-chip-text"
-              >
-                <span className="flex-1 min-w-[140px]">
-                  {b.quantidade}× {b.item}
-                  {multi ? ` — ${nomeCurto(b.tipo)}` : ""}
-                </span>
-                <input
-                  type="date"
-                  value={dataBonusPendente[b.chave] ?? hojeISO()}
-                  onChange={(e) =>
-                    setDataBonusPendente((prev) => ({ ...prev, [b.chave]: e.target.value }))
-                  }
-                  className="rounded-lg border border-painel-border bg-white px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-painel-primary/40"
-                />
-                <button
-                  type="button"
-                  onClick={() => confirmarBonusPendente(b)}
-                  disabled={confirmandoBonusChave === b.chave}
-                  title="Marcar como usufruído nessa data e enviar link de confirmação"
-                  className="inline-flex items-center gap-1 rounded-full bg-painel-gold text-white px-2.5 py-1 text-xs font-medium hover:opacity-90 transition-colors disabled:opacity-40"
-                >
-                  {confirmandoBonusChave === b.chave ? (
-                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                  ) : (
-                    <Check className="h-3.5 w-3.5" />
-                  )}
-                  Check
-                </button>
-                <button
-                  type="button"
-                  onClick={() => removerBonus(b.fichaId, b.item, b.chave)}
-                  disabled={removendoBonusChave === b.chave}
-                  title="Remover bônus"
-                  className="text-painel-muted/60 hover:text-painel-alert-text transition-colors disabled:opacity-40"
-                >
-                  {removendoBonusChave === b.chave ? (
-                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                  ) : (
-                    <X className="h-3.5 w-3.5" />
-                  )}
-                </button>
+              <li key={b.chave} className="flex flex-col gap-1.5 text-xs text-painel-chip-text">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="flex-1 min-w-[140px]">
+                    {b.quantidade}× {b.item}
+                    {multi ? ` — ${nomeCurto(b.tipo)}` : ""}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => removerBonus(b.fichaId, b.item, b.chave)}
+                    disabled={removendoBonusChave === b.chave}
+                    title="Remover bônus"
+                    className="text-painel-muted/60 hover:text-painel-alert-text transition-colors disabled:opacity-40"
+                  >
+                    {removendoBonusChave === b.chave ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      <X className="h-3.5 w-3.5" />
+                    )}
+                  </button>
+                </div>
+                {Array.from({ length: b.quantidade }).map((_, i) => {
+                  const subChave = `${b.chave}::${i}`;
+                  return (
+                    <div key={subChave} className="flex items-center gap-2 pl-1">
+                      <input
+                        type="date"
+                        value={dataBonusPendente[subChave] ?? hojeISO()}
+                        onChange={(e) =>
+                          setDataBonusPendente((prev) => ({ ...prev, [subChave]: e.target.value }))
+                        }
+                        className="w-[132px] shrink-0 rounded-lg border border-painel-border bg-white px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-painel-primary/40"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => confirmarBonusPendente(b, subChave)}
+                        disabled={confirmandoBonusChave === subChave}
+                        title="Marcar como usufruído nessa data e enviar link de confirmação"
+                        className="inline-flex shrink-0 items-center gap-1 rounded-full bg-painel-gold text-white px-2.5 py-1 text-xs font-medium hover:opacity-90 transition-colors disabled:opacity-40"
+                      >
+                        {confirmandoBonusChave === subChave ? (
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        ) : (
+                          <Check className="h-3.5 w-3.5" />
+                        )}
+                        Check
+                      </button>
+                    </div>
+                  );
+                })}
               </li>
             ))}
             {bonusRealizadosSemOrigem.map((b) => (
@@ -1791,7 +1803,7 @@ export function HistoricoSessoes({
                 </div>
                 {pacotes.length === 0 && (
                   <span className="text-xs text-painel-muted-2 shrink-0 tabular-nums">
-                    {g.linhas.length} sessõe{g.linhas.length === 1 ? "" : "s"}
+                    {g.linhas.length} {g.linhas.length === 1 ? "sessão" : "sessões"}
                   </span>
                 )}
               </div>
@@ -1952,7 +1964,7 @@ export function HistoricoSessoes({
                         <div
                           className="relative h-10 w-10 shrink-0 rounded-full"
                           style={{
-                            background: `conic-gradient(var(--painel-gold) ${pct * 3.6}deg, var(--painel-border) ${pct * 3.6}deg 360deg)`,
+                            background: `conic-gradient(var(--painel-primary) ${pct * 3.6}deg, var(--painel-border) ${pct * 3.6}deg 360deg)`,
                           }}
                         >
                           <div className="absolute inset-[3px] flex items-center justify-center rounded-full bg-white">
@@ -2028,49 +2040,58 @@ export function HistoricoSessoes({
                       </p>
                     ))}
                     {bonusAninhado.pendentes.map((b) => (
-                      <div
-                        key={b.chave}
-                        className="flex flex-wrap items-center gap-2 text-xs text-painel-gold"
-                      >
-                        <span className="flex-1 min-w-[140px]">
-                          🎁 Bônus: {b.quantidade}× {b.item}
-                          {multi ? ` — ${nomeCurto(b.tipo)}` : ""}
-                        </span>
-                        <input
-                          type="date"
-                          value={dataBonusPendente[b.chave] ?? hojeISO()}
-                          onChange={(e) =>
-                            setDataBonusPendente((prev) => ({ ...prev, [b.chave]: e.target.value }))
-                          }
-                          className="rounded-lg border border-painel-border bg-white px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-painel-primary/40"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => confirmarBonusPendente(b)}
-                          disabled={confirmandoBonusChave === b.chave}
-                          title="Marcar como usufruído nessa data e enviar link de confirmação"
-                          className="inline-flex items-center gap-1 rounded-full bg-painel-gold text-white px-2.5 py-1 text-xs font-medium hover:opacity-90 transition-colors disabled:opacity-40"
-                        >
-                          {confirmandoBonusChave === b.chave ? (
-                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                          ) : (
-                            <Check className="h-3.5 w-3.5" />
-                          )}
-                          Check
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => removerBonus(b.fichaId, b.item, b.chave)}
-                          disabled={removendoBonusChave === b.chave}
-                          title="Remover bônus"
-                          className="text-painel-gold/70 hover:text-painel-alert-text transition-colors disabled:opacity-40"
-                        >
-                          {removendoBonusChave === b.chave ? (
-                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                          ) : (
-                            <X className="h-3.5 w-3.5" />
-                          )}
-                        </button>
+                      <div key={b.chave} className="flex flex-col gap-1.5 text-xs text-painel-gold">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="flex-1 min-w-[140px]">
+                            🎁 Bônus: {b.quantidade}× {b.item}
+                            {multi ? ` — ${nomeCurto(b.tipo)}` : ""}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => removerBonus(b.fichaId, b.item, b.chave)}
+                            disabled={removendoBonusChave === b.chave}
+                            title="Remover bônus"
+                            className="text-painel-gold/70 hover:text-painel-alert-text transition-colors disabled:opacity-40"
+                          >
+                            {removendoBonusChave === b.chave ? (
+                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            ) : (
+                              <X className="h-3.5 w-3.5" />
+                            )}
+                          </button>
+                        </div>
+                        {Array.from({ length: b.quantidade }).map((_, i) => {
+                          const subChave = `${b.chave}::${i}`;
+                          return (
+                            <div key={subChave} className="flex items-center gap-2 pl-1">
+                              <input
+                                type="date"
+                                value={dataBonusPendente[subChave] ?? hojeISO()}
+                                onChange={(e) =>
+                                  setDataBonusPendente((prev) => ({
+                                    ...prev,
+                                    [subChave]: e.target.value,
+                                  }))
+                                }
+                                className="w-[132px] shrink-0 rounded-lg border border-painel-border bg-white px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-painel-primary/40"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => confirmarBonusPendente(b, subChave)}
+                                disabled={confirmandoBonusChave === subChave}
+                                title="Marcar como usufruído nessa data e enviar link de confirmação"
+                                className="inline-flex shrink-0 items-center gap-1 rounded-full bg-painel-gold text-white px-2.5 py-1 text-xs font-medium hover:opacity-90 transition-colors disabled:opacity-40"
+                              >
+                                {confirmandoBonusChave === subChave ? (
+                                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                ) : (
+                                  <Check className="h-3.5 w-3.5" />
+                                )}
+                                Check
+                              </button>
+                            </div>
+                          );
+                        })}
                       </div>
                     ))}
                     {bonusAninhado.pendentes.length > 0 && erroBonusPendente && (
