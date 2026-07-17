@@ -114,9 +114,15 @@ type GrupoItem = {
 };
 
 // Um pedaço das sessões de um item que pertence a um mesmo pacote comprado
-// (ou, quando `pacoteTotal` é undefined, sessões avulsas fora de pacote).
+// (ou, quando `pacoteTotal` é undefined, sessões avulsas fora de pacote —
+// seja porque nunca houve pacote, seja porque a entrada é `avulso: true`,
+// reservando sessões que já existiam antes do pacote ser fechado).
+// `numero` é só um identificador estável do pedaço (chave de UI); o rótulo
+// "Pacote N" exibido pra cliente usa `numeroPacote`, que só existe nos
+// pedaços de pacote de verdade (não nos avulsos).
 type Segmento = {
   numero: number;
+  numeroPacote?: number;
   linhas: LinhaSessao[];
   pacoteTotal?: number;
   bonus?: boolean;
@@ -125,22 +131,31 @@ type Segmento = {
 
 // Divide as sessões (já em ordem cronológica) de um item nos pacotes
 // comprados, na ordem em que foram definidos: as primeiras N sessões
-// pertencem ao 1º pacote, as próximas M ao 2º, e assim por diante. O que
-// sobrar depois do último pacote (ou tudo, se nunca houve pacote) vira um
-// segmento avulso, sem número de pacote.
+// pertencem ao 1º pacote, as próximas M ao 2º, e assim por diante. Entradas
+// `avulso: true` reservam sessões que já existiam ANTES de um pacote ser
+// fechado — não contam como "Pacote N", ficam num pedaço avulso próprio, no
+// meio da lista (não só no fim). O que sobrar depois do último pacote (ou
+// tudo, se nunca houve pacote) também vira um pedaço avulso, sem número.
 function segmentarPorPacote(linhas: LinhaSessao[], pacotes: PacoteItem[]): Segmento[] {
   const segmentos: Segmento[] = [];
   let indice = 0;
+  let numeroPacote = 0;
   pacotes.forEach((p, i) => {
     if (indice >= linhas.length) return;
     const fatia = linhas.slice(indice, indice + p.tamanho);
-    segmentos.push({
-      numero: i + 1,
-      linhas: fatia,
-      pacoteTotal: p.tamanho,
-      bonus: p.bonus === true,
-      completo: fatia.length >= p.tamanho,
-    });
+    if (p.avulso) {
+      segmentos.push({ numero: i + 1, linhas: fatia, completo: false });
+    } else {
+      numeroPacote += 1;
+      segmentos.push({
+        numero: i + 1,
+        numeroPacote,
+        linhas: fatia,
+        pacoteTotal: p.tamanho,
+        bonus: p.bonus === true,
+        completo: fatia.length >= p.tamanho,
+      });
+    }
     indice += fatia.length;
   });
   if (indice < linhas.length) {
@@ -600,8 +615,10 @@ export function HistoricoSessoes({
 
   // "Fechou um pacote?": anexa um tamanho de pacote a um item que já tem
   // sessões avulsas registradas (ex.: fez 1 sessão avulsa e só depois
-  // comprou o pacote de 10 — essa sessão vira a 1ª do pacote). Também serve
-  // pra registrar um novo pacote depois que o anterior foi concluído.
+  // comprou o pacote de 10). A sessão avulsa é cobrada à parte e NÃO entra
+  // no pacote novo — aplicarPacote() reserva ela numa entrada `avulso`
+  // separada, o pacote sempre começa do zero. Também serve pra registrar um
+  // novo pacote depois que o anterior foi concluído.
   const [editandoPacoteChave, setEditandoPacoteChave] = useState<string | null>(null);
   const [pacoteValor, setPacoteValor] = useState("");
   const [salvandoPacote, setSalvandoPacote] = useState(false);
@@ -1373,7 +1390,18 @@ export function HistoricoSessoes({
       overrides.set(chave, nova);
     };
 
-    if (pagoTamanho) adiciona(origem.fichaId, origem.item, { tamanho: pagoTamanho });
+    if (pagoTamanho) {
+      // Sessões avulsas feitas ANTES desse pacote (cobradas à parte) não
+      // podem virar a 1ª sessão dele — reserva elas numa entrada `avulso`
+      // antes de anexar o pacote pago, pra continuarem contando à parte.
+      const chaveOrigem = `${origem.fichaId}::${origem.item}`;
+      const totalSessoes = linhasPorChave.get(chaveOrigem) ?? 0;
+      const semPacote = Math.max(0, totalSessoes - somaPacotes(origem.fichaId, origem.item));
+      if (semPacote > 0) {
+        adiciona(origem.fichaId, origem.item, { tamanho: semPacote, avulso: true });
+      }
+      adiciona(origem.fichaId, origem.item, { tamanho: pagoTamanho });
+    }
     for (const b of bonusValidos) {
       adiciona(fichaPorTipo.get(b.tipo as Tipo)!, b.item, {
         tamanho: b.qtd,
@@ -1772,7 +1800,8 @@ export function HistoricoSessoes({
           const segmentos = segmentarPorPacote(g.linhas, pacotes);
           // Sem pacote em aberto pra esse item — ou nunca teve pacote, ou já
           // concluiu todos os anteriores. É quando faz sentido oferecer
-          // "fechar pacote" (encaixando o que já foi feito como 1ª sessão).
+          // "fechar pacote" (o que já foi feito fica avulso — só as sessões
+          // seguintes contam pro pacote novo, ver aplicarPacote).
           const semPacoteAtivo = g.linhas.length >= somaPacotes(g.fichaId, g.item);
 
           // Item inteiro é bônus de outro item comprado (todo pacote dele
@@ -1813,7 +1842,7 @@ export function HistoricoSessoes({
                   <div className="flex flex-wrap items-center gap-2">
                     <label className="text-xs text-painel-muted">
                       {pacotes.length === 0
-                        ? "Pacote de quantas sessões? (o que já foi feito vira a 1ª)"
+                        ? "Pacote de quantas sessões? (sessões avulsas já feitas ficam separadas, fora do pacote)"
                         : "Novo pacote de quantas sessões? (deixe em branco pra só adicionar um brinde)"}
                     </label>
                     <input
@@ -1988,7 +2017,7 @@ export function HistoricoSessoes({
                             <span
                               className={`text-xs ${seg.completo ? "text-painel-gold font-medium" : "text-painel-muted"}`}
                             >
-                              Pacote {seg.numero}
+                              Pacote {seg.numeroPacote}
                               {seg.completo ? " concluído" : ""}
                             </span>
                             {seg.bonus && (
