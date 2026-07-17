@@ -1500,21 +1500,21 @@ export function HistoricoSessoes({
                 {Array.from({ length: b.quantidade }).map((_, i) => {
                   const subChave = `${b.chave}::${i}`;
                   return (
-                    <div key={subChave} className="flex flex-wrap items-center gap-2 pl-1">
+                    <div key={subChave} className="flex items-center gap-2 pl-1">
                       <input
                         type="date"
                         value={dataBonusPendente[subChave] ?? hojeISO()}
                         onChange={(e) =>
                           setDataBonusPendente((prev) => ({ ...prev, [subChave]: e.target.value }))
                         }
-                        className="rounded-lg border border-painel-border bg-white px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-painel-primary/40"
+                        className="w-[132px] shrink-0 rounded-lg border border-painel-border bg-white px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-painel-primary/40"
                       />
                       <button
                         type="button"
                         onClick={() => confirmarBonusPendente(b, subChave)}
                         disabled={confirmandoBonusChave === subChave}
                         title="Marcar como usufruído nessa data e enviar link de confirmação"
-                        className="inline-flex items-center gap-1 rounded-full bg-painel-gold text-white px-2.5 py-1 text-xs font-medium hover:opacity-90 transition-colors disabled:opacity-40"
+                        className="inline-flex shrink-0 items-center gap-1 rounded-full bg-painel-gold text-white px-2.5 py-1 text-xs font-medium hover:opacity-90 transition-colors disabled:opacity-40"
                       >
                         {confirmandoBonusChave === subChave ? (
                           <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -2063,7 +2063,7 @@ export function HistoricoSessoes({
                         {Array.from({ length: b.quantidade }).map((_, i) => {
                           const subChave = `${b.chave}::${i}`;
                           return (
-                            <div key={subChave} className="flex flex-wrap items-center gap-2 pl-1">
+                            <div key={subChave} className="flex items-center gap-2 pl-1">
                               <input
                                 type="date"
                                 value={dataBonusPendente[subChave] ?? hojeISO()}
@@ -2073,14 +2073,14 @@ export function HistoricoSessoes({
                                     [subChave]: e.target.value,
                                   }))
                                 }
-                                className="rounded-lg border border-painel-border bg-white px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-painel-primary/40"
+                                className="w-[132px] shrink-0 rounded-lg border border-painel-border bg-white px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-painel-primary/40"
                               />
                               <button
                                 type="button"
                                 onClick={() => confirmarBonusPendente(b, subChave)}
                                 disabled={confirmandoBonusChave === subChave}
                                 title="Marcar como usufruído nessa data e enviar link de confirmação"
-                                className="inline-flex items-center gap-1 rounded-full bg-painel-gold text-white px-2.5 py-1 text-xs font-medium hover:opacity-90 transition-colors disabled:opacity-40"
+                                className="inline-flex shrink-0 items-center gap-1 rounded-full bg-painel-gold text-white px-2.5 py-1 text-xs font-medium hover:opacity-90 transition-colors disabled:opacity-40"
                               >
                                 {confirmandoBonusChave === subChave ? (
                                   <Loader2 className="h-3.5 w-3.5 animate-spin" />
