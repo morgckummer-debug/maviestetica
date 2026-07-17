@@ -13,6 +13,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Send,
+  FileText,
 } from "lucide-react";
 import {
   listarFichas,
@@ -189,7 +190,14 @@ function ListaFichas() {
           />
         </div>
 
-        <div className="mb-7 flex justify-end">
+        <div className="mb-7 flex flex-wrap justify-end gap-2.5">
+          <Link
+            to="/painel/nova"
+            className="inline-flex items-center gap-2 rounded-full border border-painel-border bg-white text-painel-title px-5 py-3 text-sm font-semibold hover:border-painel-primary/40 transition-colors"
+          >
+            <FileText className="h-4 w-4" />
+            Cadastrar ficha física
+          </Link>
           <button
             type="button"
             onClick={() => setEnviandoFicha(true)}

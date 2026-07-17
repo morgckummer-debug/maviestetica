@@ -20,6 +20,7 @@ import { Route as AvaliacaoIndexRouteImport } from './routes/avaliacao.index'
 import { Route as ServicosSlugRouteImport } from './routes/servicos.$slug'
 import { Route as ResultadosPowerReduxRouteImport } from './routes/resultados.power-redux'
 import { Route as PainelPendentesRouteImport } from './routes/painel.pendentes'
+import { Route as PainelNovaRouteImport } from './routes/painel.nova'
 import { Route as PainelIdRouteImport } from './routes/painel.$id'
 import { Route as ConfirmarTokenRouteImport } from './routes/confirmar.$token'
 import { Route as AvaliacaoTipoRouteImport } from './routes/avaliacao.$tipo'
@@ -84,6 +85,11 @@ const PainelPendentesRoute = PainelPendentesRouteImport.update({
   path: '/pendentes',
   getParentRoute: () => PainelRoute,
 } as any)
+const PainelNovaRoute = PainelNovaRouteImport.update({
+  id: '/nova',
+  path: '/nova',
+  getParentRoute: () => PainelRoute,
+} as any)
 const PainelIdRoute = PainelIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -140,6 +146,7 @@ export interface FileRoutesByFullPath {
   '/avaliacao/$tipo': typeof AvaliacaoTipoRoute
   '/confirmar/$token': typeof ConfirmarTokenRoute
   '/painel/$id': typeof PainelIdRoute
+  '/painel/nova': typeof PainelNovaRoute
   '/painel/pendentes': typeof PainelPendentesRoute
   '/resultados/power-redux': typeof ResultadosPowerReduxRoute
   '/servicos/$slug': typeof ServicosSlugRoute
@@ -160,6 +167,7 @@ export interface FileRoutesByTo {
   '/avaliacao/$tipo': typeof AvaliacaoTipoRoute
   '/confirmar/$token': typeof ConfirmarTokenRoute
   '/painel/$id': typeof PainelIdRoute
+  '/painel/nova': typeof PainelNovaRoute
   '/painel/pendentes': typeof PainelPendentesRoute
   '/resultados/power-redux': typeof ResultadosPowerReduxRoute
   '/servicos/$slug': typeof ServicosSlugRoute
@@ -182,6 +190,7 @@ export interface FileRoutesById {
   '/avaliacao/$tipo': typeof AvaliacaoTipoRoute
   '/confirmar/$token': typeof ConfirmarTokenRoute
   '/painel/$id': typeof PainelIdRoute
+  '/painel/nova': typeof PainelNovaRoute
   '/painel/pendentes': typeof PainelPendentesRoute
   '/resultados/power-redux': typeof ResultadosPowerReduxRoute
   '/servicos/$slug': typeof ServicosSlugRoute
@@ -205,6 +214,7 @@ export interface FileRouteTypes {
     | '/avaliacao/$tipo'
     | '/confirmar/$token'
     | '/painel/$id'
+    | '/painel/nova'
     | '/painel/pendentes'
     | '/resultados/power-redux'
     | '/servicos/$slug'
@@ -225,6 +235,7 @@ export interface FileRouteTypes {
     | '/avaliacao/$tipo'
     | '/confirmar/$token'
     | '/painel/$id'
+    | '/painel/nova'
     | '/painel/pendentes'
     | '/resultados/power-redux'
     | '/servicos/$slug'
@@ -246,6 +257,7 @@ export interface FileRouteTypes {
     | '/avaliacao/$tipo'
     | '/confirmar/$token'
     | '/painel/$id'
+    | '/painel/nova'
     | '/painel/pendentes'
     | '/resultados/power-redux'
     | '/servicos/$slug'
@@ -353,6 +365,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PainelPendentesRouteImport
       parentRoute: typeof PainelRoute
     }
+    '/painel/nova': {
+      id: '/painel/nova'
+      path: '/nova'
+      fullPath: '/painel/nova'
+      preLoaderRoute: typeof PainelNovaRouteImport
+      parentRoute: typeof PainelRoute
+    }
     '/painel/$id': {
       id: '/painel/$id'
       path: '/$id'
@@ -414,6 +433,7 @@ declare module '@tanstack/react-router' {
 
 interface PainelRouteChildren {
   PainelIdRoute: typeof PainelIdRoute
+  PainelNovaRoute: typeof PainelNovaRoute
   PainelPendentesRoute: typeof PainelPendentesRoute
   PainelIndexRoute: typeof PainelIndexRoute
   PainelClienteIdRoute: typeof PainelClienteIdRoute
@@ -421,6 +441,7 @@ interface PainelRouteChildren {
 
 const PainelRouteChildren: PainelRouteChildren = {
   PainelIdRoute: PainelIdRoute,
+  PainelNovaRoute: PainelNovaRoute,
   PainelPendentesRoute: PainelPendentesRoute,
   PainelIndexRoute: PainelIndexRoute,
   PainelClienteIdRoute: PainelClienteIdRoute,

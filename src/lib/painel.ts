@@ -236,6 +236,38 @@ export async function atualizarFicha(
   if (!res.ok) throw new Error("Não foi possível salvar as alterações.");
 }
 
+// Cadastra uma ficha nova diretamente pelo painel — para transcrever uma
+// ficha física (papel) que a Marina já tem na clínica. Ao contrário de
+// salvarFicha (server function usada pelo formulário público, gravada com a
+// chave anon), aqui a gravação usa a sessão autenticada da Marina; a policy
+// de INSERT do 0003_anon_insert.sql já libera tanto anon quanto authenticated.
+export async function criarFicha(dados: {
+  tipo: Tipo;
+  nome: string;
+  telefone: string | null;
+  respostas: Record<string, string | boolean | null>;
+  alertas: string[];
+  termo_aceito: boolean;
+  autoriza_foto: boolean;
+}): Promise<Ficha> {
+  const res = await apiRest("fichas", {
+    method: "POST",
+    headers: { Prefer: "return=representation" },
+    body: JSON.stringify({
+      tipo: dados.tipo,
+      nome: dados.nome,
+      telefone: dados.telefone || null,
+      respostas: dados.respostas,
+      alertas: dados.alertas,
+      termo_aceito: dados.termo_aceito,
+      autoriza_foto: dados.autoriza_foto,
+    }),
+  });
+  if (!res.ok) throw new Error("Não foi possível cadastrar a ficha.");
+  const arr = (await res.json()) as Ficha[];
+  return arr[0];
+}
+
 // ------------------------------------------------------------
 // Sessões de atendimento (o "caderninho" digital de cada ficha).
 // A Marina registra data + áreas + observação; a cliente confirma
