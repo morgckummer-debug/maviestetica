@@ -21,11 +21,16 @@ export type Sessao = {
 // esse bônus veio (ex.: comprou pacote de Virilha, ganhou Hidragloss de
 // brinde) — usado pra mostrar o bônus dentro do card do item comprado, em
 // vez de um card próprio separado.
+// `avulso: true` marca uma entrada automática (não é um pacote de verdade,
+// não tem "Pacote N" nem barra de progresso): reserva as sessões avulsas já
+// feitas antes de um pacote ser fechado, pra elas continuarem contando como
+// avulsas (cobradas à parte) em vez de virarem a 1ª sessão do pacote novo.
 export type PacoteItem = {
   tamanho: number;
   bonus?: boolean;
   origemFichaId?: string;
   origemItem?: string;
+  avulso?: boolean;
 };
 
 export type Ficha = {

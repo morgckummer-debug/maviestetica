@@ -114,9 +114,15 @@ type GrupoItem = {
 };
 
 // Um pedaço das sessões de um item que pertence a um mesmo pacote comprado
-// (ou, quando `pacoteTotal` é undefined, sessões avulsas fora de pacote).
+// (ou, quando `pacoteTotal` é undefined, sessões avulsas fora de pacote —
+// seja porque nunca houve pacote, seja porque a entrada é `avulso: true`,
+// reservando sessões que já existiam antes do pacote ser fechado).
+// `numero` é só um identificador estável do pedaço (chave de UI); o rótulo
+// "Pacote N" exibido pra cliente usa `numeroPacote`, que só existe nos
+// pedaços de pacote de verdade (não nos avulsos).
 type Segmento = {
   numero: number;
+  numeroPacote?: number;
   linhas: LinhaSessao[];
   pacoteTotal?: number;
   bonus?: boolean;
@@ -125,22 +131,31 @@ type Segmento = {
 
 // Divide as sessões (já em ordem cronológica) de um item nos pacotes
 // comprados, na ordem em que foram definidos: as primeiras N sessões
-// pertencem ao 1º pacote, as próximas M ao 2º, e assim por diante. O que
-// sobrar depois do último pacote (ou tudo, se nunca houve pacote) vira um
-// segmento avulso, sem número de pacote.
+// pertencem ao 1º pacote, as próximas M ao 2º, e assim por diante. Entradas
+// `avulso: true` reservam sessões que já existiam ANTES de um pacote ser
+// fechado — não contam como "Pacote N", ficam num pedaço avulso próprio, no
+// meio da lista (não só no fim). O que sobrar depois do último pacote (ou
+// tudo, se nunca houve pacote) também vira um pedaço avulso, sem número.
 function segmentarPorPacote(linhas: LinhaSessao[], pacotes: PacoteItem[]): Segmento[] {
   const segmentos: Segmento[] = [];
   let indice = 0;
+  let numeroPacote = 0;
   pacotes.forEach((p, i) => {
     if (indice >= linhas.length) return;
     const fatia = linhas.slice(indice, indice + p.tamanho);
-    segmentos.push({
-      numero: i + 1,
-      linhas: fatia,
-      pacoteTotal: p.tamanho,
-      bonus: p.bonus === true,
-      completo: fatia.length >= p.tamanho,
-    });
+    if (p.avulso) {
+      segmentos.push({ numero: i + 1, linhas: fatia, completo: false });
+    } else {
+      numeroPacote += 1;
+      segmentos.push({
+        numero: i + 1,
+        numeroPacote,
+        linhas: fatia,
+        pacoteTotal: p.tamanho,
+        bonus: p.bonus === true,
+        completo: fatia.length >= p.tamanho,
+      });
+    }
     indice += fatia.length;
   });
   if (indice < linhas.length) {
@@ -600,8 +615,10 @@ export function HistoricoSessoes({
 
   // "Fechou um pacote?": anexa um tamanho de pacote a um item que já tem
   // sessões avulsas registradas (ex.: fez 1 sessão avulsa e só depois
-  // comprou o pacote de 10 — essa sessão vira a 1ª do pacote). Também serve
-  // pra registrar um novo pacote depois que o anterior foi concluído.
+  // comprou o pacote de 10). A sessão avulsa é cobrada à parte e NÃO entra
+  // no pacote novo — aplicarPacote() reserva ela numa entrada `avulso`
+  // separada, o pacote sempre começa do zero. Também serve pra registrar um
+  // novo pacote depois que o anterior foi concluído.
   const [editandoPacoteChave, setEditandoPacoteChave] = useState<string | null>(null);
   const [pacoteValor, setPacoteValor] = useState("");
   const [salvandoPacote, setSalvandoPacote] = useState(false);
@@ -730,7 +747,7 @@ export function HistoricoSessoes({
       const tipoFaltante = tipoBonusSemFicha(bonusFormRegistro[item] ?? []);
       if (tipoFaltante) {
         setErro(
-          `Essa cliente ainda não tem ficha de ${nomeCurto(tipoFaltante)} — manda a anamnese pra ela preencher antes de registrar esse bônus.`,
+          `Essa cliente ainda não tem ficha de ${nomeCurto(tipoFaltante)} — manda a anamnese pra ela preencher antes de registrar esse brinde.`,
         );
         setTipoFaltandoAnamneseRegistro(tipoFaltante);
         return;
@@ -1186,7 +1203,7 @@ export function HistoricoSessoes({
     const data = dataBonusPendente[subChave] || hojeISO();
     if (
       !window.confirm(
-        `Confirma que a cliente usou o bônus de ${b.item} em ${dataBR(data)}? Isso registra a sessão e abre o link de confirmação por WhatsApp.`,
+        `Confirma que a cliente usou o brinde de ${b.item} em ${dataBR(data)}? Isso registra a sessão e abre o link de confirmação por WhatsApp.`,
       )
     )
       return;
@@ -1199,7 +1216,7 @@ export function HistoricoSessoes({
       // confirmação por WhatsApp na hora, em vez de deixar pendente.
       window.open(whatsappDe(nova.token, nova.data), "_blank", "noreferrer");
     } catch (e) {
-      setErroBonusPendente(e instanceof Error ? e.message : "Erro ao registrar o bônus usado.");
+      setErroBonusPendente(e instanceof Error ? e.message : "Erro ao registrar o brinde usado.");
     } finally {
       setConfirmandoBonusChave(null);
     }
@@ -1216,7 +1233,7 @@ export function HistoricoSessoes({
     const alvo = atuais[idx];
     if (
       !window.confirm(
-        `Remover o bônus de ${alvo.tamanho}× ${item}? Se alguma sessão já foi registrada com ele, ela não é apagada — volta a contar como avulsa.`,
+        `Remover o brinde de ${alvo.tamanho}× ${item}? Se alguma sessão já foi registrada com ele, ela não é apagada — volta a contar como avulsa.`,
       )
     )
       return;
@@ -1228,7 +1245,7 @@ export function HistoricoSessoes({
       await atualizarFicha(fId, { pacotes: merge });
       setPacotesOverride((prev) => ({ ...prev, [`${fId}::${item}`]: nova }));
     } catch (e) {
-      setErroBonusPendente(e instanceof Error ? e.message : "Erro ao remover o bônus.");
+      setErroBonusPendente(e instanceof Error ? e.message : "Erro ao remover o brinde.");
     } finally {
       setRemovendoBonusChave(null);
     }
@@ -1373,7 +1390,18 @@ export function HistoricoSessoes({
       overrides.set(chave, nova);
     };
 
-    if (pagoTamanho) adiciona(origem.fichaId, origem.item, { tamanho: pagoTamanho });
+    if (pagoTamanho) {
+      // Sessões avulsas feitas ANTES desse pacote (cobradas à parte) não
+      // podem virar a 1ª sessão dele — reserva elas numa entrada `avulso`
+      // antes de anexar o pacote pago, pra continuarem contando à parte.
+      const chaveOrigem = `${origem.fichaId}::${origem.item}`;
+      const totalSessoes = linhasPorChave.get(chaveOrigem) ?? 0;
+      const semPacote = Math.max(0, totalSessoes - somaPacotes(origem.fichaId, origem.item));
+      if (semPacote > 0) {
+        adiciona(origem.fichaId, origem.item, { tamanho: semPacote, avulso: true });
+      }
+      adiciona(origem.fichaId, origem.item, { tamanho: pagoTamanho });
+    }
     for (const b of bonusValidos) {
       adiciona(fichaPorTipo.get(b.tipo as Tipo)!, b.item, {
         tamanho: b.qtd,
@@ -1403,7 +1431,7 @@ export function HistoricoSessoes({
     const tipoFaltante = tipoBonusSemFicha(bonusForm);
     if (tipoFaltante) {
       setErroPacote(
-        `Essa cliente ainda não tem ficha de ${nomeCurto(tipoFaltante)} — manda a anamnese pra ela preencher antes de registrar esse bônus.`,
+        `Essa cliente ainda não tem ficha de ${nomeCurto(tipoFaltante)} — manda a anamnese pra ela preencher antes de registrar esse brinde.`,
       );
       setTipoFaltandoAnamnese(tipoFaltante);
       return;
@@ -1468,7 +1496,7 @@ export function HistoricoSessoes({
 
       {(bonusPendentesSemOrigem.length > 0 || bonusRealizadosSemOrigem.length > 0) && (
         <div className="mb-5 rounded-xl border border-painel-gold/40 bg-painel-gold/10 p-3.5">
-          <p className="text-xs font-medium text-painel-gold mb-1.5">🎁 Bônus</p>
+          <p className="text-xs font-medium text-painel-gold mb-1.5">🎁 Brinde</p>
           {bonusPendentesSemOrigem.length > 0 && (
             <p className="text-[11px] text-painel-muted mb-2">
               Marque o check no dia em que a cliente usufruir e envie o link de confirmação. A
@@ -1487,7 +1515,7 @@ export function HistoricoSessoes({
                     type="button"
                     onClick={() => removerBonus(b.fichaId, b.item, b.chave)}
                     disabled={removendoBonusChave === b.chave}
-                    title="Remover bônus"
+                    title="Remover brinde"
                     className="text-painel-muted/60 hover:text-painel-alert-text transition-colors disabled:opacity-40"
                   >
                     {removendoBonusChave === b.chave ? (
@@ -1532,7 +1560,7 @@ export function HistoricoSessoes({
               <li key={b.chave} className="flex items-center gap-1.5 text-xs text-painel-chip-text">
                 <Check className="h-3.5 w-3.5 text-painel-gold shrink-0" />
                 <span>
-                  Bônus {b.item} — realizado em {dataBR(b.data)}
+                  Brinde {b.item} — realizado em {dataBR(b.data)}
                 </span>
               </li>
             ))}
@@ -1662,7 +1690,7 @@ export function HistoricoSessoes({
                               }}
                               className="rounded-lg border border-painel-border bg-painel-bg px-2.5 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-painel-primary/40"
                             >
-                              <option value="">Bônus da promoção (opcional)</option>
+                              <option value="">Brinde da promoção (opcional)</option>
                               {opcoesBonus.map((o) => (
                                 <option key={o.valor} value={o.valor}>
                                   {o.rotulo}
@@ -1685,7 +1713,7 @@ export function HistoricoSessoes({
                             <button
                               type="button"
                               onClick={() => removerLinhaBonusRegistro(item, b.chave)}
-                              title="Remover bônus"
+                              title="Remover brinde"
                               className="text-painel-muted/60 hover:text-painel-alert-text transition-colors"
                             >
                               <X className="h-3.5 w-3.5" />
@@ -1697,7 +1725,7 @@ export function HistoricoSessoes({
                           onClick={() => adicionarLinhaBonusRegistro(item)}
                           className="text-xs font-medium text-painel-primary"
                         >
-                          + Adicionar bônus
+                          + Adicionar brinde
                         </button>
                       </div>
                     )}
@@ -1772,7 +1800,8 @@ export function HistoricoSessoes({
           const segmentos = segmentarPorPacote(g.linhas, pacotes);
           // Sem pacote em aberto pra esse item — ou nunca teve pacote, ou já
           // concluiu todos os anteriores. É quando faz sentido oferecer
-          // "fechar pacote" (encaixando o que já foi feito como 1ª sessão).
+          // "fechar pacote" (o que já foi feito fica avulso — só as sessões
+          // seguintes contam pro pacote novo, ver aplicarPacote).
           const semPacoteAtivo = g.linhas.length >= somaPacotes(g.fichaId, g.item);
 
           // Item inteiro é bônus de outro item comprado (todo pacote dele
@@ -1813,8 +1842,8 @@ export function HistoricoSessoes({
                   <div className="flex flex-wrap items-center gap-2">
                     <label className="text-xs text-painel-muted">
                       {pacotes.length === 0
-                        ? "Pacote de quantas sessões? (o que já foi feito vira a 1ª)"
-                        : "Novo pacote de quantas sessões? (deixe em branco pra só adicionar um bônus)"}
+                        ? "Pacote de quantas sessões? (sessões avulsas já feitas ficam separadas, fora do pacote)"
+                        : "Novo pacote de quantas sessões? (deixe em branco pra só adicionar um brinde)"}
                     </label>
                     <input
                       type="number"
@@ -1830,8 +1859,7 @@ export function HistoricoSessoes({
 
                   <div>
                     <p className="text-xs text-painel-muted mb-1.5">
-                      Bônus da promoção (opcional) — sessões extras ou de outro procedimento, dadas
-                      de brinde
+                      Brinde da promoção (opcional) — sessões extras ou de outro procedimento
                     </p>
                     {bonusForm.length > 0 && (
                       <div className="space-y-1.5 mb-1.5">
@@ -1869,7 +1897,7 @@ export function HistoricoSessoes({
                             <button
                               type="button"
                               onClick={() => removerLinhaBonus(b.chave)}
-                              title="Remover bônus"
+                              title="Remover brinde"
                               className="text-painel-muted/60 hover:text-painel-alert-text transition-colors"
                             >
                               <X className="h-3.5 w-3.5" />
@@ -1883,7 +1911,7 @@ export function HistoricoSessoes({
                       onClick={adicionarLinhaBonus}
                       className="text-xs font-medium text-painel-primary"
                     >
-                      + Adicionar bônus
+                      + Adicionar brinde
                     </button>
                   </div>
 
@@ -1989,12 +2017,12 @@ export function HistoricoSessoes({
                             <span
                               className={`text-xs ${seg.completo ? "text-painel-gold font-medium" : "text-painel-muted"}`}
                             >
-                              Pacote {seg.numero}
+                              Pacote {seg.numeroPacote}
                               {seg.completo ? " concluído" : ""}
                             </span>
                             {seg.bonus && (
                               <span className="rounded-full bg-painel-gold/15 text-painel-gold px-2 py-0.5 text-[10px] font-medium">
-                                🎁 Bônus
+                                🎁 Brinde
                               </span>
                             )}
                             <span className="text-xs text-painel-primary underline underline-offset-2">
@@ -2036,21 +2064,21 @@ export function HistoricoSessoes({
                   <div className="mt-3 pt-2.5 border-t border-painel-border/70 space-y-1.5">
                     {bonusAninhado.realizados.map((b) => (
                       <p key={b.chave} className="text-xs text-painel-gold">
-                        🎁 Bônus: {b.item} — realizado em {dataBR(b.data)}
+                        🎁 Brinde: {b.item} — realizado em {dataBR(b.data)}
                       </p>
                     ))}
                     {bonusAninhado.pendentes.map((b) => (
                       <div key={b.chave} className="flex flex-col gap-1.5 text-xs text-painel-gold">
                         <div className="flex flex-wrap items-center gap-2">
                           <span className="flex-1 min-w-[140px]">
-                            🎁 Bônus: {b.quantidade}× {b.item}
+                            🎁 Brinde: {b.quantidade}× {b.item}
                             {multi ? ` — ${nomeCurto(b.tipo)}` : ""}
                           </span>
                           <button
                             type="button"
                             onClick={() => removerBonus(b.fichaId, b.item, b.chave)}
                             disabled={removendoBonusChave === b.chave}
-                            title="Remover bônus"
+                            title="Remover brinde"
                             className="text-painel-gold/70 hover:text-painel-alert-text transition-colors disabled:opacity-40"
                           >
                             {removendoBonusChave === b.chave ? (
@@ -2117,7 +2145,7 @@ export function HistoricoSessoes({
                       onClick={() => iniciarEdicaoPacote(g.chave)}
                       className="text-xs font-medium text-painel-primary"
                     >
-                      + Adicionar bônus
+                      + Adicionar brinde
                     </button>
                   )}
                   {pacotes.length > 0 && (
