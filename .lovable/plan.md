@@ -1,34 +1,22 @@
-
 ## Objetivo
 
-Expor este app como um servidor MCP protegido por OAuth 2.1 do seu Supabase, para Morgana e Marina conectarem no ChatGPT/Claude/Codex e consultarem as fichas e as sessões pendentes usando a própria conta (RLS ativa — cada uma vê só o que já vê no painel).
+Definir uma imagem fixa de preview (`og:image` / `twitter:image`) para a home, para que o dashboard do Lovable, WhatsApp, Google e redes sociais mostrem sempre um screenshot do Hero — em vez de a plataforma tirar uma nova captura a cada publicação.
 
-## Ferramentas (2, apenas leitura)
+## Passos
 
-1. **`listar_fichas`** — busca fichas por nome ou telefone (ou lista as N mais recentes). Retorna: nome, telefone, tipo, data de criação, arquivada.
-   - Input: `{ busca?: string, limite?: number (default 20, max 50) }`
-2. **`sessoes_pendentes_confirmacao`** — lista sessões realizadas há 15+ dias ainda sem confirmação da cliente (mesmo critério do painel "Pendentes"). Retorna: nome da cliente, telefone, data, áreas.
-   - Input: `{}`
+1. **Capturar o Hero atual** com Playwright em 1200×630 (tamanho canônico de og:image), viewport desktop, salvando em `/mnt/documents/og-hero.png` para revisão.
+2. **Publicar como asset CDN** via `lovable-assets`, gerando `src/assets/og-hero.png.asset.json` com URL estável (não muda em republicações futuras).
+3. **Adicionar `og:image` e `twitter:image`** apenas em `src/routes/index.tsx` (leaf route — nunca no `__root.tsx`, senão sobrescreveria todas as páginas de serviço). Vou usar a URL absoluta do CDN Lovable.
+4. **Manter as páginas de serviço intactas** — cada `/servicos/$slug` já tem sua própria imagem no head e continua com preview próprio.
 
-Nenhuma ferramenta de escrita, nada de dados clínicos (respostas de anamnese, alertas de saúde) — só o que precisa pra "quantas fichas tenho da Fulana?" e "quem falta confirmar?".
+## Detalhes técnicos
 
-## Arquitetura
+- `og:image` só entra no leaf, conforme regra do TanStack Start (root concatena em todas as rotas).
+- Dimensões 1200×630 = padrão Open Graph/Twitter Large Card, exigido para renderizar corretamente no WhatsApp e LinkedIn.
+- URL do asset é imutável e sobrevive a redeploys.
+- **Cache**: WhatsApp, Facebook e o próprio dashboard do Lovable guardam o preview anterior. Depois de publicar, o novo preview aparece automaticamente com o tempo; para forçar, dá pra usar o depurador de link de cada plataforma.
 
-- Pacote `@lovable.dev/mcp-js` + Vite plugin. Endpoint em `/mcp`.
-- `defineMcp` com `auth.oauth.issuer({ issuer: "https://jjkmgkorqzbroebhksca.supabase.co/auth/v1", acceptedAudiences: "authenticated" })`.
-- Rota de consentimento em `src/routes/[.]lovable.oauth.consent.tsx`, que reaproveita o login existente do painel (dropdown Morgana/Marina em `/painel`) — se não estiver logada, manda pra `/painel` preservando o `authorization_id`, e volta pra tela de consentir depois do login.
-- Cada tool cria um cliente Supabase por-request usando o `ctx.getToken()`, então o PostgREST aplica as políticas RLS existentes das fichas/sessões como a usuária logada (Morgana ou Marina). Nada de service-role.
+## Fora do escopo
 
-## Arquivos
-
-- `bunfig.toml` — adicionar `@lovable.dev/mcp-js` nos excludes do supply-chain guard.
-- `vite.config.ts` — adicionar `mcpPlugin()`.
-- `src/lib/mcp/index.ts` — `defineMcp` com auth OAuth + as 2 tools.
-- `src/lib/mcp/tools/listar-fichas.ts`
-- `src/lib/mcp/tools/sessoes-pendentes.ts`
-- `src/routes/[.]lovable.oauth.consent.tsx` — tela de consentimento, integrada ao login existente.
-- `src/routes/painel.tsx` — pequeno ajuste: se a URL trouxer `?next=/.lovable/oauth/consent?...`, redirecionar pra lá após login bem-sucedido.
-
-## O que muda pra você
-
-Depois de publicar, você vai poder adicionar este site como conector MCP no ChatGPT/Claude/Codex. Ao conectar, o cliente abre a tela de login do painel, você escolhe Morgana ou Marina, aprova, e a partir daí o assistente pode chamar as 2 ferramentas acima como você. Nada fica exposto publicamente.
+- Não altero layout do Hero, cores, textos nem o `hero-bg.jpg` existente.
+- Não mexo em `__root.tsx` nem em outras rotas.
