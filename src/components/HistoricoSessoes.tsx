@@ -251,6 +251,7 @@ function LinhaSessaoView({
   edicao,
   envio,
   arquivar,
+  escuro,
 }: {
   id: string;
   texto: string;
@@ -263,6 +264,9 @@ function LinhaSessaoView({
   edicao: EdicaoSessao;
   envio: EnvioWhatsapp;
   arquivar: ArquivarConfirmada;
+  // Card do pacote comprado: fundo escuro, então a linha (fora de edição)
+  // usa texto bege/lavanda em vez das cores padrão, pensadas pra fundo claro.
+  escuro?: boolean;
 }) {
   if (arquivar.sessaoId === id) {
     return (
@@ -449,18 +453,39 @@ function LinhaSessaoView({
     );
   }
 
+  const corIcone = escuro
+    ? "text-painel-lilac-soft/60 hover:text-painel-lilac-soft"
+    : "text-painel-muted/60 hover:text-painel-primary";
+  const corIconeFraco = escuro
+    ? "text-painel-lilac-soft/40 hover:text-painel-lilac-soft"
+    : "text-painel-muted/40 hover:text-painel-primary";
+
   return (
     <li className="flex items-center gap-2.5 text-sm">
       <span
         aria-hidden="true"
         className={[
           "h-1.5 w-1.5 rounded-full shrink-0",
-          confirmado ? "bg-painel-muted-2" : "bg-painel-gold",
+          confirmado
+            ? escuro
+              ? "bg-painel-lilac-soft/50"
+              : "bg-painel-muted-2"
+            : escuro
+              ? "bg-painel-gold-soft"
+              : "bg-painel-gold",
         ].join(" ")}
       />
       <span
         title={confirmadoEm ? `Confirmado em ${confirmadaEm(confirmadoEm)}` : undefined}
-        className={confirmado ? "text-painel-chip-text" : "text-painel-gold font-medium"}
+        className={
+          confirmado
+            ? escuro
+              ? "text-painel-lilac-soft/90"
+              : "text-painel-chip-text"
+            : escuro
+              ? "text-painel-gold-soft font-medium"
+              : "text-painel-gold font-medium"
+        }
       >
         {texto}
       </span>
@@ -472,7 +497,7 @@ function LinhaSessaoView({
           type="button"
           onClick={() => edicao.onIniciar({ id, data, observacao })}
           title="Editar sessão"
-          className="p-1 text-painel-muted/50 hover:text-painel-primary transition-colors"
+          className={`p-1 transition-colors ${corIcone}`}
         >
           <Pencil className="h-4 w-4" />
         </button>
@@ -481,7 +506,7 @@ function LinhaSessaoView({
             type="button"
             onClick={() => envio.onIniciar(id)}
             title="Enviar por WhatsApp"
-            className="p-1 text-painel-muted/50 hover:text-painel-primary transition-colors"
+            className={`p-1 transition-colors ${corIcone}`}
           >
             <MessageCircle className="h-4 w-4" />
           </button>
@@ -495,7 +520,7 @@ function LinhaSessaoView({
               type="button"
               onClick={onCopiar}
               title="Copiar link"
-              className="text-painel-muted/60 hover:text-painel-primary transition-colors"
+              className={`transition-colors ${corIcone}`}
             >
               {copiado ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
             </button>
@@ -503,7 +528,7 @@ function LinhaSessaoView({
               type="button"
               onClick={() => envio.onIniciar(id)}
               title="Enviar por WhatsApp"
-              className="text-painel-muted/60 hover:text-painel-primary transition-colors"
+              className={`transition-colors ${corIcone}`}
             >
               <MessageCircle className="h-3.5 w-3.5" />
             </button>
@@ -513,7 +538,7 @@ function LinhaSessaoView({
           type="button"
           onClick={() => edicao.onIniciar({ id, data, observacao })}
           title="Editar sessão"
-          className="text-painel-muted/40 hover:text-painel-primary transition-colors"
+          className={`transition-colors ${corIconeFraco}`}
         >
           <Pencil className="h-3.5 w-3.5" />
         </button>
@@ -521,7 +546,7 @@ function LinhaSessaoView({
           type="button"
           onClick={() => arquivar.onIniciar(id)}
           title="Arquivar sessão"
-          className="text-painel-muted/40 hover:text-painel-alert-text transition-colors"
+          className={`transition-colors ${escuro ? "text-painel-lilac-soft/40 hover:text-painel-alert-text" : "text-painel-muted/40 hover:text-painel-alert-text"}`}
         >
           <Archive className="h-3.5 w-3.5" />
         </button>
@@ -1972,9 +1997,10 @@ export function HistoricoSessoes({
                   const chaveSeg = `${g.chave}::${seg.numero}`;
                   const aberto = expandidos[chaveSeg] ?? !seg.completo;
                   // Mais de um segmento (ex.: sessão avulsa + pacote comprado
-                  // depois) = cada um vira um card próprio, bem separado —
-                  // uma sessão avulsa nunca deve parecer "parte" do pacote.
-                  const classeCardSegmento =
+                  // depois) = a sessão avulsa vira um card próprio, claro,
+                  // bem separado do card escuro do pacote (ver abaixo) — uma
+                  // sessão avulsa nunca deve parecer "parte" do pacote.
+                  const classeCardAvulsa =
                     segmentos.length > 1
                       ? "rounded-xl border border-painel-border bg-white p-3"
                       : "";
@@ -1982,7 +2008,7 @@ export function HistoricoSessoes({
                   // Segmento sem pacote definido: sessões avulsas.
                   if (seg.pacoteTotal === undefined) {
                     return (
-                      <div key={chaveSeg} className={classeCardSegmento}>
+                      <div key={chaveSeg} className={classeCardAvulsa}>
                         {pacotes.length > 0 && (
                           <p className="text-xs text-painel-muted mb-1">Sessões avulsas</p>
                         )}
@@ -2008,19 +2034,25 @@ export function HistoricoSessoes({
                     );
                   }
 
-                  // Segmento de um pacote comprado: colapsa quando concluído.
+                  // Segmento de um pacote comprado: fundo escuro com degradê
+                  // suave e texto bege/lavanda — deixa claro, de longe, que é
+                  // um pacote pago (nunca se confunde com sessões avulsas).
+                  // Colapsa quando concluído.
                   const pct = Math.min(100, (seg.linhas.length / seg.pacoteTotal) * 100);
                   return (
-                    <div key={chaveSeg} className={classeCardSegmento}>
+                    <div
+                      key={chaveSeg}
+                      className="rounded-xl border border-white/10 bg-gradient-to-br from-painel-hero-bg via-[#2b2038] to-painel-primary-deep p-3.5 shadow-sm"
+                    >
                       <div className="flex items-start gap-3 mb-2">
                         <div
                           className="relative h-10 w-10 shrink-0 rounded-full"
                           style={{
-                            background: `conic-gradient(var(--painel-primary) ${pct * 3.6}deg, var(--painel-border) ${pct * 3.6}deg 360deg)`,
+                            background: `conic-gradient(var(--painel-lilac-soft) ${pct * 3.6}deg, rgba(255,255,255,0.15) ${pct * 3.6}deg 360deg)`,
                           }}
                         >
-                          <div className="absolute inset-[3px] flex items-center justify-center rounded-full bg-white">
-                            <span className="text-[10px] font-semibold text-painel-title">
+                          <div className="absolute inset-[3px] flex items-center justify-center rounded-full bg-painel-hero-bg">
+                            <span className="text-[10px] font-semibold text-painel-gold-soft">
                               {seg.linhas.length}/{seg.pacoteTotal}
                             </span>
                           </div>
@@ -2034,26 +2066,26 @@ export function HistoricoSessoes({
                             className="flex flex-wrap items-center gap-1.5 text-left"
                           >
                             {aberto ? (
-                              <ChevronDown className="h-3.5 w-3.5 text-painel-muted shrink-0" />
+                              <ChevronDown className="h-3.5 w-3.5 text-painel-lilac-soft/70 shrink-0" />
                             ) : (
-                              <ChevronRight className="h-3.5 w-3.5 text-painel-muted shrink-0" />
+                              <ChevronRight className="h-3.5 w-3.5 text-painel-lilac-soft/70 shrink-0" />
                             )}
                             <span
-                              className={`text-xs ${seg.completo ? "text-painel-gold font-medium" : "text-painel-muted"}`}
+                              className={`text-xs ${seg.completo ? "text-painel-gold-soft font-medium" : "text-painel-lilac-soft"}`}
                             >
                               Pacote {seg.numero}
                               {seg.completo ? " concluído" : ""}
                             </span>
                             {seg.bonus && (
-                              <span className="rounded-full bg-painel-gold/15 text-painel-gold px-2 py-0.5 text-[10px] font-medium">
+                              <span className="rounded-full bg-white/10 text-painel-gold-soft px-2 py-0.5 text-[10px] font-medium">
                                 🎁 Bônus
                               </span>
                             )}
-                            <span className="text-xs text-painel-primary underline underline-offset-2">
+                            <span className="text-xs text-painel-lilac-soft underline underline-offset-2">
                               {aberto ? "Ocultar" : "Detalhes"}
                             </span>
                           </button>
-                          <span className="text-xs text-painel-muted">
+                          <span className="text-xs text-painel-lilac-soft/70">
                             {seg.linhas.length} de {seg.pacoteTotal} sessões
                           </span>
                         </div>
@@ -2070,6 +2102,7 @@ export function HistoricoSessoes({
                               confirmado={l.confirmado}
                               confirmadoEm={l.confirmado_em}
                               copiado={copiadoId === l.sessaoId}
+                              escuro
                               onCopiar={() => copiar(l.sessaoId, l.token)}
                               arquivar={arquivarState}
                               edicao={edicaoSessao}
