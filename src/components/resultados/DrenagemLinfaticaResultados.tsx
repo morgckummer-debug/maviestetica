@@ -7,7 +7,6 @@ import drenagemBg from "@/assets/services/drenagem-linfatica.jpg";
 const resultados = [
   { id: 1, src: "/drenagem-1.jpg", alt: "Drenagem linfática antes e depois — abdômen lateral" },
   { id: 2, src: "/drenagem-2.jpg", alt: "Drenagem linfática antes e depois — abdômen frontal" },
-  { id: 3, src: "/drenagem-3.jpg", alt: "Drenagem linfática antes e depois — resultado 3" },
   { id: 4, src: "/drenagem-4.jpg", alt: "Drenagem linfática antes e depois — resultado 4" },
   { id: 5, src: "/drenagem-5.jpg", alt: "Drenagem linfática antes e depois — resultado 5" },
   { id: 6, src: "/drenagem-6.jpg", alt: "Drenagem linfática antes e depois — resultado 6" },
