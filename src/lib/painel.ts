@@ -26,6 +26,11 @@ export type PacoteItem = {
   bonus?: boolean;
   origemFichaId?: string;
   origemItem?: string;
+  // Quantas sessões desse item já existiam quando o pacote foi registrado.
+  // Sessões anteriores a esse ponto (ex.: uma sessão avulsa feita antes de a
+  // cliente fechar o pacote) ficam de fora dele — nunca contam como parte
+  // das sessões do pacote, mesmo que o pacote seja registrado depois.
+  inicioIndice?: number;
 };
 
 export type Ficha = {
