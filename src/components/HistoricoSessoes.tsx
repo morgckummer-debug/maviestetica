@@ -1952,7 +1952,7 @@ export function HistoricoSessoes({
                         <div
                           className="relative h-10 w-10 shrink-0 rounded-full"
                           style={{
-                            background: `conic-gradient(var(--painel-gold) ${pct * 3.6}deg, var(--painel-border) ${pct * 3.6}deg 360deg)`,
+                            background: `conic-gradient(var(--painel-primary) ${pct * 3.6}deg, var(--painel-border) ${pct * 3.6}deg 360deg)`,
                           }}
                         >
                           <div className="absolute inset-[3px] flex items-center justify-center rounded-full bg-white">
