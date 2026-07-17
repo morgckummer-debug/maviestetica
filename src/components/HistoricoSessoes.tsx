@@ -123,28 +123,63 @@ type Segmento = {
   completo: boolean;
 };
 
-// Divide as sessões (já em ordem cronológica) de um item nos pacotes
-// comprados, na ordem em que foram definidos: as primeiras N sessões
-// pertencem ao 1º pacote, as próximas M ao 2º, e assim por diante. O que
-// sobrar depois do último pacote (ou tudo, se nunca houve pacote) vira um
-// segmento avulso, sem número de pacote.
-function segmentarPorPacote(linhas: LinhaSessao[], pacotes: PacoteItem[]): Segmento[] {
-  const segmentos: Segmento[] = [];
+// A faixa [inicio, fim) que um pacote ocupa dentro da lista cronológica de
+// sessões de um item. `inicio` nunca fica antes de `inicioIndice` (o total
+// de sessões que já existiam quando o pacote foi registrado) — é isso que
+// impede uma sessão avulsa feita antes de existir o pacote de ser puxada
+// pra dentro dele.
+type FaixaPacote = { pacote: PacoteItem; numero: number; inicio: number; fim: number };
+
+function faixasDePacotes(pacotes: PacoteItem[]): FaixaPacote[] {
+  const faixas: FaixaPacote[] = [];
   let indice = 0;
   pacotes.forEach((p, i) => {
-    if (indice >= linhas.length) return;
-    const fatia = linhas.slice(indice, indice + p.tamanho);
-    segmentos.push({
-      numero: i + 1,
-      linhas: fatia,
-      pacoteTotal: p.tamanho,
-      bonus: p.bonus === true,
-      completo: fatia.length >= p.tamanho,
-    });
-    indice += fatia.length;
+    const inicio = Math.max(indice, p.inicioIndice ?? 0);
+    const fim = inicio + p.tamanho;
+    faixas.push({ pacote: p, numero: i + 1, inicio, fim });
+    indice = fim;
   });
-  if (indice < linhas.length) {
-    segmentos.push({ numero: segmentos.length + 1, linhas: linhas.slice(indice), completo: false });
+  return faixas;
+}
+
+// Há um pacote em andamento (incompleto) para esse total de sessões já
+// registradas? Só o último pacote definido pode estar em aberto — os
+// anteriores são sempre concluídos antes de um novo poder ser cadastrado.
+function temPacoteEmAberto(faixas: FaixaPacote[], totalSessoes: number): boolean {
+  return faixas.some((f) => totalSessoes >= f.inicio && totalSessoes < f.fim);
+}
+
+// Divide as sessões (já em ordem cronológica) de um item nos pacotes
+// comprados, respeitando a faixa de cada um (ver `faixasDePacotes`). Sessões
+// que ficam fora de qualquer faixa — antes do 1º pacote, entre dois pacotes,
+// ou depois do último — formam segmentos avulsos, sem número de pacote.
+function segmentarPorPacote(linhas: LinhaSessao[], pacotes: PacoteItem[]): Segmento[] {
+  const segmentos: Segmento[] = [];
+  let cursor = 0;
+  for (const faixa of faixasDePacotes(pacotes)) {
+    if (cursor >= linhas.length) break;
+    const inicioFaixa = Math.min(faixa.inicio, linhas.length);
+    if (inicioFaixa > cursor) {
+      segmentos.push({
+        numero: segmentos.length + 1,
+        linhas: linhas.slice(cursor, inicioFaixa),
+        completo: true,
+      });
+      cursor = inicioFaixa;
+    }
+    const fatia = linhas.slice(cursor, faixa.fim);
+    if (fatia.length === 0) break;
+    segmentos.push({
+      numero: faixa.numero,
+      linhas: fatia,
+      pacoteTotal: faixa.pacote.tamanho,
+      bonus: faixa.pacote.bonus === true,
+      completo: fatia.length >= faixa.pacote.tamanho,
+    });
+    cursor += fatia.length;
+  }
+  if (cursor < linhas.length) {
+    segmentos.push({ numero: segmentos.length + 1, linhas: linhas.slice(cursor), completo: false });
   }
   return segmentos;
 }
@@ -216,6 +251,7 @@ function LinhaSessaoView({
   edicao,
   envio,
   arquivar,
+  escuro,
 }: {
   id: string;
   texto: string;
@@ -228,6 +264,9 @@ function LinhaSessaoView({
   edicao: EdicaoSessao;
   envio: EnvioWhatsapp;
   arquivar: ArquivarConfirmada;
+  // Card do pacote comprado: fundo escuro, então a linha (fora de edição)
+  // usa texto bege/lavanda em vez das cores padrão, pensadas pra fundo claro.
+  escuro?: boolean;
 }) {
   if (arquivar.sessaoId === id) {
     return (
@@ -414,18 +453,39 @@ function LinhaSessaoView({
     );
   }
 
+  const corIcone = escuro
+    ? "text-painel-lilac-soft/60 hover:text-painel-lilac-soft"
+    : "text-painel-muted/60 hover:text-painel-primary";
+  const corIconeFraco = escuro
+    ? "text-painel-lilac-soft/40 hover:text-painel-lilac-soft"
+    : "text-painel-muted/40 hover:text-painel-primary";
+
   return (
     <li className="flex items-center gap-2.5 text-sm">
       <span
         aria-hidden="true"
         className={[
           "h-1.5 w-1.5 rounded-full shrink-0",
-          confirmado ? "bg-painel-muted-2" : "bg-painel-gold",
+          confirmado
+            ? escuro
+              ? "bg-painel-lilac-soft/50"
+              : "bg-painel-muted-2"
+            : escuro
+              ? "bg-painel-gold-soft"
+              : "bg-painel-gold",
         ].join(" ")}
       />
       <span
         title={confirmadoEm ? `Confirmado em ${confirmadaEm(confirmadoEm)}` : undefined}
-        className={confirmado ? "text-painel-chip-text" : "text-painel-gold font-medium"}
+        className={
+          confirmado
+            ? escuro
+              ? "text-painel-lilac-soft/90"
+              : "text-painel-chip-text"
+            : escuro
+              ? "text-painel-gold-soft font-medium"
+              : "text-painel-gold font-medium"
+        }
       >
         {texto}
       </span>
@@ -437,7 +497,7 @@ function LinhaSessaoView({
           type="button"
           onClick={() => edicao.onIniciar({ id, data, observacao })}
           title="Editar sessão"
-          className="p-1 text-painel-muted/50 hover:text-painel-primary transition-colors"
+          className={`p-1 transition-colors ${corIcone}`}
         >
           <Pencil className="h-4 w-4" />
         </button>
@@ -446,7 +506,7 @@ function LinhaSessaoView({
             type="button"
             onClick={() => envio.onIniciar(id)}
             title="Enviar por WhatsApp"
-            className="p-1 text-painel-muted/50 hover:text-painel-primary transition-colors"
+            className={`p-1 transition-colors ${corIcone}`}
           >
             <MessageCircle className="h-4 w-4" />
           </button>
@@ -460,7 +520,7 @@ function LinhaSessaoView({
               type="button"
               onClick={onCopiar}
               title="Copiar link"
-              className="text-painel-muted/60 hover:text-painel-primary transition-colors"
+              className={`transition-colors ${corIcone}`}
             >
               {copiado ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
             </button>
@@ -468,7 +528,7 @@ function LinhaSessaoView({
               type="button"
               onClick={() => envio.onIniciar(id)}
               title="Enviar por WhatsApp"
-              className="text-painel-muted/60 hover:text-painel-primary transition-colors"
+              className={`transition-colors ${corIcone}`}
             >
               <MessageCircle className="h-3.5 w-3.5" />
             </button>
@@ -478,7 +538,7 @@ function LinhaSessaoView({
           type="button"
           onClick={() => edicao.onIniciar({ id, data, observacao })}
           title="Editar sessão"
-          className="text-painel-muted/40 hover:text-painel-primary transition-colors"
+          className={`transition-colors ${corIconeFraco}`}
         >
           <Pencil className="h-3.5 w-3.5" />
         </button>
@@ -486,7 +546,7 @@ function LinhaSessaoView({
           type="button"
           onClick={() => arquivar.onIniciar(id)}
           title="Arquivar sessão"
-          className="text-painel-muted/40 hover:text-painel-alert-text transition-colors"
+          className={`transition-colors ${escuro ? "text-painel-lilac-soft/40 hover:text-painel-alert-text" : "text-painel-muted/40 hover:text-painel-alert-text"}`}
         >
           <Archive className="h-3.5 w-3.5" />
         </button>
@@ -598,10 +658,12 @@ export function HistoricoSessoes({
   // ver os detalhes, ou pacotes em aberto que ela recolheu.
   const [expandidos, setExpandidos] = useState<Record<string, boolean>>({});
 
-  // "Fechou um pacote?": anexa um tamanho de pacote a um item que já tem
-  // sessões avulsas registradas (ex.: fez 1 sessão avulsa e só depois
-  // comprou o pacote de 10 — essa sessão vira a 1ª do pacote). Também serve
-  // pra registrar um novo pacote depois que o anterior foi concluído.
+  // "Fechou um pacote?": registra um pacote novo pra esse item, mesmo que
+  // ele já tenha sessões avulsas (ex.: fez 1 sessão avulsa e só depois
+  // comprou o pacote de 10). A(s) sessão(ões) avulsa(s) já feitas continuam
+  // avulsas, num card separado — o pacote só passa a contar a partir da
+  // próxima sessão registrada. Também serve pra registrar um novo pacote
+  // depois que o anterior foi concluído.
   const [editandoPacoteChave, setEditandoPacoteChave] = useState<string | null>(null);
   const [pacoteValor, setPacoteValor] = useState("");
   const [salvandoPacote, setSalvandoPacote] = useState(false);
@@ -642,9 +704,6 @@ export function HistoricoSessoes({
     if (chave in pacotesOverride) return pacotesOverride[chave];
     return normalizarPacotes(fichaPorId.get(fId)?.pacotes[item]);
   };
-
-  const somaPacotes = (fId: string, item: string): number =>
-    pacotesDoItem(fId, item).reduce((total, p) => total + p.tamanho, 0);
 
   const multi = fichas.length > 1;
 
@@ -1054,21 +1113,19 @@ export function HistoricoSessoes({
       (OPCOES_SESSAO[f.tipo] ?? []).forEach((item) => {
         const chave = `${f.id}::${item}`;
         const totalSessoes = linhasPorChave.get(chave) ?? 0;
-        let cumulativo = 0;
         let quantidade = 0;
         let origemFichaId: string | undefined;
         let origemItem: string | undefined;
-        for (const p of pacotesDoItem(f.id, item)) {
-          const usadosNestePacote = Math.max(0, Math.min(p.tamanho, totalSessoes - cumulativo));
-          if (p.bonus) {
-            const restante = p.tamanho - usadosNestePacote;
+        for (const faixa of faixasDePacotes(pacotesDoItem(f.id, item))) {
+          const usadosNaFaixa = Math.max(0, Math.min(faixa.fim, totalSessoes) - faixa.inicio);
+          if (faixa.pacote.bonus) {
+            const restante = faixa.pacote.tamanho - usadosNaFaixa;
             quantidade += restante;
-            if (restante > 0 && p.origemFichaId && p.origemItem) {
-              origemFichaId = p.origemFichaId;
-              origemItem = p.origemItem;
+            if (restante > 0 && faixa.pacote.origemFichaId && faixa.pacote.origemItem) {
+              origemFichaId = faixa.pacote.origemFichaId;
+              origemItem = faixa.pacote.origemItem;
             }
           }
-          cumulativo += p.tamanho;
         }
         if (quantidade > 0) {
           lista.push({
@@ -1249,7 +1306,11 @@ export function HistoricoSessoes({
   // porque já completaram todos os pacotes anteriores (ex.: terminou o
   // pacote de 10 e comprou mais 10). Mostra o campo opcional nesses casos.
   const itensSemPacote = itens.filter(
-    (item) => (contagemDoProcedimento.get(item) ?? 0) >= somaPacotes(fichaId, item),
+    (item) =>
+      !temPacoteEmAberto(
+        faixasDePacotes(pacotesDoItem(fichaId, item)),
+        contagemDoProcedimento.get(item) ?? 0,
+      ),
   );
 
   // Número que a sessão a ser registrada teria DENTRO do pacote/segmento
@@ -1257,12 +1318,13 @@ export function HistoricoSessoes({
   // em vez de contar tudo junto desde a 1ª sessão do item.
   const proximaOrdinalLocal = (item: string): number => {
     const totalAtual = contagemDoProcedimento.get(item) ?? 0;
-    let acumulado = 0;
-    for (const { tamanho } of pacotesDoItem(fichaId, item)) {
-      if (totalAtual < acumulado + tamanho) return totalAtual - acumulado + 1;
-      acumulado += tamanho;
+    let indiceAnterior = 0;
+    for (const faixa of faixasDePacotes(pacotesDoItem(fichaId, item))) {
+      if (totalAtual < faixa.inicio) return totalAtual - indiceAnterior + 1;
+      if (totalAtual < faixa.fim) return totalAtual - faixa.inicio + 1;
+      indiceAnterior = faixa.fim;
     }
-    return totalAtual - acumulado + 1;
+    return totalAtual - indiceAnterior + 1;
   };
 
   const iniciarEdicaoPacote = (chave: string) => {
@@ -1368,7 +1430,14 @@ export function HistoricoSessoes({
     };
     const adiciona = (fichaAlvo: string, itemAlvo: string, entrada: PacoteItem) => {
       const chave = `${fichaAlvo}::${itemAlvo}`;
-      const nova = [...(overrides.get(chave) ?? pacotesDoItem(fichaAlvo, itemAlvo)), entrada];
+      // Sessões já registradas pra esse item, antes deste pacote existir,
+      // ficam de fora dele (ver `inicioIndice` em PacoteItem) — é o que
+      // impede uma sessão avulsa já feita de virar a 1ª sessão do pacote.
+      const inicioIndice = linhasPorChave.get(chave) ?? 0;
+      const nova = [
+        ...(overrides.get(chave) ?? pacotesDoItem(fichaAlvo, itemAlvo)),
+        { ...entrada, inicioIndice },
+      ];
       mergeDe(fichaAlvo)[itemAlvo] = nova;
       overrides.set(chave, nova);
     };
@@ -1772,8 +1841,9 @@ export function HistoricoSessoes({
           const segmentos = segmentarPorPacote(g.linhas, pacotes);
           // Sem pacote em aberto pra esse item — ou nunca teve pacote, ou já
           // concluiu todos os anteriores. É quando faz sentido oferecer
-          // "fechar pacote" (encaixando o que já foi feito como 1ª sessão).
-          const semPacoteAtivo = g.linhas.length >= somaPacotes(g.fichaId, g.item);
+          // "fechar pacote" (as sessões avulsas já feitas continuam de fora,
+          // num card separado — o pacote só passa a contar a partir de agora).
+          const semPacoteAtivo = !temPacoteEmAberto(faixasDePacotes(pacotes), g.linhas.length);
 
           // Item inteiro é bônus de outro item comprado (todo pacote dele
           // tem origem conhecida, sem nenhuma sessão avulsa por fora) — não
@@ -1813,7 +1883,7 @@ export function HistoricoSessoes({
                   <div className="flex flex-wrap items-center gap-2">
                     <label className="text-xs text-painel-muted">
                       {pacotes.length === 0
-                        ? "Pacote de quantas sessões? (o que já foi feito vira a 1ª)"
+                        ? "Pacote de quantas sessões? (as sessões avulsas já feitas continuam avulsas, num card separado)"
                         : "Novo pacote de quantas sessões? (deixe em branco pra só adicionar um bônus)"}
                     </label>
                     <input
@@ -1926,11 +1996,19 @@ export function HistoricoSessoes({
                 {segmentos.map((seg) => {
                   const chaveSeg = `${g.chave}::${seg.numero}`;
                   const aberto = expandidos[chaveSeg] ?? !seg.completo;
+                  // Mais de um segmento (ex.: sessão avulsa + pacote comprado
+                  // depois) = a sessão avulsa vira um card próprio, claro,
+                  // bem separado do card escuro do pacote (ver abaixo) — uma
+                  // sessão avulsa nunca deve parecer "parte" do pacote.
+                  const classeCardAvulsa =
+                    segmentos.length > 1
+                      ? "rounded-xl border border-painel-border bg-white p-3"
+                      : "";
 
                   // Segmento sem pacote definido: sessões avulsas.
                   if (seg.pacoteTotal === undefined) {
                     return (
-                      <div key={chaveSeg}>
+                      <div key={chaveSeg} className={classeCardAvulsa}>
                         {pacotes.length > 0 && (
                           <p className="text-xs text-painel-muted mb-1">Sessões avulsas</p>
                         )}
@@ -1956,19 +2034,25 @@ export function HistoricoSessoes({
                     );
                   }
 
-                  // Segmento de um pacote comprado: colapsa quando concluído.
+                  // Segmento de um pacote comprado: fundo escuro com degradê
+                  // suave e texto bege/lavanda — deixa claro, de longe, que é
+                  // um pacote pago (nunca se confunde com sessões avulsas).
+                  // Colapsa quando concluído.
                   const pct = Math.min(100, (seg.linhas.length / seg.pacoteTotal) * 100);
                   return (
-                    <div key={chaveSeg}>
+                    <div
+                      key={chaveSeg}
+                      className="rounded-xl border border-white/10 bg-gradient-to-br from-painel-hero-bg via-[#2b2038] to-painel-primary-deep p-3.5 shadow-sm"
+                    >
                       <div className="flex items-start gap-3 mb-2">
                         <div
                           className="relative h-10 w-10 shrink-0 rounded-full"
                           style={{
-                            background: `conic-gradient(var(--painel-primary) ${pct * 3.6}deg, var(--painel-border) ${pct * 3.6}deg 360deg)`,
+                            background: `conic-gradient(var(--painel-lilac-soft) ${pct * 3.6}deg, rgba(255,255,255,0.15) ${pct * 3.6}deg 360deg)`,
                           }}
                         >
-                          <div className="absolute inset-[3px] flex items-center justify-center rounded-full bg-white">
-                            <span className="text-[10px] font-semibold text-painel-title">
+                          <div className="absolute inset-[3px] flex items-center justify-center rounded-full bg-painel-hero-bg">
+                            <span className="text-[10px] font-semibold text-painel-gold-soft">
                               {seg.linhas.length}/{seg.pacoteTotal}
                             </span>
                           </div>
@@ -1982,26 +2066,26 @@ export function HistoricoSessoes({
                             className="flex flex-wrap items-center gap-1.5 text-left"
                           >
                             {aberto ? (
-                              <ChevronDown className="h-3.5 w-3.5 text-painel-muted shrink-0" />
+                              <ChevronDown className="h-3.5 w-3.5 text-painel-lilac-soft/70 shrink-0" />
                             ) : (
-                              <ChevronRight className="h-3.5 w-3.5 text-painel-muted shrink-0" />
+                              <ChevronRight className="h-3.5 w-3.5 text-painel-lilac-soft/70 shrink-0" />
                             )}
                             <span
-                              className={`text-xs ${seg.completo ? "text-painel-gold font-medium" : "text-painel-muted"}`}
+                              className={`text-xs ${seg.completo ? "text-painel-gold-soft font-medium" : "text-painel-lilac-soft"}`}
                             >
                               Pacote {seg.numero}
                               {seg.completo ? " concluído" : ""}
                             </span>
                             {seg.bonus && (
-                              <span className="rounded-full bg-painel-gold/15 text-painel-gold px-2 py-0.5 text-[10px] font-medium">
+                              <span className="rounded-full bg-white/10 text-painel-gold-soft px-2 py-0.5 text-[10px] font-medium">
                                 🎁 Bônus
                               </span>
                             )}
-                            <span className="text-xs text-painel-primary underline underline-offset-2">
+                            <span className="text-xs text-painel-lilac-soft underline underline-offset-2">
                               {aberto ? "Ocultar" : "Detalhes"}
                             </span>
                           </button>
-                          <span className="text-xs text-painel-muted">
+                          <span className="text-xs text-painel-lilac-soft/70">
                             {seg.linhas.length} de {seg.pacoteTotal} sessões
                           </span>
                         </div>
@@ -2018,6 +2102,7 @@ export function HistoricoSessoes({
                               confirmado={l.confirmado}
                               confirmadoEm={l.confirmado_em}
                               copiado={copiadoId === l.sessaoId}
+                              escuro
                               onCopiar={() => copiar(l.sessaoId, l.token)}
                               arquivar={arquivarState}
                               edicao={edicaoSessao}
