@@ -1791,7 +1791,7 @@ export function HistoricoSessoes({
                 </div>
                 {pacotes.length === 0 && (
                   <span className="text-xs text-painel-muted-2 shrink-0 tabular-nums">
-                    {g.linhas.length} sessõe{g.linhas.length === 1 ? "" : "s"}
+                    {g.linhas.length} {g.linhas.length === 1 ? "sessão" : "sessões"}
                   </span>
                 )}
               </div>
