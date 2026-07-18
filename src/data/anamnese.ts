@@ -3,6 +3,8 @@
 // As respostas são salvas no Supabase no campo `respostas` (JSONB), indexadas
 // pelo `id` de cada campo, então mudar perguntas não exige alterar o banco.
 
+import { cpfValido } from "@/lib/mascaras";
+
 // Esconde o campo quando outro campo tiver determinado valor.
 // Ex.: perguntas de menstruação com { campo: "sexo", valor: "Masculino" }.
 export type CondicaoCampo = { campo: string; valor: string };
@@ -913,6 +915,32 @@ export type Respostas = Record<string, string | boolean | null>;
 export function campoVisivel(campo: Campo, respostas: Respostas): boolean {
   if (!campo.ocultarSe) return true;
   return respostas[campo.ocultarSe.campo] !== campo.ocultarSe.valor;
+}
+
+// Campo preenchido corretamente pra avançar/enviar — obrigatoriedade (todos
+// os tipos) + validade dos dígitos verificadores do CPF (mesmo campo
+// opcional, um CPF digitado errado não passa). Compartilhado entre
+// /avaliacao/$tipo (cliente) e /painel/nova (cadastro manual da Marina),
+// que têm as mesmas regras.
+export function campoValido(campo: Campo, respostas: Respostas): boolean {
+  if (campo.tipo === "texto" && campo.mascara === "cpf") {
+    const valor = String(respostas[campo.id] ?? "").trim();
+    if (valor.length === 0) return !campo.obrigatorio;
+    return cpfValido(valor);
+  }
+  if (campo.tipo === "texto" && campo.obrigatorio) {
+    return String(respostas[campo.id] ?? "").trim().length > 0;
+  }
+  if (campo.tipo === "selecao" && campo.obrigatorio) {
+    return String(respostas[campo.id] ?? "").trim().length > 0;
+  }
+  if (campo.tipo === "multi" && campo.obrigatorio) {
+    return String(respostas[campo.id] ?? "").trim().length > 0;
+  }
+  if (campo.tipo === "simnao") {
+    return respostas[campo.id] === true || respostas[campo.id] === false;
+  }
+  return true;
 }
 
 // Calcula os alertas de segurança a partir das respostas de uma ficha

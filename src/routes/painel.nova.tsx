@@ -9,6 +9,7 @@ import {
   nomeCurto,
   calcularAlertas,
   campoVisivel,
+  campoValido,
   type Tipo,
   type Respostas,
 } from "@/data/anamnese";
@@ -68,22 +69,9 @@ function Formulario({ tipo, onTrocarTipo }: { tipo: Tipo; onTrocarTipo: () => vo
 
   const podeAvancar = (() => {
     if (naConfirmacao) return termoFisico && !enviando;
-    return etapas[step].campos.every((c) => {
-      if (!campoVisivel(c, respostas)) return true;
-      if (c.tipo === "texto" && c.obrigatorio) {
-        return String(respostas[c.id] ?? "").trim().length > 0;
-      }
-      if (c.tipo === "selecao" && c.obrigatorio) {
-        return String(respostas[c.id] ?? "").trim().length > 0;
-      }
-      if (c.tipo === "multi" && c.obrigatorio) {
-        return String(respostas[c.id] ?? "").trim().length > 0;
-      }
-      if (c.tipo === "simnao") {
-        return respostas[c.id] === true || respostas[c.id] === false;
-      }
-      return true;
-    });
+    return etapas[step].campos.every(
+      (c) => !campoVisivel(c, respostas) || campoValido(c, respostas),
+    );
   })();
 
   const cadastrar = async () => {

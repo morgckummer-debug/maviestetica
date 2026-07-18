@@ -6,7 +6,7 @@
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
 import type { Campo, Respostas } from "@/data/anamnese";
-import { aplicarMascara } from "@/lib/mascaras";
+import { aplicarMascara, cpfValido } from "@/lib/mascaras";
 import { buscarEnderecoPorCep } from "@/lib/cep";
 
 export function Chip({
@@ -106,6 +106,13 @@ export function CampoView({
       }
     };
 
+    // CPF: avalia os dígitos verificadores assim que os 11 números são
+    // digitados — mesma lógica usada pra bloquear o "Continuar" (campoValido
+    // em anamnese.ts), só que aqui é feedback em tempo real pra cliente.
+    const cpfDigitado = ((respostas[campo.id] as string) ?? "").replace(/\D/g, "");
+    const cpfInvalido =
+      campo.mascara === "cpf" && cpfDigitado.length === 11 && !cpfValido(cpfDigitado);
+
     return (
       <div>
         <label className="block text-sm font-medium mb-2">{campo.label}</label>
@@ -137,7 +144,13 @@ export function CampoView({
               }}
               onBlur={campo.mascara === "cep" ? buscarCep : undefined}
               placeholder={campo.placeholder}
-              className={campo.mascara === "cep" ? `${inputBase} pr-10` : inputBase}
+              className={[
+                inputBase,
+                campo.mascara === "cep" ? "pr-10" : "",
+                cpfInvalido ? "border-rose focus:ring-rose/40" : "",
+              ]
+                .filter(Boolean)
+                .join(" ")}
             />
             {campo.mascara === "cep" && buscandoCep && (
               <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
@@ -148,6 +161,9 @@ export function CampoView({
           <p className="mt-1.5 text-xs text-rose">
             CEP não encontrado — preencha o endereço manualmente.
           </p>
+        )}
+        {cpfInvalido && (
+          <p className="mt-1.5 text-xs text-rose">CPF inválido — confira os números.</p>
         )}
       </div>
     );
