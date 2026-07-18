@@ -16,13 +16,15 @@ import {
   FileText,
 } from "lucide-react";
 import {
+  listarClientes,
   listarFichas,
   listarFichasExcluidas,
   listarUltimasSessoesPorFicha,
   restaurarFicha,
+  type Cliente,
   type Ficha,
 } from "@/lib/painel";
-import { agruparClientes, digitos, type Cliente } from "@/lib/clientes";
+import { agregarFichas, digitos, type FichasAgregadas } from "@/lib/clientes";
 import { TIPOS, FICHAS, nomeCurto, nomeTipo, type Tipo } from "@/data/anamnese";
 import { EnviarFicha } from "@/components/EnviarFicha";
 import { RamosWatermark } from "@/components/RamosWatermark";
@@ -58,7 +60,11 @@ function diasEntre(dataAntigaISO: string, dataRecenteISO: string): number {
   return Math.round(ms / 86400000);
 }
 
+// Cliente + o que é derivado das fichas dela (contagem, tipos, alertas...).
+type ClienteListado = Cliente & FichasAgregadas & { fichas: Ficha[] };
+
 function ListaFichas() {
+  const [clientesBase, setClientesBase] = useState<Cliente[] | null>(null);
   const [fichas, setFichas] = useState<Ficha[] | null>(null);
   const [erro, setErro] = useState<string | null>(null);
   const [busca, setBusca] = useState("");
@@ -81,6 +87,9 @@ function ListaFichas() {
   const [erroRestaurar, setErroRestaurar] = useState<string | null>(null);
 
   useEffect(() => {
+    listarClientes()
+      .then(setClientesBase)
+      .catch((e) => setErro(e instanceof Error ? e.message : "Erro ao carregar."));
     listarFichas()
       .then(setFichas)
       .catch((e) => setErro(e instanceof Error ? e.message : "Erro ao carregar."));
@@ -93,6 +102,9 @@ function ListaFichas() {
     // aqui ficam em silêncio — não interrompe quem já está com a lista
     // carregada só por causa de uma soneca de rede.
     const intervalo = setInterval(() => {
+      listarClientes()
+        .then(setClientesBase)
+        .catch(() => {});
       listarFichas()
         .then(setFichas)
         .catch(() => {});
@@ -103,8 +115,22 @@ function ListaFichas() {
     return () => clearInterval(intervalo);
   }, []);
 
-  // Agrupa as fichas por pessoa (mesma cliente = mesmo WhatsApp/CPF).
-  const clientes = useMemo(() => (fichas ? agruparClientes(fichas) : []), [fichas]);
+  // Junta cada cliente com as fichas dela (por cliente_id) e o que é
+  // derivado disso (tipos, alertas, se está toda arquivada).
+  const clientes = useMemo<ClienteListado[]>(() => {
+    if (!clientesBase || !fichas) return [];
+    const porCliente = new Map<string, Ficha[]>();
+    for (const f of fichas) {
+      if (!f.cliente_id) continue;
+      const arr = porCliente.get(f.cliente_id);
+      if (arr) arr.push(f);
+      else porCliente.set(f.cliente_id, [f]);
+    }
+    return clientesBase.map((c) => {
+      const fichasDoCliente = porCliente.get(c.id) ?? [];
+      return { ...c, fichas: fichasDoCliente, ...agregarFichas(fichasDoCliente) };
+    });
+  }, [clientesBase, fichas]);
 
   // Dias desde a atividade mais recente da cliente (a sessão mais nova,
   // entre TODAS as fichas dela — se ela ainda mexe em algum procedimento,
@@ -133,8 +159,7 @@ function ListaFichas() {
       if (c.nome.toLowerCase().includes(q)) return true;
       if (qDigitos) {
         if (digitos(c.telefone).includes(qDigitos)) return true;
-        if (c.fichas.some((f) => digitos(f.respostas?.cpf as string).includes(qDigitos)))
-          return true;
+        if (digitos(c.cpf).includes(qDigitos)) return true;
       }
       return false;
     });
@@ -213,7 +238,7 @@ function ListaFichas() {
         <div className="mb-5 flex items-baseline justify-between gap-3">
           <h2 className="font-display text-[34px] text-painel-title">Clientes</h2>
           <p className="text-[13px] text-painel-muted">
-            {fichas
+            {clientesBase && fichas
               ? busca || filtroTipo !== "todas"
                 ? `${filtrados.length} de ${clientes.length} cliente(s)`
                 : `${clientes.length} cliente(s) · ${fichas.length} ficha(s)`
@@ -244,13 +269,13 @@ function ListaFichas() {
           </div>
         )}
 
-        {!fichas && !erro && (
+        {(!clientesBase || !fichas) && !erro && (
           <div className="flex justify-center py-16">
             <Loader2 className="h-6 w-6 animate-spin text-painel-muted" />
           </div>
         )}
 
-        {fichas && filtrados.length === 0 && (
+        {clientesBase && fichas && filtrados.length === 0 && (
           <div className="flex flex-col items-center justify-center py-16 text-center text-painel-muted">
             <Inbox className="h-10 w-10 mb-3 opacity-50" />
             <p>
@@ -262,7 +287,7 @@ function ListaFichas() {
         )}
 
         <div className="space-y-3">
-          {paginados.map((c: Cliente) => {
+          {paginados.map((c: ClienteListado) => {
             const dias = diasSemAtividade.get(c.id);
             const inativaAutomatica = dias !== undefined && dias >= DIAS_INATIVA;
             const inativa = c.todasArquivadas || inativaAutomatica;
@@ -309,7 +334,7 @@ function ListaFichas() {
                   </p>
                 </div>
                 <div className="flex items-center gap-3.5 shrink-0">
-                  {c.autorizaFoto ? (
+                  {c.autoriza_foto ? (
                     <span title="Autorizou uso de imagem">
                       <Camera className="h-4 w-4 text-painel-green" />
                     </span>

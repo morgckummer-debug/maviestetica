@@ -39,6 +39,9 @@ export type Ficha = {
   tipo: Tipo;
   nome: string;
   telefone: string | null;
+  // Dona da ficha. Nullable só nas fichas de antes da migração 0011
+  // (script scripts/migrar-clientes.mjs) — toda ficha nova já nasce ligada.
+  cliente_id: string | null;
   respostas: Record<string, string | boolean | null>;
   alertas: string[];
   termo_aceito: boolean;
@@ -56,6 +59,44 @@ export type Ficha = {
   // ganhou mais 2 de brinde numa promoção. Aceita também os formatos antigos
   // (um número só, ou uma lista de números), salvos antes de existir bônus.
   pacotes: Record<string, number | number[] | PacoteItem[]>;
+};
+
+// Cadastro da cliente — fonte única da identidade (nome, contato,
+// endereço...), separada da anamnese de cada tratamento (que continua em
+// `Ficha`). Ver migração 0011_clientes.sql.
+export type Cliente = {
+  id: string;
+  created_at: string;
+  nome: string;
+  telefone: string | null;
+  cpf: string | null;
+  email: string | null;
+  nascimento: string | null; // "YYYY-MM-DD"
+  sexo: string | null;
+  profissao: string | null;
+  estado_civil: string | null;
+  cep: string | null;
+  endereco: string | null;
+  numero: string | null;
+  complemento: string | null;
+  cidade: string | null;
+  como_conheceu: string | null;
+  autoriza_foto: boolean;
+  arquivada: boolean;
+  excluida: boolean;
+};
+
+// Um contrato já gerado e impresso — ver migração 0012_contratos.sql.
+export type Contrato = {
+  id: string;
+  cliente_id: string;
+  created_at: string;
+  profissao: string | null;
+  estado_civil: string | null;
+  itens: { chave: string; tipo: string; descricao: string; quantidade: string }[];
+  forma_pagamento: string | null;
+  autoriza_foto: boolean;
+  data_contrato: string; // "YYYY-MM-DD"
 };
 
 function agora(): number {
@@ -250,6 +291,7 @@ export async function criarFicha(dados: {
   tipo: Tipo;
   nome: string;
   telefone: string | null;
+  clienteId: string;
   respostas: Record<string, string | boolean | null>;
   alertas: string[];
   termo_aceito: boolean;
@@ -262,6 +304,7 @@ export async function criarFicha(dados: {
       tipo: dados.tipo,
       nome: dados.nome,
       telefone: dados.telefone || null,
+      cliente_id: dados.clienteId,
       respostas: dados.respostas,
       alertas: dados.alertas,
       termo_aceito: dados.termo_aceito,
@@ -270,6 +313,219 @@ export async function criarFicha(dados: {
   });
   if (!res.ok) throw new Error("Não foi possível cadastrar a ficha.");
   const arr = (await res.json()) as Ficha[];
+  return arr[0];
+}
+
+// ------------------------------------------------------------
+// Cadastro de clientes — fonte única da identidade (nome, contato,
+// endereço...). Ver migração 0011_clientes.sql.
+// ------------------------------------------------------------
+
+// Acha (por telefone/CPF) ou cria a cliente, pela mesma função
+// security-definer usada pelo formulário público (0011_clientes.sql) —
+// usada pelo cadastro manual (painel/nova) pra não duplicar cliente
+// quando a Marina transcreve uma ficha física de alguém que já tem cadastro.
+export async function encontrarOuCriarCliente(
+  respostas: Record<string, string | boolean | null>,
+  telefone: string | null,
+): Promise<string> {
+  const texto = (v: unknown): string | null =>
+    typeof v === "string" && v.trim() ? v.trim() : null;
+  const res = await apiRest("rpc/encontrar_ou_criar_cliente", {
+    method: "POST",
+    body: JSON.stringify({
+      p_nome: texto(respostas.nome) ?? "",
+      p_telefone: telefone || null,
+      p_cpf: texto(respostas.cpf),
+      p_email: texto(respostas.email),
+      p_nascimento: texto(respostas.nascimento),
+      p_sexo: texto(respostas.sexo),
+      p_profissao: texto(respostas.profissao),
+      p_estado_civil: texto(respostas.estadoCivil),
+      p_cep: texto(respostas.cep),
+      p_endereco: texto(respostas.endereco),
+      p_numero: texto(respostas.numero),
+      p_complemento: texto(respostas.complemento),
+      p_cidade: texto(respostas.cidade),
+      p_como_conheceu: texto(respostas.comoConheceu),
+      p_autoriza_foto: false,
+    }),
+  });
+  if (!res.ok) {
+    const detalhe = await res.text().catch(() => "");
+    if (/function .*encontrar_ou_criar_cliente.* does not exist/i.test(detalhe)) {
+      throw new Error(
+        "Rode a migração 0011_clientes.sql no Supabase (SQL Editor) para ativar o cadastro de clientes.",
+      );
+    }
+    throw new Error("Não foi possível salvar os dados da cliente.");
+  }
+  return (await res.json()) as string;
+}
+
+export async function listarClientes(): Promise<Cliente[]> {
+  const res = await apiRest("clientes?select=*&excluida=eq.false&order=created_at.desc");
+  if (!res.ok) {
+    const detalhe = await res.text().catch(() => "");
+    if (/relation .*clientes.* does not exist/i.test(detalhe)) {
+      throw new Error(
+        "Rode a migração 0011_clientes.sql no Supabase (SQL Editor) para ativar o cadastro de clientes.",
+      );
+    }
+    throw new Error("Não foi possível carregar as clientes.");
+  }
+  return (await res.json()) as Cliente[];
+}
+
+export async function obterCliente(id: string): Promise<Cliente | null> {
+  const res = await apiRest(`clientes?id=eq.${encodeURIComponent(id)}&select=*`);
+  if (!res.ok) throw new Error("Não foi possível carregar a cliente.");
+  const arr = (await res.json()) as Cliente[];
+  return arr[0] ?? null;
+}
+
+// Fichas de uma cliente específica (aba "Fichas" e histórico de sessões).
+export async function listarFichasDoCliente(clienteId: string): Promise<Ficha[]> {
+  const res = await apiRest(
+    `fichas?select=*&cliente_id=eq.${encodeURIComponent(clienteId)}&excluida=eq.false&order=created_at.desc`,
+  );
+  if (!res.ok) throw new Error("Não foi possível carregar as fichas da cliente.");
+  return (await res.json()) as Ficha[];
+}
+
+export async function atualizarCliente(
+  id: string,
+  patch: Partial<
+    Pick<
+      Cliente,
+      | "nome"
+      | "telefone"
+      | "cpf"
+      | "email"
+      | "nascimento"
+      | "sexo"
+      | "profissao"
+      | "estado_civil"
+      | "cep"
+      | "endereco"
+      | "numero"
+      | "complemento"
+      | "cidade"
+      | "como_conheceu"
+      | "autoriza_foto"
+      | "arquivada"
+    >
+  >,
+): Promise<void> {
+  const res = await apiRest(`clientes?id=eq.${encodeURIComponent(id)}`, {
+    method: "PATCH",
+    headers: { Prefer: "return=minimal" },
+    body: JSON.stringify(patch),
+  });
+  if (!res.ok) throw new Error("Não foi possível salvar as alterações do cadastro.");
+}
+
+async function marcarClienteExcluida(id: string, excluida: boolean): Promise<void> {
+  const res = await apiRest(`clientes?id=eq.${encodeURIComponent(id)}`, {
+    method: "PATCH",
+    headers: { Prefer: "return=representation" },
+    body: JSON.stringify({ excluida }),
+  });
+  if (!res.ok) {
+    throw new Error(
+      excluida ? "Não foi possível excluir a cliente." : "Não foi possível restaurar a cliente.",
+    );
+  }
+  const alteradas = (await res.json().catch(() => [])) as unknown[];
+  if (!Array.isArray(alteradas) || alteradas.length === 0) {
+    throw new Error(
+      "A alteração não foi salva no banco (permissão de atualizar clientes ausente).",
+    );
+  }
+}
+
+export async function excluirCliente(id: string): Promise<void> {
+  await marcarClienteExcluida(id, true);
+}
+
+export async function restaurarCliente(id: string): Promise<void> {
+  await marcarClienteExcluida(id, false);
+}
+
+// Exclui a cliente e TODAS as fichas dela de verdade (sem volta) — as
+// fichas são excluídas uma a uma (reaproveitando excluirFichaDefinitivamente,
+// que já cuida das sessões via cascade) antes de apagar o cadastro, porque
+// a FK fichas.cliente_id não tem "on delete cascade" — exclusão definitiva é
+// sempre um passo explícito, igual já era por ficha.
+export async function excluirClienteDefinitivamente(id: string): Promise<void> {
+  const fichas = await listarFichasDoCliente(id);
+  for (const f of fichas) {
+    await excluirFichaDefinitivamente(f.id);
+  }
+  const res = await apiRest(`clientes?id=eq.${encodeURIComponent(id)}`, {
+    method: "DELETE",
+    headers: { Prefer: "return=representation" },
+  });
+  if (!res.ok) throw new Error("Não foi possível excluir a cliente definitivamente.");
+  const apagadas = (await res.json().catch(() => [])) as unknown[];
+  if (!Array.isArray(apagadas) || apagadas.length === 0) {
+    throw new Error("A exclusão não foi salva no banco (permissão de excluir clientes ausente).");
+  }
+}
+
+// ------------------------------------------------------------
+// Contratos gerados — histórico (aba "Contratos"). Ver migração
+// 0012_contratos.sql.
+// ------------------------------------------------------------
+
+export async function listarContratos(clienteId: string): Promise<Contrato[]> {
+  const res = await apiRest(
+    `contratos?select=*&cliente_id=eq.${encodeURIComponent(clienteId)}&order=created_at.desc`,
+  );
+  if (!res.ok) {
+    const detalhe = await res.text().catch(() => "");
+    if (/relation .*contratos.* does not exist/i.test(detalhe)) {
+      throw new Error(
+        "Rode a migração 0012_contratos.sql no Supabase (SQL Editor) para ativar o histórico de contratos.",
+      );
+    }
+    throw new Error("Não foi possível carregar os contratos.");
+  }
+  return (await res.json()) as Contrato[];
+}
+
+export async function criarContrato(dados: {
+  clienteId: string;
+  profissao: string | null;
+  estadoCivil: string | null;
+  itens: Contrato["itens"];
+  formaPagamento: string | null;
+  autorizaFoto: boolean;
+  dataContrato: string;
+}): Promise<Contrato> {
+  const res = await apiRest("contratos", {
+    method: "POST",
+    headers: { Prefer: "return=representation" },
+    body: JSON.stringify({
+      cliente_id: dados.clienteId,
+      profissao: dados.profissao,
+      estado_civil: dados.estadoCivil,
+      itens: dados.itens,
+      forma_pagamento: dados.formaPagamento,
+      autoriza_foto: dados.autorizaFoto,
+      data_contrato: dados.dataContrato,
+    }),
+  });
+  if (!res.ok) {
+    const detalhe = await res.text().catch(() => "");
+    if (/relation .*contratos.* does not exist/i.test(detalhe)) {
+      throw new Error(
+        "Rode a migração 0012_contratos.sql no Supabase (SQL Editor) para ativar o histórico de contratos.",
+      );
+    }
+    throw new Error("Não foi possível salvar o contrato.");
+  }
+  const arr = (await res.json()) as Contrato[];
   return arr[0];
 }
 

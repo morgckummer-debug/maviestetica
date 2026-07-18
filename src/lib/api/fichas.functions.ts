@@ -18,6 +18,48 @@ const schema = z.object({
   autoriza_foto: z.boolean().default(false),
 });
 
+// Acha (por telefone/CPF) ou cria a cliente dona da ficha, pela função
+// security-definer `encontrar_ou_criar_cliente` (0011_clientes.sql) — o
+// `anon` nunca lê/grava a tabela `clientes` direto, só chama essa função.
+async function encontrarOuCriarCliente(
+  respostas: Record<string, string | boolean | null>,
+  telefone: string,
+): Promise<string> {
+  const texto = (v: unknown): string | null =>
+    typeof v === "string" && v.trim() ? v.trim() : null;
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/encontrar_ou_criar_cliente`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      apikey: SUPABASE_ANON_KEY!,
+      Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+    },
+    body: JSON.stringify({
+      p_nome: texto(respostas.nome) ?? "",
+      p_telefone: telefone || null,
+      p_cpf: texto(respostas.cpf),
+      p_email: texto(respostas.email),
+      p_nascimento: texto(respostas.nascimento),
+      p_sexo: texto(respostas.sexo),
+      p_profissao: texto(respostas.profissao),
+      p_estado_civil: texto(respostas.estadoCivil),
+      p_cep: texto(respostas.cep),
+      p_endereco: texto(respostas.endereco),
+      p_numero: texto(respostas.numero),
+      p_complemento: texto(respostas.complemento),
+      p_cidade: texto(respostas.cidade),
+      p_como_conheceu: texto(respostas.comoConheceu),
+      p_autoriza_foto: false,
+    }),
+  });
+  if (!res.ok) {
+    const detalhe = await res.text().catch(() => "");
+    console.error("Falha ao localizar/criar cliente no Supabase:", res.status, detalhe);
+    throw new Error("Não foi possível salvar seus dados. Tente novamente.");
+  }
+  return (await res.json()) as string;
+}
+
 export const salvarFicha = createServerFn({ method: "POST" })
   .inputValidator(schema)
   .handler(async ({ data }) => {
@@ -27,6 +69,8 @@ export const salvarFicha = createServerFn({ method: "POST" })
     if (!data.termo_aceito) {
       throw new Error("É necessário aceitar o termo de responsabilidade.");
     }
+
+    const clienteId = await encontrarOuCriarCliente(data.respostas, data.telefone);
 
     const res = await fetch(`${SUPABASE_URL}/rest/v1/fichas`, {
       method: "POST",
@@ -40,6 +84,7 @@ export const salvarFicha = createServerFn({ method: "POST" })
         tipo: data.tipo,
         nome: data.nome,
         telefone: data.telefone || null,
+        cliente_id: clienteId,
         respostas: data.respostas,
         alertas: data.alertas,
         termo_aceito: data.termo_aceito,

@@ -213,6 +213,13 @@ const ETAPA_DADOS: Etapa = {
   ],
 };
 
+// Campos do Cadastro da cliente (aba "Cadastro", tabela `clientes` —
+// migração 0011_clientes.sql). Mesmos campos de ETAPA_DADOS: continuam
+// sendo perguntados no formulário de ficha (é assim que os dados de uma
+// cliente nova entram no sistema), mas a edição depois de enviada a ficha
+// passa a acontecer no Cadastro, não mais dentro de cada ficha.
+export const CAMPOS_CADASTRO: Campo[] = ETAPA_DADOS.campos;
+
 // Perguntas que não se aplicam a pacientes do sexo masculino
 // (menstruação, gravidez, menopausa, amamentação).
 const OCULTAR_SE_MASCULINO: CondicaoCampo = { campo: "sexo", valor: "Masculino" };

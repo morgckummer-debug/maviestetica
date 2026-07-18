@@ -1,8 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { ArrowLeft, Camera, CameraOff, Loader2, Plus, Printer, Trash2 } from "lucide-react";
-import { listarFichas, type Ficha } from "@/lib/painel";
-import { clientePorFichaId } from "@/lib/clientes";
+import { obterCliente, criarContrato, type Cliente } from "@/lib/painel";
 import { OPCOES_SESSAO, TIPOS, nomeCurto, type Tipo } from "@/data/anamnese";
 import { aplicarMascara, formatarDataBRBarra } from "@/lib/mascaras";
 import { ESTADOS_CIVIS, MESES_PT, type ItemContratado } from "@/data/contrato";
@@ -37,9 +36,12 @@ function novoItem(): ItemContratado {
 
 function GerarContrato() {
   const { id } = useParams({ from: "/painel/contrato/$id" });
-  const [fichas, setFichas] = useState<Ficha[] | null>(null);
+  const [cliente, setCliente] = useState<Cliente | null>(null);
+  const [naoEncontrada, setNaoEncontrada] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const [hidratado, setHidratado] = useState(false);
+  const [salvando, setSalvando] = useState(false);
+  const [erroSalvar, setErroSalvar] = useState<string | null>(null);
 
   const [profissao, setProfissao] = useState("");
   const [estadoCivil, setEstadoCivil] = useState("");
@@ -55,44 +57,42 @@ function GerarContrato() {
   const [dataAno, setDataAno] = useState("");
 
   useEffect(() => {
-    listarFichas()
-      .then(setFichas)
+    obterCliente(id)
+      .then((c) => {
+        if (!c) {
+          setNaoEncontrada(true);
+          return;
+        }
+        setCliente(c);
+      })
       .catch((e) => setErro(e instanceof Error ? e.message : "Erro ao carregar."));
     const hoje = hojeDMY();
     setDataDia(hoje.dia);
     setDataMes(hoje.mes);
     setDataAno(hoje.ano);
-  }, []);
+  }, [id]);
 
-  const cliente = useMemo(() => (fichas ? clientePorFichaId(fichas, id) : null), [fichas, id]);
-
-  // Pré-preenche a partir das fichas da cliente, uma única vez — depois disso
-  // a Marina pode editar livremente sem o formulário sobrescrever por cima.
+  // Pré-preenche a partir do cadastro da cliente, uma única vez — depois
+  // disso a Marina pode editar livremente sem o formulário sobrescrever por
+  // cima. Vem de uma linha só (tabela `clientes`), então não tem mais o
+  // risco de misturar endereço de fichas diferentes da mesma pessoa.
   useEffect(() => {
     if (!cliente || hidratado) return;
-    const respostaEm = (chave: string): string => {
-      for (const f of cliente.fichas) {
-        const v = f.respostas?.[chave];
-        if (typeof v === "string" && v.trim()) return v.trim();
-      }
-      return "";
-    };
-    const nascimentoBruto = respostaEm("nascimento");
-    const enderecoBruto = respostaEm("endereco");
-    const numeroBruto = respostaEm("numero");
-    const complementoBruto = respostaEm("complemento");
-    const cidadeBruta = respostaEm("cidade");
-    setNascimento(nascimentoBruto ? formatarDataBRBarra(nascimentoBruto) : "");
+    setNascimento(cliente.nascimento ? formatarDataBRBarra(cliente.nascimento) : "");
     setCpf(cliente.cpf ? aplicarMascara("cpf", cliente.cpf) : "");
     setTelefone(cliente.telefone ? aplicarMascara("telefone", cliente.telefone) : "");
     setEndereco(
-      [[enderecoBruto, numeroBruto].filter(Boolean).join(", "), complementoBruto, cidadeBruta]
+      [
+        [cliente.endereco, cliente.numero].filter(Boolean).join(", "),
+        cliente.complemento,
+        cliente.cidade,
+      ]
         .filter(Boolean)
         .join(", "),
     );
-    setProfissao(respostaEm("profissao"));
-    setEstadoCivil(respostaEm("estadoCivil"));
-    setAutorizaFoto(cliente.autorizaFoto);
+    setProfissao(cliente.profissao ?? "");
+    setEstadoCivil(cliente.estado_civil ?? "");
+    setAutorizaFoto(cliente.autoriza_foto);
     setHidratado(true);
   }, [cliente, hidratado]);
 
@@ -101,6 +101,34 @@ function GerarContrato() {
 
   const removerItem = (chave: string) =>
     setItens((prev) => (prev.length > 1 ? prev.filter((i) => i.chave !== chave) : prev));
+
+  // Salva o contrato (aba "Contratos" da cliente) e só então abre a
+  // impressão — se o salvamento falhar, avisa mas não trava a impressão,
+  // já que ela pode precisar do papel na hora mesmo assim.
+  const imprimir = async () => {
+    if (!cliente) return;
+    setSalvando(true);
+    setErroSalvar(null);
+    try {
+      const ano = Number(dataAno) || new Date().getFullYear();
+      const mes = String(Number(dataMes) || new Date().getMonth() + 1).padStart(2, "0");
+      const dia = String(Number(dataDia) || new Date().getDate()).padStart(2, "0");
+      await criarContrato({
+        clienteId: cliente.id,
+        profissao: profissao.trim() || null,
+        estadoCivil: estadoCivil.trim() || null,
+        itens,
+        formaPagamento: formaPagamento.trim() || null,
+        autorizaFoto,
+        dataContrato: `${ano}-${mes}-${dia}`,
+      });
+    } catch (e) {
+      setErroSalvar(e instanceof Error ? e.message : "Erro ao salvar o contrato.");
+    } finally {
+      setSalvando(false);
+    }
+    window.print();
+  };
 
   const dados = {
     nome: cliente?.nome ?? "",
@@ -129,21 +157,21 @@ function GerarContrato() {
     );
   }
 
-  if (!fichas) {
-    return (
-      <div className="flex justify-center py-16">
-        <Loader2 className="h-6 w-6 animate-spin text-painel-muted" />
-      </div>
-    );
-  }
-
-  if (!cliente) {
+  if (naoEncontrada) {
     return (
       <div className="text-center py-16">
         <p className="text-painel-muted mb-4">Cliente não encontrada.</p>
         <Link to="/painel" className="text-painel-primary underline">
           Voltar à lista
         </Link>
+      </div>
+    );
+  }
+
+  if (!cliente) {
+    return (
+      <div className="flex justify-center py-16">
+        <Loader2 className="h-6 w-6 animate-spin text-painel-muted" />
       </div>
     );
   }
@@ -409,12 +437,19 @@ function GerarContrato() {
             </div>
           </div>
 
+          {erroSalvar && <p className="text-sm text-painel-alert-text">{erroSalvar}</p>}
+
           <button
             type="button"
-            onClick={() => window.print()}
-            className="w-full inline-flex items-center justify-center gap-2 rounded-full bg-painel-primary text-white px-6 py-3 text-sm font-semibold hover:bg-painel-primary/90 transition-colors"
+            onClick={imprimir}
+            disabled={salvando}
+            className="w-full inline-flex items-center justify-center gap-2 rounded-full bg-painel-primary text-white px-6 py-3 text-sm font-semibold hover:bg-painel-primary/90 transition-colors disabled:opacity-60"
           >
-            <Printer className="h-4 w-4" />
+            {salvando ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Printer className="h-4 w-4" />
+            )}
             Imprimir contrato
           </button>
         </div>

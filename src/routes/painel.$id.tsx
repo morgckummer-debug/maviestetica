@@ -9,8 +9,6 @@ import {
   Check,
   Archive,
   Trash2,
-  Pencil,
-  X,
 } from "lucide-react";
 import { getFicha, nomeTipo, type Campo } from "@/data/anamnese";
 import {
@@ -20,12 +18,14 @@ import {
   excluirFichaDefinitivamente,
   type Ficha,
 } from "@/lib/painel";
-import { mascaraTelefone, mascaraCpf, formatarDataBR, aplicarMascara } from "@/lib/mascaras";
-import { buscarEnderecoPorCep } from "@/lib/cep";
+import { mascaraTelefone, mascaraCpf, formatarDataBR } from "@/lib/mascaras";
 import { RamosWatermark } from "@/components/RamosWatermark";
 
-// Etapa de dados pessoais (nome, telefone, endereço...) — é a única que a
-// Marina pode editar depois, para atualizar celular/endereço da cliente.
+// Dados pessoais (nome, telefone, endereço...) não aparecem mais aqui —
+// viraram a aba "Cadastro" na página da cliente (tabela `clientes`,
+// migração 0011). Essa etapa só continua existindo na config da ficha
+// (data/anamnese.ts) porque o formulário público ainda pergunta esses
+// campos ao preencher uma ficha nova.
 const TITULO_DADOS_PESSOAIS = "Seus dados";
 
 export const Route = createFileRoute("/painel/$id")({
@@ -110,13 +110,6 @@ function DetalheFicha() {
   // null = nada em andamento; senão, qual das duas opções está sendo salva.
   const [excluindo, setExcluindo] = useState<"arquivar" | "definitivo" | null>(null);
 
-  const [editandoDados, setEditandoDados] = useState(false);
-  const [dadosForm, setDadosForm] = useState<Record<string, string>>({});
-  const [salvandoDados, setSalvandoDados] = useState(false);
-  const [erroDados, setErroDados] = useState<string | null>(null);
-  const [buscandoCepDados, setBuscandoCepDados] = useState(false);
-  const [cepDadosNaoEncontrado, setCepDadosNaoEncontrado] = useState(false);
-
   useEffect(() => {
     obterFicha(id)
       .then((f) => {
@@ -173,77 +166,6 @@ function DetalheFicha() {
       setFicha({ ...ficha, autoriza_foto: novo });
     } catch (e) {
       setErro(e instanceof Error ? e.message : "Erro ao atualizar a autorização de imagem.");
-    }
-  };
-
-  const camposDadosPessoais = (): Campo[] => {
-    if (!ficha) return [];
-    const etapa = getFicha(ficha.tipo)?.etapas.find((e) => e.titulo === TITULO_DADOS_PESSOAIS);
-    return etapa?.campos ?? [];
-  };
-
-  const iniciarEdicaoDados = () => {
-    if (!ficha) return;
-    const inicial: Record<string, string> = {};
-    for (const c of camposDadosPessoais()) {
-      inicial[c.id] = String(ficha.respostas?.[c.id] ?? "");
-    }
-    setDadosForm(inicial);
-    setErroDados(null);
-    setCepDadosNaoEncontrado(false);
-    setEditandoDados(true);
-  };
-
-  // Mesma busca por CEP (ViaCEP) do formulário de preenchimento — faltava
-  // aqui na edição, então o endereço nunca vinha automático ao editar.
-  const buscarCepDados = async () => {
-    const digitos = (dadosForm.cep ?? "").replace(/\D/g, "");
-    if (digitos.length !== 8) return;
-    setCepDadosNaoEncontrado(false);
-    setBuscandoCepDados(true);
-    try {
-      const endereco = await buscarEnderecoPorCep(digitos);
-      if (!endereco) {
-        setCepDadosNaoEncontrado(true);
-        return;
-      }
-      const rua = [endereco.logradouro, endereco.bairro].filter(Boolean).join(", ");
-      setDadosForm((prev) => ({
-        ...prev,
-        ...(rua ? { endereco: rua } : {}),
-        ...(endereco.localidade
-          ? {
-              cidade: endereco.uf ? `${endereco.localidade} - ${endereco.uf}` : endereco.localidade,
-            }
-          : {}),
-      }));
-    } finally {
-      setBuscandoCepDados(false);
-    }
-  };
-
-  const salvarDados = async () => {
-    if (!ficha) return;
-    setSalvandoDados(true);
-    setErroDados(null);
-    try {
-      const respostas = { ...ficha.respostas };
-      for (const c of camposDadosPessoais()) {
-        respostas[c.id] = dadosForm[c.id]?.trim() || null;
-      }
-      // As colunas "telefone" e "nome" (usadas na lista, no topo da ficha e
-      // para agrupar as fichas da mesma cliente) espelham os campos
-      // "whatsapp" e "nome" das respostas — não bastava atualizar só o
-      // JSON de respostas.
-      const telefone = respostas.whatsapp ? String(respostas.whatsapp) : null;
-      const nome = respostas.nome ? String(respostas.nome).trim() : ficha.nome;
-      await atualizarFicha(id, { respostas, telefone, nome });
-      setFicha({ ...ficha, respostas, telefone, nome });
-      setEditandoDados(false);
-    } catch (e) {
-      setErroDados(e instanceof Error ? e.message : "Erro ao salvar os dados.");
-    } finally {
-      setSalvandoDados(false);
     }
   };
 
@@ -309,7 +231,9 @@ function DetalheFicha() {
 
   const r = ficha.respostas ?? {};
   const def = getFicha(ficha.tipo);
-  const etapas = def?.etapas ?? [];
+  // "Seus dados" (nome, contato, endereço...) virou a aba Cadastro na
+  // página da cliente — aqui só entra o resto da anamnese.
+  const etapas = (def?.etapas ?? []).filter((e) => e.titulo !== TITULO_DADOS_PESSOAIS);
   const camposMedidas = def?.camposMedidas ?? [];
   const avaliacao = def?.avaliacao ?? [];
   const imc = calcularImc(medidas.altura, medidas.peso);
@@ -336,14 +260,15 @@ function DetalheFicha() {
             <ArrowLeft className="h-4 w-4" />
             Todas as clientes
           </Link>
-          {/* A página da cliente aceita o id de qualquer ficha do grupo. */}
-          <Link
-            to="/painel/cliente/$id"
-            params={{ id }}
-            className="text-sm text-primary underline underline-offset-4 hover:opacity-80"
-          >
-            Página da cliente · sessões
-          </Link>
+          {ficha.cliente_id && (
+            <Link
+              to="/painel/cliente/$id"
+              params={{ id: ficha.cliente_id }}
+              className="text-sm text-primary underline underline-offset-4 hover:opacity-80"
+            >
+              Página da cliente · sessões
+            </Link>
+          )}
         </div>
 
         <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-6">
@@ -493,170 +418,40 @@ function DetalheFicha() {
 
             if (linhas.length === 0) return null;
 
-            const ehDadosPessoais = etapa.titulo === TITULO_DADOS_PESSOAIS;
-            const editandoEsta = ehDadosPessoais && editandoDados;
-            const camposFaltando = etapa.campos.filter(
-              (c) =>
-                "obrigatorio" in c && c.obrigatorio && !String(dadosForm[c.id] ?? "").trim(),
-            );
-            const podeSalvarDados = camposFaltando.length === 0;
-
             return (
               <div key={etapa.titulo} className={`rounded-2xl border ${bordaCard} bg-card p-5`}>
-                <div className="flex items-center justify-between gap-3 mb-3">
-                  <h3 className="font-medium text-primary">{etapa.titulo}</h3>
-                  {ehDadosPessoais && !editandoDados && (
-                    <button
-                      type="button"
-                      onClick={iniciarEdicaoDados}
-                      className="inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:opacity-80 transition-opacity"
+                <h3 className="font-medium text-primary mb-3">{etapa.titulo}</h3>
+                <dl className="grid md:grid-cols-2 gap-x-8">
+                  {linhas.map((l) => (
+                    <div
+                      key={l.id}
+                      className={`flex justify-between gap-4 py-1.5 text-sm border-b ${
+                        l.alerta ? "border-rose/30" : "border-border/50"
+                      }`}
                     >
-                      <Pencil className="h-3.5 w-3.5" />
-                      Editar dados
-                    </button>
-                  )}
-                </div>
-
-                {editandoEsta ? (
-                  <div>
-                    <div className="grid sm:grid-cols-2 gap-4 mb-4">
-                      {etapa.campos.map((c) => (
-                        <div key={c.id}>
-                          <label className="block text-xs font-medium text-muted-foreground mb-1.5">
-                            {c.label}
-                          </label>
-                          {c.tipo === "selecao" ? (
-                            <div className="flex flex-wrap gap-2">
-                              {c.opcoes.map((op) => (
-                                <button
-                                  key={op}
-                                  type="button"
-                                  onClick={() => setDadosForm((prev) => ({ ...prev, [c.id]: op }))}
-                                  className={[
-                                    "rounded-full border px-3 py-1.5 text-sm transition-colors",
-                                    dadosForm[c.id] === op
-                                      ? "bg-lavender-soft border-lavender text-primary font-medium"
-                                      : "bg-card border-border text-foreground/70 hover:border-primary/40",
-                                  ].join(" ")}
-                                >
-                                  {op}
-                                </button>
-                              ))}
-                            </div>
-                          ) : c.tipo === "texto" ? (
-                            <div className="relative">
-                              <input
-                                type={c.inputMode === "date" ? "date" : "text"}
-                                inputMode={
-                                  c.inputMode === "tel" ||
-                                  c.inputMode === "email" ||
-                                  c.inputMode === "numeric"
-                                    ? c.inputMode
-                                    : undefined
-                                }
-                                value={dadosForm[c.id] ?? ""}
-                                onChange={(e) => {
-                                  setDadosForm((prev) => ({
-                                    ...prev,
-                                    [c.id]: aplicarMascara(c.mascara, e.target.value),
-                                  }));
-                                  if (c.mascara === "cep") setCepDadosNaoEncontrado(false);
-                                }}
-                                onBlur={c.mascara === "cep" ? buscarCepDados : undefined}
-                                placeholder={c.placeholder}
-                                className={[
-                                  "w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring",
-                                  c.mascara === "cep" ? "pr-9" : "",
-                                ]
-                                  .filter(Boolean)
-                                  .join(" ")}
-                              />
-                              {c.mascara === "cep" && buscandoCepDados && (
-                                <Loader2 className="absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
-                              )}
-                              {c.mascara === "cep" && cepDadosNaoEncontrado && (
-                                <p className="mt-1.5 text-xs text-rose">
-                                  CEP não encontrado — preencha o endereço manualmente.
-                                </p>
-                              )}
-                            </div>
-                          ) : null}
-                        </div>
-                      ))}
-                    </div>
-
-                    {erroDados && <p className="text-sm text-destructive mb-3">{erroDados}</p>}
-
-                    {/* Sem isso, o botão só ficava opaco (fácil de não notar) e o clique
-                        em "Salvar" não fazia nada — sem dizer por quê. */}
-                    {!podeSalvarDados && (
-                      <p className="text-sm text-destructive mb-3">
-                        Preencha para salvar: {camposFaltando.map((c) => c.label).join(", ")}
-                      </p>
-                    )}
-
-                    <div className="flex items-center gap-3">
-                      <button
-                        type="button"
-                        onClick={salvarDados}
-                        disabled={salvandoDados || !podeSalvarDados}
-                        className="inline-flex items-center gap-2 rounded-full bg-primary text-primary-foreground px-5 py-2 text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-40"
-                      >
-                        {salvandoDados ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                        ) : (
-                          <Check className="h-4 w-4" />
-                        )}
-                        Salvar
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setEditandoDados(false)}
-                        disabled={salvandoDados}
-                        className="inline-flex items-center gap-1.5 rounded-full border border-border px-5 py-2 text-sm font-medium text-foreground/70 hover:border-primary/40 transition-colors disabled:opacity-40"
-                      >
-                        <X className="h-4 w-4" />
-                        Cancelar
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <dl className="grid md:grid-cols-2 gap-x-8">
-                    {linhas.map((l) => (
-                      <div
-                        key={l.id}
-                        className={`flex justify-between gap-4 py-1.5 text-sm border-b ${
-                          l.alerta ? "border-rose/30" : "border-border/50"
+                      <dt className={l.alerta ? "text-rose font-medium" : "text-muted-foreground"}>
+                        {l.alerta && <AlertTriangle className="inline h-3.5 w-3.5 mr-1 -mt-0.5" />}
+                        {l.label}
+                      </dt>
+                      <dd
+                        className={`text-right font-medium shrink-0 ${
+                          l.alerta ? "text-rose" : "text-foreground"
                         }`}
                       >
-                        <dt
-                          className={l.alerta ? "text-rose font-medium" : "text-muted-foreground"}
-                        >
-                          {l.alerta && (
-                            <AlertTriangle className="inline h-3.5 w-3.5 mr-1 -mt-0.5" />
-                          )}
-                          {l.label}
-                        </dt>
-                        <dd
-                          className={`text-right font-medium shrink-0 ${
-                            l.alerta ? "text-rose" : "text-foreground"
-                          }`}
-                        >
-                          {l.val}
-                          {l.detalhe && (
-                            <span
-                              className={`block font-normal ${
-                                l.alerta ? "text-rose/80" : "text-muted-foreground"
-                              }`}
-                            >
-                              {l.detalhe}
-                            </span>
-                          )}
-                        </dd>
-                      </div>
-                    ))}
-                  </dl>
-                )}
+                        {l.val}
+                        {l.detalhe && (
+                          <span
+                            className={`block font-normal ${
+                              l.alerta ? "text-rose/80" : "text-muted-foreground"
+                            }`}
+                          >
+                            {l.detalhe}
+                          </span>
+                        )}
+                      </dd>
+                    </div>
+                  ))}
+                </dl>
               </div>
             );
           })}
