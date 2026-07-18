@@ -157,18 +157,21 @@ function segmentarPorPacote(linhas: LinhaSessao[], pacotes: PacoteItem[]): Segme
   const segmentos: Segmento[] = [];
   let cursor = 0;
   for (const faixa of faixasDePacotes(pacotes)) {
-    if (cursor >= linhas.length) break;
-    const inicioFaixa = Math.min(faixa.inicio, linhas.length);
-    if (inicioFaixa > cursor) {
+    // Pacote ainda não alcançado (nem a sessão que marcaria seu início
+    // existe) — nem ele, nem nenhum pacote seguinte, tem card ainda.
+    if (faixa.inicio > linhas.length) break;
+    if (faixa.inicio > cursor) {
       segmentos.push({
         numero: segmentos.length + 1,
-        linhas: linhas.slice(cursor, inicioFaixa),
+        linhas: linhas.slice(cursor, faixa.inicio),
         completo: true,
       });
-      cursor = inicioFaixa;
+      cursor = faixa.inicio;
     }
+    // Mesmo com 0 sessões feitas ainda (pacote recém-fechado), o card do
+    // pacote já deve aparecer — só não teria card se nem tivesse sido
+    // alcançado (checado acima).
     const fatia = linhas.slice(cursor, faixa.fim);
-    if (fatia.length === 0) break;
     segmentos.push({
       numero: faixa.numero,
       linhas: fatia,
