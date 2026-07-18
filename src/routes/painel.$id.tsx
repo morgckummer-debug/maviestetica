@@ -21,6 +21,7 @@ import {
   type Ficha,
 } from "@/lib/painel";
 import { mascaraTelefone, mascaraCpf, formatarDataBR, aplicarMascara } from "@/lib/mascaras";
+import { buscarEnderecoPorCep } from "@/lib/cep";
 import { RamosWatermark } from "@/components/RamosWatermark";
 
 // Etapa de dados pessoais (nome, telefone, endereço...) — é a única que a
@@ -113,6 +114,8 @@ function DetalheFicha() {
   const [dadosForm, setDadosForm] = useState<Record<string, string>>({});
   const [salvandoDados, setSalvandoDados] = useState(false);
   const [erroDados, setErroDados] = useState<string | null>(null);
+  const [buscandoCepDados, setBuscandoCepDados] = useState(false);
+  const [cepDadosNaoEncontrado, setCepDadosNaoEncontrado] = useState(false);
 
   useEffect(() => {
     obterFicha(id)
@@ -187,7 +190,36 @@ function DetalheFicha() {
     }
     setDadosForm(inicial);
     setErroDados(null);
+    setCepDadosNaoEncontrado(false);
     setEditandoDados(true);
+  };
+
+  // Mesma busca por CEP (ViaCEP) do formulário de preenchimento — faltava
+  // aqui na edição, então o endereço nunca vinha automático ao editar.
+  const buscarCepDados = async () => {
+    const digitos = (dadosForm.cep ?? "").replace(/\D/g, "");
+    if (digitos.length !== 8) return;
+    setCepDadosNaoEncontrado(false);
+    setBuscandoCepDados(true);
+    try {
+      const endereco = await buscarEnderecoPorCep(digitos);
+      if (!endereco) {
+        setCepDadosNaoEncontrado(true);
+        return;
+      }
+      const rua = [endereco.logradouro, endereco.bairro].filter(Boolean).join(", ");
+      setDadosForm((prev) => ({
+        ...prev,
+        ...(rua ? { endereco: rua } : {}),
+        ...(endereco.localidade
+          ? {
+              cidade: endereco.uf ? `${endereco.localidade} - ${endereco.uf}` : endereco.localidade,
+            }
+          : {}),
+      }));
+    } finally {
+      setBuscandoCepDados(false);
+    }
   };
 
   const salvarDados = async () => {
@@ -510,25 +542,42 @@ function DetalheFicha() {
                               ))}
                             </div>
                           ) : c.tipo === "texto" ? (
-                            <input
-                              type={c.inputMode === "date" ? "date" : "text"}
-                              inputMode={
-                                c.inputMode === "tel" ||
-                                c.inputMode === "email" ||
-                                c.inputMode === "numeric"
-                                  ? c.inputMode
-                                  : undefined
-                              }
-                              value={dadosForm[c.id] ?? ""}
-                              onChange={(e) =>
-                                setDadosForm((prev) => ({
-                                  ...prev,
-                                  [c.id]: aplicarMascara(c.mascara, e.target.value),
-                                }))
-                              }
-                              placeholder={c.placeholder}
-                              className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                            />
+                            <div className="relative">
+                              <input
+                                type={c.inputMode === "date" ? "date" : "text"}
+                                inputMode={
+                                  c.inputMode === "tel" ||
+                                  c.inputMode === "email" ||
+                                  c.inputMode === "numeric"
+                                    ? c.inputMode
+                                    : undefined
+                                }
+                                value={dadosForm[c.id] ?? ""}
+                                onChange={(e) => {
+                                  setDadosForm((prev) => ({
+                                    ...prev,
+                                    [c.id]: aplicarMascara(c.mascara, e.target.value),
+                                  }));
+                                  if (c.mascara === "cep") setCepDadosNaoEncontrado(false);
+                                }}
+                                onBlur={c.mascara === "cep" ? buscarCepDados : undefined}
+                                placeholder={c.placeholder}
+                                className={[
+                                  "w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring",
+                                  c.mascara === "cep" ? "pr-9" : "",
+                                ]
+                                  .filter(Boolean)
+                                  .join(" ")}
+                              />
+                              {c.mascara === "cep" && buscandoCepDados && (
+                                <Loader2 className="absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
+                              )}
+                              {c.mascara === "cep" && cepDadosNaoEncontrado && (
+                                <p className="mt-1.5 text-xs text-rose">
+                                  CEP não encontrado — preencha o endereço manualmente.
+                                </p>
+                              )}
+                            </div>
                           ) : null}
                         </div>
                       ))}
