@@ -27,6 +27,7 @@ import { Route as ConfirmarTokenRouteImport } from './routes/confirmar.$token'
 import { Route as AvaliacaoTipoRouteImport } from './routes/avaliacao.$tipo'
 import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
 import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]/list-tools'
+import { Route as PainelContratoIdRouteImport } from './routes/painel.contrato.$id'
 import { Route as PainelClienteIdRouteImport } from './routes/painel.cliente.$id'
 import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
 import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
@@ -123,6 +124,11 @@ const Char91DotmcpChar93ListToolsRoute =
     path: '/.mcp/list-tools',
     getParentRoute: () => rootRouteImport,
   } as any)
+const PainelContratoIdRoute = PainelContratoIdRouteImport.update({
+  id: '/contrato/$id',
+  path: '/contrato/$id',
+  getParentRoute: () => PainelRoute,
+} as any)
 const PainelClienteIdRoute = PainelClienteIdRouteImport.update({
   id: '/cliente/$id',
   path: '/cliente/$id',
@@ -162,6 +168,7 @@ export interface FileRoutesByFullPath {
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/painel/cliente/$id': typeof PainelClienteIdRoute
+  '/painel/contrato/$id': typeof PainelContratoIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -184,6 +191,7 @@ export interface FileRoutesByTo {
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/painel/cliente/$id': typeof PainelClienteIdRoute
+  '/painel/contrato/$id': typeof PainelContratoIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -208,6 +216,7 @@ export interface FileRoutesById {
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/painel/cliente/$id': typeof PainelClienteIdRoute
+  '/painel/contrato/$id': typeof PainelContratoIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -233,6 +242,7 @@ export interface FileRouteTypes {
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/painel/cliente/$id'
+    | '/painel/contrato/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -255,6 +265,7 @@ export interface FileRouteTypes {
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/painel/cliente/$id'
+    | '/painel/contrato/$id'
   id:
     | '__root__'
     | '/'
@@ -278,6 +289,7 @@ export interface FileRouteTypes {
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/painel/cliente/$id'
+    | '/painel/contrato/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -427,6 +439,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof Char91DotmcpChar93ListToolsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/painel/contrato/$id': {
+      id: '/painel/contrato/$id'
+      path: '/contrato/$id'
+      fullPath: '/painel/contrato/$id'
+      preLoaderRoute: typeof PainelContratoIdRouteImport
+      parentRoute: typeof PainelRoute
+    }
     '/painel/cliente/$id': {
       id: '/painel/cliente/$id'
       path: '/cliente/$id'
@@ -457,6 +476,7 @@ interface PainelRouteChildren {
   PainelPendentesRoute: typeof PainelPendentesRoute
   PainelIndexRoute: typeof PainelIndexRoute
   PainelClienteIdRoute: typeof PainelClienteIdRoute
+  PainelContratoIdRoute: typeof PainelContratoIdRoute
 }
 
 const PainelRouteChildren: PainelRouteChildren = {
@@ -465,6 +485,7 @@ const PainelRouteChildren: PainelRouteChildren = {
   PainelPendentesRoute: PainelPendentesRoute,
   PainelIndexRoute: PainelIndexRoute,
   PainelClienteIdRoute: PainelClienteIdRoute,
+  PainelContratoIdRoute: PainelContratoIdRoute,
 }
 
 const PainelRouteWithChildren =
