@@ -8,7 +8,7 @@
 // uma cliente atrás do cartão de outra pessoa.
 
 import type { Ficha } from "./painel";
-import type { Tipo } from "@/data/anamnese";
+import type { TipoFicha } from "@/data/anamnese";
 
 // Só os dígitos (para comparar telefone/CPF sem depender da máscara).
 export function digitos(v: string | null | undefined): string {
@@ -26,7 +26,7 @@ export type Cliente = {
   telefone: string | null;
   cpf: string; // dígitos, se houver
   fichas: Ficha[]; // mais recentes primeiro
-  tipos: Tipo[]; // tipos distintos, na ordem em que aparecem
+  tipos: TipoFicha[]; // tipos distintos, na ordem em que aparecem
   alertas: number; // total de alertas somando as fichas
   autorizaFoto: boolean; // alguma ficha autoriza imagem
   // Só considera a cliente inativa (visual acinzentado na lista) quando
@@ -42,7 +42,7 @@ function cpfDaFicha(f: Ficha): string {
 function paraCliente(fichas: Ficha[]): Cliente {
   // fichas já vêm mais recentes primeiro (listarFichas ordena por created_at).
   const rep = fichas[0];
-  const tipos: Tipo[] = [];
+  const tipos: TipoFicha[] = [];
   for (const f of fichas) if (!tipos.includes(f.tipo)) tipos.push(f.tipo);
   return {
     id: rep.id,

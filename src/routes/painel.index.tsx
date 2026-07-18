@@ -23,7 +23,7 @@ import {
   type Ficha,
 } from "@/lib/painel";
 import { agruparClientes, digitos, type Cliente } from "@/lib/clientes";
-import { TIPOS, FICHAS, nomeCurto, nomeTipo, type Tipo } from "@/data/anamnese";
+import { TIPOS, FICHAS, getFicha, nomeCurto, nomeTipo, type Tipo } from "@/data/anamnese";
 import { EnviarFicha } from "@/components/EnviarFicha";
 import { RamosWatermark } from "@/components/RamosWatermark";
 import {
@@ -299,7 +299,7 @@ function ListaFichas() {
                         key={t}
                         className="text-[11px] rounded-full px-2.5 py-0.5 bg-painel-badge-bg text-painel-title"
                       >
-                        {FICHAS[t]?.emoji ?? ""} {nomeCurto(t)}
+                        {getFicha(t)?.emoji ?? ""} {nomeCurto(t)}
                       </span>
                     ))}
                   </div>
@@ -388,7 +388,7 @@ function ListaFichas() {
                   {fichasExcluidas.map((f) => (
                     <li key={f.id} className="flex items-center gap-2 text-sm text-painel-muted-2">
                       <span className="truncate">
-                        {f.nome} · {FICHAS[f.tipo]?.emoji ?? ""} {nomeTipo(f.tipo)}
+                        {f.nome} · {getFicha(f.tipo)?.emoji ?? ""} {nomeTipo(f.tipo)}
                         {f.telefone ? ` · ${f.telefone}` : ""}
                       </span>
                       <button

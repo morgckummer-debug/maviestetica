@@ -3,7 +3,7 @@
 // guardada no navegador (localStorage) e é renovada automaticamente.
 
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from "./supabase";
-import type { Tipo } from "@/data/anamnese";
+import type { Tipo, TipoFicha } from "@/data/anamnese";
 
 const CHAVE_SESSAO = "mavi_sessao";
 
@@ -36,7 +36,7 @@ export type PacoteItem = {
 export type Ficha = {
   id: string;
   created_at: string;
-  tipo: Tipo;
+  tipo: TipoFicha;
   nome: string;
   telefone: string | null;
   respostas: Record<string, string | boolean | null>;
@@ -247,7 +247,7 @@ export async function atualizarFicha(
 // chave anon), aqui a gravação usa a sessão autenticada da Marina; a policy
 // de INSERT do 0003_anon_insert.sql já libera tanto anon quanto authenticated.
 export async function criarFicha(dados: {
-  tipo: Tipo;
+  tipo: TipoFicha;
   nome: string;
   telefone: string | null;
   respostas: Record<string, string | boolean | null>;

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Send, Copy, Check, MessageCircle, X } from "lucide-react";
 import { digitos } from "@/lib/clientes";
 import { aplicarMascara } from "@/lib/mascaras";
-import { TIPOS, FICHAS, nomeCurto, type Tipo } from "@/data/anamnese";
+import { TIPOS, getFicha, nomeCurto, type TipoFicha } from "@/data/anamnese";
 import { PainelModal } from "@/components/PainelModal";
 
 // Painel para gerar e compartilhar o link de uma ficha (anamnese) — link
@@ -19,12 +19,12 @@ export function EnviarFicha({
 }: {
   nomeInicial?: string;
   celularInicial?: string | null;
-  tipoInicial?: Tipo;
+  tipoInicial?: TipoFicha;
   convitePadrao?: boolean;
   onFechar?: () => void;
 }) {
   const [origin, setOrigin] = useState("");
-  const [tipo, setTipo] = useState<Tipo>(tipoInicial ?? "corporal");
+  const [tipo, setTipo] = useState<TipoFicha>(tipoInicial ?? "corporal");
   const [copiado, setCopiado] = useState(false);
   const [convite, setConvite] = useState(convitePadrao);
   const [nome, setNome] = useState(nomeInicial);
@@ -51,7 +51,8 @@ export function EnviarFicha({
       : `${origin}/avaliacao/${tipo}`;
 
   const primeiroNome = nomeLimpo.split(" ")[0];
-  const mensagem = `Oi${primeiroNome ? ` ${primeiroNome}` : ""}! 💜 Antes do seu atendimento na MAVI, preencha sua ficha de ${FICHAS[tipo].nome.toLowerCase()} — leva só alguns minutinhos: ${link}`;
+  const nomeFicha = (getFicha(tipo)?.nome ?? tipo).toLowerCase();
+  const mensagem = `Oi${primeiroNome ? ` ${primeiroNome}` : ""}! 💜 Antes do seu atendimento na MAVI, preencha sua ficha de ${nomeFicha} — leva só alguns minutinhos: ${link}`;
   const whatsapp =
     convite && celularCompleto
       ? `https://wa.me/55${celularDigitos}?text=${encodeURIComponent(mensagem)}`
@@ -98,6 +99,18 @@ export function EnviarFicha({
       </div>
 
       <div className="flex flex-wrap gap-2 mb-4">
+        <button
+          type="button"
+          onClick={() => setTipo("cadastro")}
+          className={[
+            "rounded-full border px-3 py-1.5 text-xs transition-colors",
+            tipo === "cadastro"
+              ? "bg-painel-primary border-painel-primary text-white font-medium"
+              : "bg-white/5 border-white/20 text-white/70 hover:border-white/40",
+          ].join(" ")}
+        >
+          {getFicha("cadastro")?.emoji} Cadastro
+        </button>
         {TIPOS.map((t) => (
           <button
             key={t}
@@ -110,8 +123,8 @@ export function EnviarFicha({
                 : "bg-white/5 border-white/20 text-white/70 hover:border-white/40",
             ].join(" ")}
           >
-            {FICHAS[t].emoji} {nomeCurto(t)}
-            {FICHAS[t].emConstrucao ? " (em breve)" : ""}
+            {getFicha(t)?.emoji} {nomeCurto(t)}
+            {getFicha(t)?.emConstrucao ? " (em breve)" : ""}
           </button>
         ))}
       </div>
