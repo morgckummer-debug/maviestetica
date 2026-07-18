@@ -600,8 +600,10 @@ function agruparPorItem(
       if (s.data > g.maisRecente) g.maisRecente = s.data;
     }
   }
-  const grupos = [...porChave.values()].sort((a, b) => a.maisRecente.localeCompare(b.maisRecente));
-  semItem.sort((a, b) => a.data.localeCompare(b.data));
+  // Itens (e sessões avulsas) mais recentemente movimentados ficam no topo
+  // da ficha — ordem decrescente, em vez de crescente.
+  const grupos = [...porChave.values()].sort((a, b) => b.maisRecente.localeCompare(a.maisRecente));
+  semItem.sort((a, b) => b.data.localeCompare(a.data));
   return { grupos, semItem };
 }
 
@@ -2016,22 +2018,27 @@ export function HistoricoSessoes({
                           <p className="text-xs text-painel-muted mb-1">Sessões avulsas</p>
                         )}
                         <ul className="space-y-1">
-                          {seg.linhas.map((l, idx) => (
-                            <LinhaSessaoView
-                              key={l.sessaoId}
-                              id={l.sessaoId}
-                              texto={`${dataBR(l.data)}: ${idx + 1}ª sessão (${l.confirmado ? "confirmado" : "aguardando confirmação"})`}
-                              data={l.data}
-                              observacao={l.observacao}
-                              confirmado={l.confirmado}
-                              confirmadoEm={l.confirmado_em}
-                              copiado={copiadoId === l.sessaoId}
-                              onCopiar={() => copiar(l.sessaoId, l.token)}
-                              arquivar={arquivarState}
-                              edicao={edicaoSessao}
-                              envio={envioSessao}
-                            />
-                          ))}
+                          {/* Ordinal calculado na ordem cronológica (idx), mas
+                              exibido com a mais recente no topo (reverse). */}
+                          {seg.linhas
+                            .map((l, idx) => ({ l, ordinal: idx + 1 }))
+                            .reverse()
+                            .map(({ l, ordinal }) => (
+                              <LinhaSessaoView
+                                key={l.sessaoId}
+                                id={l.sessaoId}
+                                texto={`${dataBR(l.data)}: ${ordinal}ª sessão (${l.confirmado ? "confirmado" : "aguardando confirmação"})`}
+                                data={l.data}
+                                observacao={l.observacao}
+                                confirmado={l.confirmado}
+                                confirmadoEm={l.confirmado_em}
+                                copiado={copiadoId === l.sessaoId}
+                                onCopiar={() => copiar(l.sessaoId, l.token)}
+                                arquivar={arquivarState}
+                                edicao={edicaoSessao}
+                                envio={envioSessao}
+                              />
+                            ))}
                         </ul>
                       </div>
                     );
@@ -2095,23 +2102,26 @@ export function HistoricoSessoes({
                       </div>
                       {aberto && (
                         <ul className="space-y-1">
-                          {seg.linhas.map((l, idx) => (
-                            <LinhaSessaoView
-                              key={l.sessaoId}
-                              id={l.sessaoId}
-                              texto={`${dataBR(l.data)}: ${idx + 1}ª sessão (${l.confirmado ? "confirmado" : "aguardando confirmação"})`}
-                              data={l.data}
-                              observacao={l.observacao}
-                              confirmado={l.confirmado}
-                              confirmadoEm={l.confirmado_em}
-                              copiado={copiadoId === l.sessaoId}
-                              escuro
-                              onCopiar={() => copiar(l.sessaoId, l.token)}
-                              arquivar={arquivarState}
-                              edicao={edicaoSessao}
-                              envio={envioSessao}
-                            />
-                          ))}
+                          {seg.linhas
+                            .map((l, idx) => ({ l, ordinal: idx + 1 }))
+                            .reverse()
+                            .map(({ l, ordinal }) => (
+                              <LinhaSessaoView
+                                key={l.sessaoId}
+                                id={l.sessaoId}
+                                texto={`${dataBR(l.data)}: ${ordinal}ª sessão (${l.confirmado ? "confirmado" : "aguardando confirmação"})`}
+                                data={l.data}
+                                observacao={l.observacao}
+                                confirmado={l.confirmado}
+                                confirmadoEm={l.confirmado_em}
+                                copiado={copiadoId === l.sessaoId}
+                                escuro
+                                onCopiar={() => copiar(l.sessaoId, l.token)}
+                                arquivar={arquivarState}
+                                edicao={edicaoSessao}
+                                envio={envioSessao}
+                              />
+                            ))}
                         </ul>
                       )}
                     </div>
