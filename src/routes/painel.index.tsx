@@ -311,7 +311,7 @@ function ListaFichas() {
                 <div className="flex items-center gap-3.5 shrink-0">
                   {c.autorizaFoto ? (
                     <span title="Autorizou uso de imagem">
-                      <Camera className="h-4 w-4 text-painel-gold" />
+                      <Camera className="h-4 w-4 text-painel-green" />
                     </span>
                   ) : (
                     <span title="Não autorizou uso de imagem">

@@ -9,6 +9,7 @@ import {
   AUTORIZACAO_FOTO_TEXTO,
   calcularAlertas,
   campoVisivel,
+  campoValido,
   type Respostas,
 } from "@/data/anamnese";
 import { salvarFicha } from "@/lib/api/fichas.functions";
@@ -103,22 +104,9 @@ function FichaPage() {
 
   const podeAvancar = (() => {
     if (naTermo) return termoAceito && !enviando;
-    return etapas[step].campos.every((c) => {
-      if (!campoVisivel(c, respostas)) return true;
-      if (c.tipo === "texto" && c.obrigatorio) {
-        return String(respostas[c.id] ?? "").trim().length > 0;
-      }
-      if (c.tipo === "selecao" && c.obrigatorio) {
-        return String(respostas[c.id] ?? "").trim().length > 0;
-      }
-      if (c.tipo === "multi" && c.obrigatorio) {
-        return String(respostas[c.id] ?? "").trim().length > 0;
-      }
-      if (c.tipo === "simnao") {
-        return respostas[c.id] === true || respostas[c.id] === false;
-      }
-      return true;
-    });
+    return etapas[step].campos.every(
+      (c) => !campoVisivel(c, respostas) || campoValido(c, respostas),
+    );
   })();
 
   const enviar = async () => {

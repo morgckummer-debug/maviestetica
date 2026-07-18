@@ -419,7 +419,7 @@ function DetalheFicha() {
             title="A cliente mudou de ideia? Clique para atualizar."
             className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 transition-colors ${
               ficha.autoriza_foto
-                ? "bg-lavender-soft text-primary hover:bg-lavender-soft/70"
+                ? "bg-success/10 text-success hover:bg-success/20"
                 : "bg-destructive/10 text-destructive hover:bg-destructive/20"
             }`}
           >

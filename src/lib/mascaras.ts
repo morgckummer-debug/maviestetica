@@ -21,10 +21,41 @@ export function mascaraCpf(v: string): string {
   return out;
 }
 
-export function aplicarMascara(mascara: "telefone" | "cpf" | undefined, v: string): string {
+// 35700-000
+export function mascaraCep(v: string): string {
+  const d = v.replace(/\D/g, "").slice(0, 8);
+  if (d.length > 5) return `${d.slice(0, 5)}-${d.slice(5)}`;
+  return d;
+}
+
+export function aplicarMascara(mascara: "telefone" | "cpf" | "cep" | undefined, v: string): string {
   if (mascara === "telefone") return mascaraTelefone(v);
   if (mascara === "cpf") return mascaraCpf(v);
+  if (mascara === "cep") return mascaraCep(v);
   return v;
+}
+
+// Valida o CPF pelos dígitos verificadores (algoritmo oficial da Receita) —
+// pega tanto números incompletos/inventados quanto os repetidos clássicos
+// (111.111.111-11 etc., que "passariam" no cálculo se não fossem barrados).
+export function cpfValido(v: string): boolean {
+  const d = v.replace(/\D/g, "");
+  if (d.length !== 11) return false;
+  if (/^(\d)\1{10}$/.test(d)) return false;
+
+  const digitoVerificador = (base: string): number => {
+    let soma = 0;
+    for (let i = 0; i < base.length; i++) {
+      soma += parseInt(base[i], 10) * (base.length + 1 - i);
+    }
+    const resto = (soma * 10) % 11;
+    return resto === 10 ? 0 : resto;
+  };
+
+  return (
+    digitoVerificador(d.slice(0, 9)) === parseInt(d[9], 10) &&
+    digitoVerificador(d.slice(0, 10)) === parseInt(d[10], 10)
+  );
 }
 
 // Data de nascimento: "1977-12-30" (do <input type="date">) -> "30.12.1977"

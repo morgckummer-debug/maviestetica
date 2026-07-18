@@ -3,8 +3,11 @@
 // (/avaliacao/$tipo, preenchido pela cliente) e o cadastro manual no painel
 // (/painel/nova, preenchido pela Marina a partir de uma ficha física).
 
+import { useState } from "react";
+import { Loader2 } from "lucide-react";
 import type { Campo, Respostas } from "@/data/anamnese";
-import { aplicarMascara } from "@/lib/mascaras";
+import { aplicarMascara, cpfValido } from "@/lib/mascaras";
+import { buscarEnderecoPorCep } from "@/lib/cep";
 
 export function Chip({
   label,
@@ -73,7 +76,43 @@ export function CampoView({
   compacto?: boolean;
   mostrarErro?: boolean;
 }) {
+  const [buscandoCep, setBuscandoCep] = useState(false);
+  const [cepNaoEncontrado, setCepNaoEncontrado] = useState(false);
+
   if (campo.tipo === "texto") {
+    // CEP: ao completar os 8 dígitos, busca o endereço (ViaCEP) e já
+    // preenche rua/bairro/cidade — a cliente só completa número/complemento.
+    const buscarCep = async () => {
+      const digitos = (respostas[campo.id] as string | undefined)?.replace(/\D/g, "") ?? "";
+      if (digitos.length !== 8) return;
+      setCepNaoEncontrado(false);
+      setBuscandoCep(true);
+      try {
+        const endereco = await buscarEnderecoPorCep(digitos);
+        if (!endereco) {
+          setCepNaoEncontrado(true);
+          return;
+        }
+        const rua = [endereco.logradouro, endereco.bairro].filter(Boolean).join(", ");
+        if (rua) set("endereco", rua);
+        if (endereco.localidade) {
+          set(
+            "cidade",
+            endereco.uf ? `${endereco.localidade} - ${endereco.uf}` : endereco.localidade,
+          );
+        }
+      } finally {
+        setBuscandoCep(false);
+      }
+    };
+
+    // CPF: avalia os dígitos verificadores assim que os 11 números são
+    // digitados — mesma lógica usada pra bloquear o "Continuar" (campoValido
+    // em anamnese.ts), só que aqui é feedback em tempo real pra cliente.
+    const cpfDigitado = ((respostas[campo.id] as string) ?? "").replace(/\D/g, "");
+    const cpfInvalido =
+      campo.mascara === "cpf" && cpfDigitado.length === 11 && !cpfValido(cpfDigitado);
+
     return (
       <div>
         <label className="block text-sm font-medium mb-2">{campo.label}</label>
@@ -86,22 +125,45 @@ export function CampoView({
             className={inputBase}
           />
         ) : (
-          <input
-            type={campo.inputMode === "date" ? "date" : "text"}
-            inputMode={
-              campo.inputMode === "tel"
-                ? "tel"
-                : campo.inputMode === "email"
-                  ? "email"
-                  : campo.inputMode === "numeric"
-                    ? "numeric"
-                    : undefined
-            }
-            value={(respostas[campo.id] as string) ?? ""}
-            onChange={(e) => set(campo.id, aplicarMascara(campo.mascara, e.target.value))}
-            placeholder={campo.placeholder}
-            className={inputBase}
-          />
+          <div className="relative">
+            <input
+              type={campo.inputMode === "date" ? "date" : "text"}
+              inputMode={
+                campo.inputMode === "tel"
+                  ? "tel"
+                  : campo.inputMode === "email"
+                    ? "email"
+                    : campo.inputMode === "numeric"
+                      ? "numeric"
+                      : undefined
+              }
+              value={(respostas[campo.id] as string) ?? ""}
+              onChange={(e) => {
+                set(campo.id, aplicarMascara(campo.mascara, e.target.value));
+                if (campo.mascara === "cep") setCepNaoEncontrado(false);
+              }}
+              onBlur={campo.mascara === "cep" ? buscarCep : undefined}
+              placeholder={campo.placeholder}
+              className={[
+                inputBase,
+                campo.mascara === "cep" ? "pr-10" : "",
+                cpfInvalido ? "border-rose focus:ring-rose/40" : "",
+              ]
+                .filter(Boolean)
+                .join(" ")}
+            />
+            {campo.mascara === "cep" && buscandoCep && (
+              <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
+            )}
+          </div>
+        )}
+        {campo.mascara === "cep" && cepNaoEncontrado && (
+          <p className="mt-1.5 text-xs text-rose">
+            CEP não encontrado — preencha o endereço manualmente.
+          </p>
+        )}
+        {cpfInvalido && (
+          <p className="mt-1.5 text-xs text-rose">CPF inválido — confira os números.</p>
         )}
       </div>
     );
