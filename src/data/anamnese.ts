@@ -15,8 +15,9 @@ export type CampoTexto = {
   obrigatorio?: boolean;
   multiline?: boolean;
   inputMode?: "text" | "tel" | "email" | "date" | "numeric";
-  // Formata o texto enquanto digita (ex.: celular e CPF)
-  mascara?: "telefone" | "cpf";
+  // Formata o texto enquanto digita (ex.: celular e CPF). "cep" também
+  // dispara a busca automática de endereço (ver CampoView).
+  mascara?: "telefone" | "cpf" | "cep";
   ocultarSe?: CondicaoCampo;
   ajuda?: string;
 };
@@ -151,12 +152,21 @@ const ETAPA_DADOS: Etapa = {
     },
     {
       tipo: "texto",
-      id: "endereco",
-      label: "Endereço (opcional)",
-      placeholder: "Rua, número, complemento",
+      id: "cep",
+      label: "CEP",
+      placeholder: "35700-000",
+      inputMode: "numeric",
+      mascara: "cep",
+      obrigatorio: true,
     },
-    { tipo: "texto", id: "cep", label: "CEP (opcional)", placeholder: "35700-000" },
-    { tipo: "texto", id: "cidade", label: "Cidade (opcional)", placeholder: "Sete Lagoas" },
+    {
+      tipo: "texto",
+      id: "endereco",
+      label: "Endereço",
+      placeholder: "Rua, número, complemento",
+      obrigatorio: true,
+    },
+    { tipo: "texto", id: "cidade", label: "Cidade", placeholder: "Sete Lagoas", obrigatorio: true },
     {
       tipo: "texto",
       id: "comoConheceu",
@@ -629,8 +639,23 @@ const ETAPA_DADOS_DEPILACAO: Etapa = {
       opcoes: ["Feminino", "Masculino"],
       obrigatorio: true,
     },
-    { tipo: "texto", id: "endereco", label: "Endereço", placeholder: "Rua, número, bairro" },
-    { tipo: "texto", id: "cidade", label: "Cidade", placeholder: "Sete Lagoas" },
+    {
+      tipo: "texto",
+      id: "cep",
+      label: "CEP",
+      placeholder: "35700-000",
+      inputMode: "numeric",
+      mascara: "cep",
+      obrigatorio: true,
+    },
+    {
+      tipo: "texto",
+      id: "endereco",
+      label: "Endereço",
+      placeholder: "Rua, número, bairro",
+      obrigatorio: true,
+    },
+    { tipo: "texto", id: "cidade", label: "Cidade", placeholder: "Sete Lagoas", obrigatorio: true },
     {
       tipo: "texto",
       id: "whatsapp",

@@ -21,9 +21,17 @@ export function mascaraCpf(v: string): string {
   return out;
 }
 
-export function aplicarMascara(mascara: "telefone" | "cpf" | undefined, v: string): string {
+// 35700-000
+export function mascaraCep(v: string): string {
+  const d = v.replace(/\D/g, "").slice(0, 8);
+  if (d.length > 5) return `${d.slice(0, 5)}-${d.slice(5)}`;
+  return d;
+}
+
+export function aplicarMascara(mascara: "telefone" | "cpf" | "cep" | undefined, v: string): string {
   if (mascara === "telefone") return mascaraTelefone(v);
   if (mascara === "cpf") return mascaraCpf(v);
+  if (mascara === "cep") return mascaraCep(v);
   return v;
 }
 
