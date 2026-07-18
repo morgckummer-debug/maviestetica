@@ -2154,14 +2154,15 @@ export function HistoricoSessoes({
                           onClick={() => enviarRelatorio(g, seg)}
                           disabled={enviandoRelatorioChave === chaveSeg}
                           title="Gerar link do relatório desse pacote e enviar por WhatsApp"
-                          className="shrink-0 inline-flex items-center gap-1 rounded-full bg-white/10 text-painel-lilac-soft px-2.5 py-1 text-[11px] font-medium hover:bg-white/15 transition-colors disabled:opacity-40"
+                          aria-label="Enviar Relatório"
+                          className="shrink-0 inline-flex items-center gap-1 rounded-full bg-white/10 text-painel-lilac-soft px-2.5 py-1.5 sm:py-1 text-[11px] font-medium hover:bg-white/15 transition-colors disabled:opacity-40"
                         >
                           {enviandoRelatorioChave === chaveSeg ? (
                             <Loader2 className="h-3 w-3 animate-spin" />
                           ) : (
                             <Send className="h-3 w-3" />
                           )}
-                          Enviar Relatório
+                          <span className="hidden sm:inline">Enviar Relatório</span>
                         </button>
                       </div>
                       {erroRelatorioChave[chaveSeg] && (
