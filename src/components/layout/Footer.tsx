@@ -43,7 +43,7 @@ export function Footer() {
           <ul className="space-y-3 text-sm text-muted-foreground">
             <li className="flex items-start gap-2">
               <MessageCircle className="h-4 w-4 mt-0.5 text-primary" />
-              <a href={WHATSAPP_URL} target="_blank" rel="noreferrer" className="hover:text-primary">
+              <a href={WHATSAPP_URL} target="whatsapp" rel="noreferrer" className="hover:text-primary">
                 {WHATSAPP_DISPLAY}
               </a>
             </li>

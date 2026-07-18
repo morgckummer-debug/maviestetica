@@ -495,9 +495,11 @@ function DetalheFicha() {
 
             const ehDadosPessoais = etapa.titulo === TITULO_DADOS_PESSOAIS;
             const editandoEsta = ehDadosPessoais && editandoDados;
-            const podeSalvarDados = etapa.campos.every(
-              (c) => !("obrigatorio" in c && c.obrigatorio) || String(dadosForm[c.id] ?? "").trim(),
+            const camposFaltando = etapa.campos.filter(
+              (c) =>
+                "obrigatorio" in c && c.obrigatorio && !String(dadosForm[c.id] ?? "").trim(),
             );
+            const podeSalvarDados = camposFaltando.length === 0;
 
             return (
               <div key={etapa.titulo} className={`rounded-2xl border ${bordaCard} bg-card p-5`}>
@@ -584,6 +586,14 @@ function DetalheFicha() {
                     </div>
 
                     {erroDados && <p className="text-sm text-destructive mb-3">{erroDados}</p>}
+
+                    {/* Sem isso, o botão só ficava opaco (fácil de não notar) e o clique
+                        em "Salvar" não fazia nada — sem dizer por quê. */}
+                    {!podeSalvarDados && (
+                      <p className="text-sm text-destructive mb-3">
+                        Preencha para salvar: {camposFaltando.map((c) => c.label).join(", ")}
+                      </p>
+                    )}
 
                     <div className="flex items-center gap-3">
                       <button

@@ -39,7 +39,7 @@ export function Contact() {
               <div className="mt-10 flex flex-wrap gap-3">
                 <a
                   href={WHATSAPP_URL}
-                  target="_blank"
+                  target="whatsapp"
                   rel="noreferrer"
                   className="inline-flex items-center gap-2 rounded-full bg-rose text-accent-foreground px-7 py-3.5 text-sm font-medium hover:opacity-90 transition-opacity"
                 >
@@ -63,7 +63,7 @@ export function Contact() {
                 <MessageCircle className="h-5 w-5 mt-1 text-lavender" />
                 <div>
                   <p className="text-xs uppercase tracking-widest text-primary-foreground/60">WhatsApp</p>
-                  <a href={WHATSAPP_URL} target="_blank" rel="noreferrer" className="text-lg">
+                  <a href={WHATSAPP_URL} target="whatsapp" rel="noreferrer" className="text-lg">
                     {WHATSAPP_DISPLAY}
                   </a>
                 </div>

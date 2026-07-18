@@ -58,7 +58,7 @@ export function Hero() {
           <div className="mt-10 flex justify-center lg:justify-start">
             <a
               href={WHATSAPP_URL}
-              target="_blank"
+              target="whatsapp"
               rel="noreferrer"
               className="inline-flex items-center gap-2 rounded-full bg-primary text-primary-foreground px-8 py-4 text-sm font-medium hover:-translate-y-0.5 transition-all shadow-lg shadow-primary/20 hover:shadow-primary/30"
             >
