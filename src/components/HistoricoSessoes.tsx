@@ -2102,9 +2102,17 @@ export function HistoricoSessoes({
                   return (
                     <div
                       key={chaveSeg}
-                      className="rounded-xl border border-white/10 bg-painel-hero-bg p-3.5 shadow-sm"
+                      className="relative overflow-hidden rounded-xl border border-white/10 bg-painel-hero-bg p-3.5 shadow-sm"
                     >
-                      <div className="flex items-start gap-3 mb-2">
+                      <div
+                        aria-hidden="true"
+                        className="pointer-events-none absolute inset-0"
+                        style={{
+                          background:
+                            "radial-gradient(circle at 92% 0%, rgba(179,146,76,.4), transparent 50%), radial-gradient(circle at 4% 100%, rgba(154,111,176,.5), transparent 55%)",
+                        }}
+                      />
+                      <div className="relative flex items-start gap-3 mb-2">
                         <div
                           className="relative h-10 w-10 shrink-0 rounded-full"
                           style={{
@@ -2166,12 +2174,12 @@ export function HistoricoSessoes({
                         </button>
                       </div>
                       {erroRelatorioChave[chaveSeg] && (
-                        <p className="text-[11px] text-painel-alert-text mb-2">
+                        <p className="relative text-[11px] text-painel-alert-text mb-2">
                           {erroRelatorioChave[chaveSeg]}
                         </p>
                       )}
                       {aberto && (
-                        <ul className="space-y-1">
+                        <ul className="relative space-y-1">
                           {seg.linhas
                             .map((l, idx) => ({ l, ordinal: idx + 1 }))
                             .reverse()
