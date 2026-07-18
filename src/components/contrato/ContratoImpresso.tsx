@@ -6,6 +6,8 @@
 
 import {
   CONTRATADA_TEXTO,
+  CONTRATADA_NOME,
+  CONTRATADA_CNPJ,
   CLAUSULA_1_INTRO,
   CLAUSULA_1_OBJETO_INTRO,
   CLAUSULA_1_ITENS,
@@ -146,21 +148,18 @@ export function ContratoImpresso({ dados }: { dados: DadosContrato }) {
           {dados.dataMes ? mesPorExtenso : "________________"} de {dados.dataAno || "________"}
         </p>
 
-        <div className="space-y-14 text-center text-[11pt]">
-          <div>
-            <p className="mb-1">CONTRATANTE:</p>
-            <div className="mx-auto w-[70%] border-t border-black pt-1">CPF: {dados.cpf}</div>
+        <div className="space-y-16 text-center text-[11pt]">
+          <div className="mx-auto w-[70%] border-t border-black pt-1">
+            {dados.nome}
+            <br />
+            CPF: {dados.cpf}
           </div>
-          <div>
-            <p className="mb-1">CONTRATADA:</p>
-            <div className="mx-auto w-[70%] border-t border-black pt-1">
-              CNPJ: 50.531.164/0001-13
-            </div>
+          <div className="mx-auto w-[70%] border-t border-black pt-1">
+            {CONTRATADA_NOME}
+            <br />
+            CNPJ: {CONTRATADA_CNPJ}
           </div>
-          <div>
-            <p className="mb-1">TESTEMUNHA:</p>
-            <div className="mx-auto w-[70%] border-t border-black pt-1">CPF:</div>
-          </div>
+          <div className="mx-auto w-[70%] border-t border-black pt-1">CPF:</div>
         </div>
       </Pagina>
     </div>
