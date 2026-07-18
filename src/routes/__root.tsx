@@ -15,6 +15,7 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { SITE_URL } from "@/data/services";
+import ogSocial from "@/assets/og-social.png.asset.json";
 
 function NotFoundComponent() {
   return (
@@ -108,8 +109,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         content:
           "Centro de estética em Sete Lagoas, MG. Especialistas em drenagem linfática, depilação a laser Ácrus, limpeza de pele profunda, pós-operatório e tratamentos corporais personalizados.",
       },
-      { property: "og:image", content: `${SITE_URL}/icon-512.png` },
-      { name: "twitter:image", content: `${SITE_URL}/icon-512.png` },
+      { property: "og:image", content: `${SITE_URL}${ogSocial.url}` },
+      { property: "og:image:width", content: "1200" },
+      { property: "og:image:height", content: "630" },
+      { property: "og:image:alt", content: "MAVI Centro de Estética — Sete Lagoas, MG" },
+      { name: "twitter:image", content: `${SITE_URL}${ogSocial.url}` },
     ],
     links: [
       {
