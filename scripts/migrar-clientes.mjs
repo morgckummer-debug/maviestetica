@@ -36,7 +36,10 @@ async function api(path, init = {}) {
   const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
     ...init,
     headers: {
-      "Content-Type": "application/json",
+      // Só manda Content-Type quando tem corpo (POST/PATCH) - mandar esse
+      // cabeçalho num GET sem corpo faz o Supabase responder errado
+      // (confirmado: devolvia só 1 linha em vez de todas).
+      ...(init.body ? { "Content-Type": "application/json" } : {}),
       apikey: SERVICE_KEY,
       Authorization: `Bearer ${SERVICE_KEY}`,
       ...init.headers,

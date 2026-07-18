@@ -44,12 +44,15 @@ function Invoke-Api {
     $headers = @{
         "apikey"        = $ServiceKey
         "Authorization" = "Bearer $ServiceKey"
-        "Content-Type"  = "application/json"
     }
     if ($Prefer) { $headers["Prefer"] = $Prefer }
 
     $uri = "$SupabaseUrl/rest/v1/$Path"
     if ($null -ne $Body) {
+        # So manda Content-Type quando realmente tem corpo (POST/PATCH) -
+        # mandar esse cabeçalho numa consulta GET sem corpo faz o Supabase
+        # responder errado (confirmado: devolvia só 1 linha em vez de todas).
+        $headers["Content-Type"] = "application/json"
         $json = $Body | ConvertTo-Json -Depth 10 -Compress
         return Invoke-RestMethod -Uri $uri -Method $Method -Headers $headers -Body $json
     }
