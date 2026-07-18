@@ -83,7 +83,7 @@ export function ContratoImpresso({ dados }: { dados: DadosContrato }) {
           {itensValidos.length === 0 ? (
             <p className="text-[11pt]">&nbsp;</p>
           ) : (
-            <ul className="text-[11pt] leading-relaxed list-none">
+            <ul className="text-[11pt] leading-relaxed list-none font-bold">
               {itensValidos.map((item) => (
                 <li key={item.chave}>
                   {item.quantidade} sessão(ões) de {item.descricao}
@@ -106,7 +106,7 @@ export function ContratoImpresso({ dados }: { dados: DadosContrato }) {
         <h2 className="font-bold text-[11.5pt] mb-3">CLÁUSULA 2 - DO PAGAMENTO</h2>
         <p className="text-[11pt] leading-relaxed mb-2">{CLAUSULA_2_INTRO}</p>
         <div className="mb-4 min-h-[50px] border-y border-black/40 py-2">
-          <p className="text-[11pt] leading-relaxed whitespace-pre-wrap">
+          <p className="text-[11pt] leading-relaxed whitespace-pre-wrap font-bold">
             {dados.formaPagamento || " "}
           </p>
         </div>

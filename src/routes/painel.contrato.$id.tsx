@@ -84,6 +84,8 @@ function GerarContrato() {
     setCpf(cliente.cpf ? aplicarMascara("cpf", cliente.cpf) : "");
     setTelefone(cliente.telefone ? aplicarMascara("telefone", cliente.telefone) : "");
     setEndereco([enderecoBruto, cidadeBruta].filter(Boolean).join(", "));
+    setProfissao(respostaEm("profissao"));
+    setEstadoCivil(respostaEm("estadoCivil"));
     setAutorizaFoto(cliente.autorizaFoto);
     setHidratado(true);
   }, [cliente, hidratado]);
