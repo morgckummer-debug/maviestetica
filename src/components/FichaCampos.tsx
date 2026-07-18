@@ -81,8 +81,7 @@ export function CampoView({
 
   if (campo.tipo === "texto") {
     // CEP: ao completar os 8 dígitos, busca o endereço (ViaCEP) e já
-    // preenche rua/bairro/cidade — a cliente só completa o número, direto no
-    // campo "Endereço" (ex.: "Rua Tenente Garro, 81 - Santa Efigênia").
+    // preenche rua/bairro/cidade — a cliente só completa número/complemento.
     const buscarCep = async () => {
       const digitos = (respostas[campo.id] as string | undefined)?.replace(/\D/g, "") ?? "";
       if (digitos.length !== 8) return;

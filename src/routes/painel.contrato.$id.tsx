@@ -3,6 +3,7 @@ import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { ArrowLeft, Camera, CameraOff, Loader2, Plus, Printer, Trash2 } from "lucide-react";
 import { listarFichas, type Ficha } from "@/lib/painel";
 import { clientePorFichaId } from "@/lib/clientes";
+import { enderecoCompleto } from "@/lib/endereco";
 import { OPCOES_SESSAO, TIPOS, nomeCurto, type Tipo } from "@/data/anamnese";
 import { aplicarMascara, formatarDataBRBarra } from "@/lib/mascaras";
 import { ESTADOS_CIVIS, MESES_PT, type ItemContratado } from "@/data/contrato";
@@ -79,12 +80,21 @@ function GerarContrato() {
     };
     const nascimentoBruto = respostaEm("nascimento");
     const enderecoBruto = respostaEm("endereco");
+    const numeroBruto = respostaEm("numero");
     const complementoBruto = respostaEm("complemento");
     const cidadeBruta = respostaEm("cidade");
     setNascimento(nascimentoBruto ? formatarDataBRBarra(nascimentoBruto) : "");
     setCpf(cliente.cpf ? aplicarMascara("cpf", cliente.cpf) : "");
     setTelefone(cliente.telefone ? aplicarMascara("telefone", cliente.telefone) : "");
-    setEndereco([enderecoBruto, complementoBruto, cidadeBruta].filter(Boolean).join(", "));
+    setEndereco(
+      [
+        enderecoBruto ? enderecoCompleto(enderecoBruto, numeroBruto) : "",
+        complementoBruto,
+        cidadeBruta,
+      ]
+        .filter(Boolean)
+        .join(", "),
+    );
     setProfissao(respostaEm("profissao"));
     setEstadoCivil(respostaEm("estadoCivil"));
     setAutorizaFoto(cliente.autorizaFoto);
