@@ -475,6 +475,53 @@ export async function restaurarFicha(id: string): Promise<void> {
 // não fica em "Fichas excluídas" e não tem como desfazer. As sessões dela
 // somem junto (on delete cascade, migração 0005_sessoes.sql). A policy de
 // DELETE já existe desde a migração 0004_delete.sql.
+// ------------------------------------------------------------
+// Relatório de pacote — link público (leia-se: 0010_relatorios_pacote.sql)
+// pra Marina mandar por WhatsApp mostrando a contagem de sessões de um
+// pacote específico. Reenviar o mesmo pacote atualiza o mesmo registro
+// (upsert por ficha+item+número), então o link enviado antes continua
+// válido e passa a mostrar os dados mais recentes.
+// ------------------------------------------------------------
+
+export type NovoRelatorioPacote = {
+  fichaId: string;
+  item: string;
+  pacoteNumero: number;
+  clienteNome: string;
+  pacoteTotal: number;
+  concluido: boolean;
+  sessoes: { data: string; confirmado: boolean; confirmado_em: string | null }[];
+};
+
+export async function enviarRelatorioPacote(dados: NovoRelatorioPacote): Promise<string> {
+  const res = await apiRest("relatorios_pacote?on_conflict=ficha_id,item,pacote_numero", {
+    method: "POST",
+    headers: { Prefer: "resolution=merge-duplicates,return=representation" },
+    body: JSON.stringify({
+      ficha_id: dados.fichaId,
+      item: dados.item,
+      pacote_numero: dados.pacoteNumero,
+      cliente_nome: dados.clienteNome,
+      pacote_total: dados.pacoteTotal,
+      concluido: dados.concluido,
+      sessoes: dados.sessoes,
+      atualizado_em: new Date().toISOString(),
+    }),
+  });
+  if (!res.ok) {
+    const detalhe = await res.text().catch(() => "");
+    if (/relation .*relatorios_pacote.* does not exist/i.test(detalhe)) {
+      throw new Error(
+        "Rode a migração 0010_relatorios_pacote.sql no Supabase (SQL Editor) para ativar o relatório.",
+      );
+    }
+    throw new Error("Não foi possível gerar o relatório.");
+  }
+  const arr = (await res.json()) as { token: string }[];
+  if (!arr[0]) throw new Error("Não foi possível gerar o relatório.");
+  return arr[0].token;
+}
+
 export async function excluirFichaDefinitivamente(id: string): Promise<void> {
   const res = await apiRest(`fichas?id=eq.${encodeURIComponent(id)}`, {
     method: "DELETE",

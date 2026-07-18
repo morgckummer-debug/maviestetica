@@ -26,3 +26,20 @@ export function linkWhatsappConfirmacao(params: {
   const numero = numeroWhatsapp(params.telefone);
   return `https://wa.me/${numero}?text=${encodeURIComponent(msg)}`;
 }
+
+export function linkRelatorio(origin: string, token: string): string {
+  return `${origin}/relatorio/${token}`;
+}
+
+export function linkWhatsappRelatorio(params: {
+  origin: string;
+  token: string;
+  telefone: string | null | undefined;
+  nomeCliente: string;
+  item: string;
+}): string {
+  const primeiro = params.nomeCliente.trim().split(" ")[0] || "";
+  const msg = `Oi ${primeiro}! 💜 Segue o relatório do seu pacote de ${params.item} na MAVI: ${linkRelatorio(params.origin, params.token)}`;
+  const numero = numeroWhatsapp(params.telefone);
+  return `https://wa.me/${numero}?text=${encodeURIComponent(msg)}`;
+}

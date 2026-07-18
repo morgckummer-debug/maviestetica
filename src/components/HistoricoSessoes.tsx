@@ -10,6 +10,7 @@ import {
   MessageCircle,
   Pencil,
   Plus,
+  Send,
   X,
 } from "lucide-react";
 import {
@@ -26,10 +27,11 @@ import {
   arquivarSessao,
   atualizarSessao,
   atualizarFicha,
+  enviarRelatorioPacote,
   type SessaoAtendimento,
   type PacoteItem,
 } from "@/lib/painel";
-import { linkConfirmacao, linkWhatsappConfirmacao } from "@/lib/whatsapp";
+import { linkConfirmacao, linkWhatsappConfirmacao, linkWhatsappRelatorio } from "@/lib/whatsapp";
 import { EnviarFicha } from "@/components/EnviarFicha";
 
 const CINCO_MINUTOS_MS = 5 * 60 * 1000;
@@ -697,6 +699,12 @@ export function HistoricoSessoes({
   const [restaurandoId, setRestaurandoId] = useState<string | null>(null);
   const [mostrarArquivadas, setMostrarArquivadas] = useState(false);
 
+  // "Enviar Relatório": gera (ou atualiza) o link público de progresso de um
+  // pacote específico e abre o WhatsApp já com a mensagem pronta. Só um
+  // pacote por vez (chave = `${fichaId}::${item}::${numero}`).
+  const [enviandoRelatorioChave, setEnviandoRelatorioChave] = useState<string | null>(null);
+  const [erroRelatorioChave, setErroRelatorioChave] = useState<Record<string, string>>({});
+
   const fichaPorId = useMemo(() => {
     const m = new Map<string, Procedimento>();
     fichas.forEach((f) => m.set(f.id, f));
@@ -1241,10 +1249,7 @@ export function HistoricoSessoes({
   // `subChave` identifica uma unidade específica do bônus (ex.: a 1ª ou a 2ª
   // das 2× Axilas ganhas) — cada uma com sua própria data e seu próprio
   // "Check", já que a cliente pode usufruir delas em dias diferentes.
-  const confirmarBonusPendente = async (
-    b: { fichaId: string; item: string },
-    subChave: string,
-  ) => {
+  const confirmarBonusPendente = async (b: { fichaId: string; item: string }, subChave: string) => {
     const data = dataBonusPendente[subChave] || hojeISO();
     if (
       !window.confirm(
@@ -1518,6 +1523,49 @@ export function HistoricoSessoes({
       setErroPacote(e instanceof Error ? e.message : "Erro ao cancelar o pacote.");
     } finally {
       setRemovendoPacoteChave(null);
+    }
+  };
+
+  // Gera (ou atualiza) o relatório público desse pacote e já abre o
+  // WhatsApp com o link — a cliente confere sozinha data por data e a
+  // contagem que falta, em vez de precisar confiar de memória.
+  const enviarRelatorio = async (g: GrupoItem, seg: Segmento) => {
+    if (seg.pacoteTotal === undefined) return;
+    const chave = `${g.chave}::${seg.numero}`;
+    setEnviandoRelatorioChave(chave);
+    setErroRelatorioChave((prev) => ({ ...prev, [chave]: "" }));
+    try {
+      const token = await enviarRelatorioPacote({
+        fichaId: g.fichaId,
+        item: g.item,
+        pacoteNumero: seg.numero,
+        clienteNome: nomeCliente,
+        pacoteTotal: seg.pacoteTotal,
+        concluido: seg.completo,
+        sessoes: seg.linhas.map((l) => ({
+          data: l.data,
+          confirmado: l.confirmado,
+          confirmado_em: l.confirmado_em,
+        })),
+      });
+      window.open(
+        linkWhatsappRelatorio({
+          origin,
+          token,
+          telefone: telefoneCliente,
+          nomeCliente,
+          item: g.item,
+        }),
+        "_blank",
+        "noreferrer",
+      );
+    } catch (e) {
+      setErroRelatorioChave((prev) => ({
+        ...prev,
+        [chave]: e instanceof Error ? e.message : "Não foi possível gerar o relatório.",
+      }));
+    } finally {
+      setEnviandoRelatorioChave(null);
     }
   };
 
@@ -1969,7 +2017,9 @@ export function HistoricoSessoes({
                       disabled={
                         salvandoPacote ||
                         (!pacoteValor.trim() &&
-                          !bonusForm.some((b) => b.tipo && b.item && parseInt(b.quantidade, 10) > 0))
+                          !bonusForm.some(
+                            (b) => b.tipo && b.item && parseInt(b.quantidade, 10) > 0,
+                          ))
                       }
                       className="rounded-full bg-painel-primary text-white px-3.5 py-1.5 text-xs font-medium hover:bg-painel-primary/90 transition-colors disabled:opacity-40"
                     >
@@ -2099,7 +2149,26 @@ export function HistoricoSessoes({
                             {seg.linhas.length} de {seg.pacoteTotal} sessões
                           </span>
                         </div>
+                        <button
+                          type="button"
+                          onClick={() => enviarRelatorio(g, seg)}
+                          disabled={enviandoRelatorioChave === chaveSeg}
+                          title="Gerar link do relatório desse pacote e enviar por WhatsApp"
+                          className="shrink-0 inline-flex items-center gap-1 rounded-full bg-white/10 text-painel-lilac-soft px-2.5 py-1 text-[11px] font-medium hover:bg-white/15 transition-colors disabled:opacity-40"
+                        >
+                          {enviandoRelatorioChave === chaveSeg ? (
+                            <Loader2 className="h-3 w-3 animate-spin" />
+                          ) : (
+                            <Send className="h-3 w-3" />
+                          )}
+                          Enviar Relatório
+                        </button>
                       </div>
+                      {erroRelatorioChave[chaveSeg] && (
+                        <p className="text-[11px] text-painel-alert-text mb-2">
+                          {erroRelatorioChave[chaveSeg]}
+                        </p>
+                      )}
                       {aberto && (
                         <ul className="space-y-1">
                           {seg.linhas
