@@ -2094,15 +2094,15 @@ export function HistoricoSessoes({
                     );
                   }
 
-                  // Segmento de um pacote comprado: fundo escuro com degradê
-                  // suave e texto bege/lavanda — deixa claro, de longe, que é
-                  // um pacote pago (nunca se confunde com sessões avulsas).
-                  // Colapsa quando concluído.
+                  // Segmento de um pacote comprado: mesmo fundo escuro do
+                  // cabeçalho da cliente (bg-painel-hero-bg), texto bege/lavanda
+                  // — deixa claro, de longe, que é um pacote pago (nunca se
+                  // confunde com sessões avulsas). Colapsa quando concluído.
                   const pct = Math.min(100, (seg.linhas.length / seg.pacoteTotal) * 100);
                   return (
                     <div
                       key={chaveSeg}
-                      className="rounded-xl border border-white/10 bg-gradient-to-br from-painel-hero-bg via-[#2b2038] to-painel-primary-deep p-3.5 shadow-sm"
+                      className="rounded-xl border border-white/10 bg-painel-hero-bg p-3.5 shadow-sm"
                     >
                       <div className="flex items-start gap-3 mb-2">
                         <div
