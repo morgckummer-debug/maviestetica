@@ -504,8 +504,7 @@ function DetalheFicha() {
             const ehDadosPessoais = etapa.titulo === TITULO_DADOS_PESSOAIS;
             const editandoEsta = ehDadosPessoais && editandoDados;
             const camposFaltando = etapa.campos.filter(
-              (c) =>
-                "obrigatorio" in c && c.obrigatorio && !String(dadosForm[c.id] ?? "").trim(),
+              (c) => "obrigatorio" in c && c.obrigatorio && !String(dadosForm[c.id] ?? "").trim(),
             );
             const podeSalvarDados = camposFaltando.length === 0;
 
@@ -721,92 +720,97 @@ function DetalheFicha() {
           </div>
         ))}
 
-        {/* Medidas + relatório (preenchidos pela Marina) */}
-        <div className={`rounded-2xl border ${bordaCard} bg-card p-5 sm:p-6`}>
-          <h3 className="font-display text-2xl text-primary mb-1">Medidas e avaliação</h3>
-          <p className="text-sm text-muted-foreground mb-5">Preenchido no atendimento.</p>
+        {/* Medidas + relatório (preenchidos pela Marina) — não existe pra
+            ficha de Cadastro, que não é um atendimento. */}
+        {ficha.tipo !== "cadastro" && (
+          <div className={`rounded-2xl border ${bordaCard} bg-card p-5 sm:p-6`}>
+            <h3 className="font-display text-2xl text-primary mb-1">Medidas e avaliação</h3>
+            <p className="text-sm text-muted-foreground mb-5">Preenchido no atendimento.</p>
 
-          {camposMedidas.length > 0 && (
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-6">
-              {camposMedidas.map((m) => {
-                const campoInput = (
-                  <div key={m.id}>
-                    <label className="block text-xs font-medium text-muted-foreground mb-1.5">
-                      {m.label}
-                    </label>
-                    <input
-                      value={medidas[m.id] ?? ""}
-                      onChange={(e) => setMedidas((prev) => ({ ...prev, [m.id]: e.target.value }))}
-                      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                    />
-                  </div>
-                );
-                if (m.id !== "peso") return campoInput;
-                // IMC calculado automaticamente, ao lado do peso (só no painel).
-                return (
-                  <Fragment key={m.id}>
-                    {campoInput}
-                    <div>
+            {camposMedidas.length > 0 && (
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-6">
+                {camposMedidas.map((m) => {
+                  const campoInput = (
+                    <div key={m.id}>
                       <label className="block text-xs font-medium text-muted-foreground mb-1.5">
-                        IMC
+                        {m.label}
                       </label>
-                      <div
-                        className={[
-                          "w-full rounded-lg border px-3 py-2 text-sm",
-                          imc?.nivel === "obesidade"
-                            ? "border-destructive/40 bg-destructive/10 text-destructive"
-                            : imc?.nivel === "sobrepeso"
-                              ? "border-amber-500/40 bg-amber-500/10 text-amber-600 dark:text-amber-500"
-                              : "border-border bg-secondary/40",
-                        ].join(" ")}
-                      >
-                        {imc ? (
-                          <span className="font-medium">
-                            {imc.valor.toFixed(1)}
-                            <span className="font-normal"> · {imc.classe}</span>
-                          </span>
-                        ) : (
-                          <span className="text-muted-foreground">altura e peso</span>
-                        )}
-                      </div>
+                      <input
+                        value={medidas[m.id] ?? ""}
+                        onChange={(e) =>
+                          setMedidas((prev) => ({ ...prev, [m.id]: e.target.value }))
+                        }
+                        className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                      />
                     </div>
-                  </Fragment>
-                );
-              })}
-            </div>
-          )}
-
-          <div className="mb-5">
-            <label className="block text-sm font-medium mb-2">Minha avaliação</label>
-            <textarea
-              value={relatorio}
-              onChange={(e) => setRelatorio(e.target.value)}
-              rows={4}
-              placeholder="Procedimento realizado, observações, evolução..."
-              className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-            />
-          </div>
-
-          {erro && <p className="text-sm text-destructive mb-3">{erro}</p>}
-
-          <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={salvar}
-              disabled={salvando}
-              className="inline-flex items-center gap-2 rounded-full bg-primary text-primary-foreground px-6 py-3 text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-40"
-            >
-              {salvando ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-              Salvar
-            </button>
-            {salvo && (
-              <span className="inline-flex items-center gap-1.5 text-sm text-primary">
-                <Check className="h-4 w-4" />
-                Salvo!
-              </span>
+                  );
+                  if (m.id !== "peso") return campoInput;
+                  // IMC calculado automaticamente, ao lado do peso (só no painel).
+                  return (
+                    <Fragment key={m.id}>
+                      {campoInput}
+                      <div>
+                        <label className="block text-xs font-medium text-muted-foreground mb-1.5">
+                          IMC
+                        </label>
+                        <div
+                          className={[
+                            "w-full rounded-lg border px-3 py-2 text-sm",
+                            imc?.nivel === "obesidade"
+                              ? "border-destructive/40 bg-destructive/10 text-destructive"
+                              : imc?.nivel === "sobrepeso"
+                                ? "border-amber-500/40 bg-amber-500/10 text-amber-600 dark:text-amber-500"
+                                : "border-border bg-secondary/40",
+                          ].join(" ")}
+                        >
+                          {imc ? (
+                            <span className="font-medium">
+                              {imc.valor.toFixed(1)}
+                              <span className="font-normal"> · {imc.classe}</span>
+                            </span>
+                          ) : (
+                            <span className="text-muted-foreground">altura e peso</span>
+                          )}
+                        </div>
+                      </div>
+                    </Fragment>
+                  );
+                })}
+              </div>
             )}
+
+            <div className="mb-5">
+              <label className="block text-sm font-medium mb-2">Minha avaliação</label>
+              <textarea
+                value={relatorio}
+                onChange={(e) => setRelatorio(e.target.value)}
+                rows={4}
+                placeholder="Procedimento realizado, observações, evolução..."
+                className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+              />
+            </div>
+
+            {erro && <p className="text-sm text-destructive mb-3">{erro}</p>}
+
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={salvar}
+                disabled={salvando}
+                className="inline-flex items-center gap-2 rounded-full bg-primary text-primary-foreground px-6 py-3 text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-40"
+              >
+                {salvando ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                Salvar
+              </button>
+              {salvo && (
+                <span className="inline-flex items-center gap-1.5 text-sm text-primary">
+                  <Check className="h-4 w-4" />
+                  Salvo!
+                </span>
+              )}
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

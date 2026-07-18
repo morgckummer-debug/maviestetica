@@ -9,7 +9,7 @@ import {
   Send,
   Trash2,
 } from "lucide-react";
-import { FICHAS, TIPOS, nomeTipo, nomeCurto } from "@/data/anamnese";
+import { TIPOS, getFicha, ehTipo, nomeTipo, nomeCurto, type Tipo } from "@/data/anamnese";
 import { listarFichas, excluirFicha, excluirFichaDefinitivamente, type Ficha } from "@/lib/painel";
 import { clientePorFichaId, type Cliente } from "@/lib/clientes";
 import { mascaraTelefone } from "@/lib/mascaras";
@@ -64,15 +64,19 @@ function PaginaCliente() {
     return [...set];
   }, [cliente]);
 
+  // A ficha de Cadastro não é procedimento — não entra no histórico de
+  // sessões/pacotes (só as fichas de serviço mesmo).
   const procedimentos: Procedimento[] = useMemo(
     () =>
       cliente
-        ? cliente.fichas.map((f) => ({
-            id: f.id,
-            tipo: f.tipo,
-            nome: f.nome,
-            pacotes: f.pacotes ?? {},
-          }))
+        ? cliente.fichas
+            .filter((f): f is Ficha & { tipo: Tipo } => ehTipo(f.tipo))
+            .map((f) => ({
+              id: f.id,
+              tipo: f.tipo,
+              nome: f.nome,
+              pacotes: f.pacotes ?? {},
+            }))
         : [],
     [cliente],
   );
@@ -315,7 +319,7 @@ function PaginaCliente() {
                   f.arquivada ? "opacity-60" : ""
                 }`}
               >
-                <span>{FICHAS[f.tipo]?.emoji ?? ""}</span>
+                <span>{getFicha(f.tipo)?.emoji ?? ""}</span>
                 <span>{nomeCurto(f.tipo)}</span>
                 <span className="opacity-70">{formatarData(f.created_at).slice(0, 5)}</span>
                 {f.alertas.length > 0 && (

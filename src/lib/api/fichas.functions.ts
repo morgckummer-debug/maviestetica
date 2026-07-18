@@ -9,7 +9,7 @@ import { SUPABASE_URL, SUPABASE_ANON_KEY } from "../supabase";
 // Marina logada. Não precisa de chave secreta nem de config no hosting.
 
 const schema = z.object({
-  tipo: z.enum(["corporal", "facial", "laser"]),
+  tipo: z.enum(["corporal", "facial", "laser", "cadastro"]),
   nome: z.string().min(1, "Informe o nome."),
   telefone: z.string().optional().default(""),
   respostas: z.record(z.string(), z.union([z.string(), z.boolean(), z.null()])).default({}),
