@@ -195,7 +195,7 @@ function ConfirmarPage() {
               </p>
             )}
             <p className="mt-6 text-base text-muted-foreground">
-              Cuide-se com carinho até a próxima. 🌸
+              Cuide-se com carinho! Até a próxima! 🌸
             </p>
           </>
         )}
