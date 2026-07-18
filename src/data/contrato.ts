@@ -7,9 +7,16 @@
 // IMPORTANTE: não reescreva o texto das cláusulas sem confirmar com a Marina
 // — é conteúdo jurídico, em revisão com a advogada dela.
 
+// CPF pessoal da Marina como consta no contrato original (logo antes do nome
+// dela, no cabeçalho) — formato incompleto (sem dígitos verificadores), mas
+// reproduzido tal como está no documento em uso.
+export const CONTRATADA_NOME = "MARINA OLIVEIRA ARAÚJO";
+export const CONTRATADA_CPF = "47.189.380";
+export const CONTRATADA_CNPJ = "50.531.164/0001-13";
+
 export const CONTRATADA_TEXTO =
-  "CONTRATADA: 47.189.380 MARINA OLIVEIRA ARAÚJO, Nome Fantasia MAVI CENTRO DE ESTÉTICA, CNPJ " +
-  "50.531.164/0001-13, sediada à Rua Nestor de Andrade, N° 142, Bairro Chácara do Paiva, Sete Lagoas, MG.";
+  `CONTRATADA: ${CONTRATADA_CPF} ${CONTRATADA_NOME}, Nome Fantasia MAVI CENTRO DE ESTÉTICA, CNPJ ` +
+  `${CONTRATADA_CNPJ}, sediada à Rua Nestor de Andrade, N° 142, Bairro Chácara do Paiva, Sete Lagoas, MG.`;
 
 export const CLAUSULA_1_INTRO =
   "Por este instrumento, a CONTRATADA, através de profissionais, regularmente habilitados obriga-se a " +
