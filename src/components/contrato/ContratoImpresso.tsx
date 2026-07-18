@@ -124,7 +124,10 @@ export function ContratoImpresso({ dados }: { dados: DadosContrato }) {
             <p key={i} className="text-[10.5pt] leading-relaxed text-justify">
               {String.fromCharCode(97 + i)}) {texto}
               {i === CLAUSULA_3_ITENS.length - 1 && (
-                <span className="ml-2 whitespace-nowrap">( ) SIM &nbsp;&nbsp; ( ) NÃO</span>
+                <span className="ml-2 whitespace-nowrap font-semibold">
+                  {dados.autorizaFoto ? "(X)" : "( )"} SIM &nbsp;&nbsp;{" "}
+                  {dados.autorizaFoto ? "( )" : "(X)"} NÃO
+                </span>
               )}
             </p>
           ))}
@@ -159,7 +162,6 @@ export function ContratoImpresso({ dados }: { dados: DadosContrato }) {
             <br />
             CNPJ: {CONTRATADA_CNPJ}
           </div>
-          <div className="mx-auto w-[70%] border-t border-black pt-1">CPF:</div>
         </div>
       </Pagina>
     </div>
