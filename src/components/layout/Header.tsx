@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { Menu, X, MessageCircle } from "lucide-react";
 import logo from "@/assets/logo-mavi.png";
-import { WHATSAPP_URL, services } from "@/data/services";
+import { WHATSAPP_URL } from "@/data/services";
 
 export function Header() {
   const [open, setOpen] = useState(false);
@@ -54,22 +54,6 @@ export function Header() {
             <a href="/#servicos" onClick={() => setOpen(false)} className="text-foreground/80">Serviços</a>
             <a href="/#sobre" onClick={() => setOpen(false)} className="text-foreground/80">Sobre</a>
             <a href="/#contato" onClick={() => setOpen(false)} className="text-foreground/80">Contato</a>
-            <div className="border-t border-border/50 pt-4">
-              <p className="text-xs uppercase tracking-widest text-muted-foreground mb-3">Tratamentos</p>
-              <div className="flex flex-col gap-3">
-                {services.map((s) => (
-                  <Link
-                    key={s.slug}
-                    to="/servicos/$slug"
-                    params={{ slug: s.slug }}
-                    onClick={() => setOpen(false)}
-                    className="text-sm text-foreground/70"
-                  >
-                    {s.name}
-                  </Link>
-                ))}
-              </div>
-            </div>
             <a
               href={WHATSAPP_URL}
               target="whatsapp"
