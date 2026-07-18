@@ -48,15 +48,20 @@ function Invoke-Api {
     if ($Prefer) { $headers["Prefer"] = $Prefer }
 
     $uri = "$SupabaseUrl/rest/v1/$Path"
+    Write-Host "[debug] $Method $uri (headers: $($headers.Keys -join ', '))" -ForegroundColor DarkGray
     if ($null -ne $Body) {
         # So manda Content-Type quando realmente tem corpo (POST/PATCH) -
         # mandar esse cabeçalho numa consulta GET sem corpo faz o Supabase
         # responder errado (confirmado: devolvia só 1 linha em vez de todas).
         $headers["Content-Type"] = "application/json"
         $json = $Body | ConvertTo-Json -Depth 10 -Compress
-        return Invoke-RestMethod -Uri $uri -Method $Method -Headers $headers -Body $json
+        $resultado = Invoke-RestMethod -Uri $uri -Method $Method -Headers $headers -Body $json
+        Write-Host "[debug] resposta: $($resultado.Count) item(ns)" -ForegroundColor DarkGray
+        return $resultado
     }
-    return Invoke-RestMethod -Uri $uri -Method $Method -Headers $headers
+    $resultado = Invoke-RestMethod -Uri $uri -Method $Method -Headers $headers
+    Write-Host "[debug] resposta: $($resultado.Count) item(ns)" -ForegroundColor DarkGray
+    return $resultado
 }
 
 function Get-Digitos([string]$v) {
