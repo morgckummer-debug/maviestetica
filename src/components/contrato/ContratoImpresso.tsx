@@ -7,7 +7,7 @@
 import {
   CONTRATADA_TEXTO,
   CONTRATADA_NOME,
-  CONTRATADA_CPF,
+  CONTRATADA_RG,
   CLAUSULA_1_INTRO,
   CLAUSULA_1_OBJETO_INTRO,
   CLAUSULA_1_ITENS,
@@ -157,7 +157,7 @@ export function ContratoImpresso({ dados }: { dados: DadosContrato }) {
           <div className="mx-auto w-[70%] border-t border-black pt-1">
             {CONTRATADA_NOME}
             <br />
-            CPF: {CONTRATADA_CPF}
+            RG: {CONTRATADA_RG}
           </div>
           <div className="mx-auto w-[70%] border-t border-black pt-1">CPF:</div>
         </div>
