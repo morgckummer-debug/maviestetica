@@ -160,12 +160,16 @@ export function ContratoImpresso({ dados }: { dados: DadosContrato }) {
           ))}
         </div>
 
-        <p className="text-[8.7pt] leading-snug text-justify mb-4">{FORO_TEXTO}</p>
+        <p className="text-[8.7pt] leading-snug text-justify mb-3">{FORO_TEXTO}</p>
 
-        <p className="text-[9.5pt] text-center mb-4">
+        <p className="text-[9.5pt] text-center mb-1">
           Sete Lagoas, {dados.dataDia || "____"} de{" "}
           {dados.dataMes ? mesPorExtenso : "________________"} de {dados.dataAno || "________"}
         </p>
+
+        {/* Espaço em branco de verdade pra assinar a caneta — não só um
+            respiro visual, tem que caber uma assinatura de próprio punho. */}
+        <div style={{ height: "18mm" }} aria-hidden="true" />
 
         <div className="grid grid-cols-2 gap-10 text-center text-[9.5pt]">
           <div className="border-t border-black pt-1">
