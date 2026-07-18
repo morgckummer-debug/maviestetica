@@ -107,6 +107,16 @@ export const AUTORIZACAO_FOTO_TEXTO =
   "documentação e divulgação em redes sociais ou material publicitário. A autorização é " +
   "concedida gratuitamente, sem nada a ser reclamado a título de direitos.";
 
+// Opções de estado civil — usadas na ficha e reaproveitadas no contrato de
+// prestação de serviços (ver src/data/contrato.ts).
+export const ESTADOS_CIVIS = [
+  "Solteiro(a)",
+  "Casado(a)",
+  "Divorciado(a)",
+  "Viúvo(a)",
+  "União estável",
+] as const;
+
 // Etapa de dados pessoais — comum às 3 fichas.
 const ETAPA_DADOS: Etapa = {
   titulo: "Seus dados",
@@ -120,6 +130,18 @@ const ETAPA_DADOS: Etapa = {
       obrigatorio: true,
     },
     { tipo: "texto", id: "nascimento", label: "Data de nascimento", inputMode: "date" },
+    {
+      tipo: "texto",
+      id: "profissao",
+      label: "Profissão (opcional)",
+      placeholder: "Sua profissão",
+    },
+    {
+      tipo: "selecao",
+      id: "estadoCivil",
+      label: "Estado civil (opcional)",
+      opcoes: [...ESTADOS_CIVIS],
+    },
     {
       tipo: "selecao",
       id: "sexo",
@@ -392,15 +414,30 @@ const FACIAL: DefinicaoFicha = {
     {
       titulo: "Avaliação da pele",
       campos: [
-        { tipo: "selecao", id: "fototipo", label: "Fototipo", opcoes: ["1", "2", "3", "4", "5", "6"] },
-        { tipo: "selecao", id: "grauAcne", label: "Grau de acne", opcoes: ["I", "II", "III", "IV"] },
+        {
+          tipo: "selecao",
+          id: "fototipo",
+          label: "Fototipo",
+          opcoes: ["1", "2", "3", "4", "5", "6"],
+        },
+        {
+          tipo: "selecao",
+          id: "grauAcne",
+          label: "Grau de acne",
+          opcoes: ["I", "II", "III", "IV"],
+        },
         {
           tipo: "selecao",
           id: "espessura",
           label: "Espessura",
           opcoes: ["Espessa", "Fina", "Muito fina"],
         },
-        { tipo: "selecao", id: "hidratacao", label: "Hidratação", opcoes: ["Desidratada", "Normal"] },
+        {
+          tipo: "selecao",
+          id: "hidratacao",
+          label: "Hidratação",
+          opcoes: ["Desidratada", "Normal"],
+        },
         {
           tipo: "selecao",
           id: "oleosidade",
@@ -623,7 +660,13 @@ const ETAPA_DADOS_DEPILACAO: Etapa = {
   titulo: "Seus dados",
   descricao: "Para a Marina te receber com cuidado e segurança.",
   campos: [
-    { tipo: "texto", id: "nome", label: "Nome completo", placeholder: "Seu nome", obrigatorio: true },
+    {
+      tipo: "texto",
+      id: "nome",
+      label: "Nome completo",
+      placeholder: "Seu nome",
+      obrigatorio: true,
+    },
     {
       tipo: "texto",
       id: "cpf",
@@ -634,6 +677,18 @@ const ETAPA_DADOS_DEPILACAO: Etapa = {
       obrigatorio: true,
     },
     { tipo: "texto", id: "nascimento", label: "Data de nascimento", inputMode: "date" },
+    {
+      tipo: "texto",
+      id: "profissao",
+      label: "Profissão (opcional)",
+      placeholder: "Sua profissão",
+    },
+    {
+      tipo: "selecao",
+      id: "estadoCivil",
+      label: "Estado civil (opcional)",
+      opcoes: [...ESTADOS_CIVIS],
+    },
     {
       tipo: "selecao",
       id: "sexo",

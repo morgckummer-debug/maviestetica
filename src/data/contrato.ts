@@ -98,13 +98,9 @@ export const FORO_TEXTO =
   "Para dirimir todas e quaisquer controvérsias as questões oriundas deste contrato, as partes elegem " +
   "o foro da Comarca Sete Lagoas - MG.";
 
-export const ESTADOS_CIVIS = [
-  "Solteiro(a)",
-  "Casado(a)",
-  "Divorciado(a)",
-  "Viúvo(a)",
-  "União estável",
-] as const;
+// ESTADOS_CIVIS mora em data/anamnese.ts (a ficha é quem coleta o dado);
+// reexportado aqui só pra quem já importa esse módulo não precisar trocar.
+export { ESTADOS_CIVIS } from "./anamnese";
 
 export type ItemContratado = {
   chave: string;
