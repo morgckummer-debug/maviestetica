@@ -22,6 +22,7 @@ import {
 } from "@/lib/painel";
 import { mascaraTelefone, mascaraCpf, formatarDataBR, aplicarMascara } from "@/lib/mascaras";
 import { buscarEnderecoPorCep } from "@/lib/cep";
+import { enderecoCompleto } from "@/lib/endereco";
 import { RamosWatermark } from "@/components/RamosWatermark";
 
 // Etapa de dados pessoais (nome, telefone, endereço...) — é a única que a
@@ -468,16 +469,23 @@ function DetalheFicha() {
         <div className="space-y-6 mb-10">
           {etapas.map((etapa) => {
             const linhas = etapa.campos
+              // O "número" só aparece como campo próprio na edição — na
+              // visualização ele entra junto do endereço, num texto só.
+              .filter((c) => c.id !== "numero")
               .map((c) => {
                 const bruto = valorResposta(r[c.id]);
                 if (bruto === null) return null;
-                const val = formatarValorCampo(c, bruto);
+                const val =
+                  c.id === "endereco"
+                    ? enderecoCompleto(bruto, valorResposta(r.numero))
+                    : formatarValorCampo(c, bruto);
+                const label = c.id === "endereco" ? "Endereço" : c.label;
                 const detalhe =
                   c.tipo === "simnao" || c.tipo === "selecao"
                     ? valorResposta(r[`${c.id}__detalhe`])
                     : null;
                 const alerta = c.tipo === "simnao" && Boolean(c.alertaSeSim) && r[c.id] === true;
-                return { id: c.id, label: c.label, val, detalhe, alerta };
+                return { id: c.id, label, val, detalhe, alerta };
               })
               .filter(
                 (

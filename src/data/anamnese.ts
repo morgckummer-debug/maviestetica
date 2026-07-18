@@ -186,8 +186,15 @@ const ETAPA_DADOS: Etapa = {
     {
       tipo: "texto",
       id: "endereco",
-      label: "Endereço completo (rua, número e bairro)",
-      placeholder: "Rua Tenente Garro, 81 - Santa Efigênia",
+      label: "Endereço (rua, bairro)",
+      placeholder: "Preenchido automaticamente pelo CEP",
+      obrigatorio: true,
+    },
+    {
+      tipo: "texto",
+      id: "numero",
+      label: "Número",
+      placeholder: "123",
       obrigatorio: true,
     },
     {
@@ -714,8 +721,15 @@ const ETAPA_DADOS_DEPILACAO: Etapa = {
     {
       tipo: "texto",
       id: "endereco",
-      label: "Endereço completo (rua, número e bairro)",
-      placeholder: "Rua Tenente Garro, 81 - Santa Efigênia",
+      label: "Endereço (rua, bairro)",
+      placeholder: "Preenchido automaticamente pelo CEP",
+      obrigatorio: true,
+    },
+    {
+      tipo: "texto",
+      id: "numero",
+      label: "Número",
+      placeholder: "123",
       obrigatorio: true,
     },
     {
