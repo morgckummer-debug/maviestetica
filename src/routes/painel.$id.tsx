@@ -207,7 +207,7 @@ function DetalheFicha() {
         setCepDadosNaoEncontrado(true);
         return;
       }
-      const rua = [endereco.logradouro, endereco.bairro].filter(Boolean).join(", ");
+      const rua = [endereco.logradouro, endereco.bairro].filter(Boolean).join(" - ");
       setDadosForm((prev) => ({
         ...prev,
         ...(rua ? { endereco: rua } : {}),

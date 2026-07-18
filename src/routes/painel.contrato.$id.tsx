@@ -79,17 +79,12 @@ function GerarContrato() {
     };
     const nascimentoBruto = respostaEm("nascimento");
     const enderecoBruto = respostaEm("endereco");
-    const numeroBruto = respostaEm("numero");
     const complementoBruto = respostaEm("complemento");
     const cidadeBruta = respostaEm("cidade");
     setNascimento(nascimentoBruto ? formatarDataBRBarra(nascimentoBruto) : "");
     setCpf(cliente.cpf ? aplicarMascara("cpf", cliente.cpf) : "");
     setTelefone(cliente.telefone ? aplicarMascara("telefone", cliente.telefone) : "");
-    setEndereco(
-      [[enderecoBruto, numeroBruto].filter(Boolean).join(", "), complementoBruto, cidadeBruta]
-        .filter(Boolean)
-        .join(", "),
-    );
+    setEndereco([enderecoBruto, complementoBruto, cidadeBruta].filter(Boolean).join(", "));
     setProfissao(respostaEm("profissao"));
     setEstadoCivil(respostaEm("estadoCivil"));
     setAutorizaFoto(cliente.autorizaFoto);
