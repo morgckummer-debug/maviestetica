@@ -2,9 +2,9 @@
 // na pré-visualização (dentro da "folha" no painel) quanto na impressão de
 // verdade (ver #contrato-imprimir no styles.css, que esconde todo o resto da
 // página quando a Marina manda imprimir). Cabe em 2 folhas A4 — página 1 tem
-// os dados da contratante e a Cláusula 1 (objeto); página 2 tem pagamento,
-// condições gerais, rescisão e as assinaturas. As linhas de assinatura ficam
-// em branco de propósito — a cliente assina a caneta, no papel.
+// os dados da contratante e as Cláusulas 1 e 2 (objeto e pagamento); página 2
+// tem condições gerais, rescisão e as assinaturas. As linhas de assinatura
+// ficam em branco de propósito — a cliente assina a caneta, no papel.
 
 import {
   CONTRATADA_TEXTO,
@@ -24,7 +24,7 @@ import {
 
 function CampoPreenchido({ label, valor }: { label: string; valor: string }) {
   return (
-    <p className="text-[9pt] leading-snug mb-1">
+    <p className="text-[9.5pt] leading-relaxed mb-1.5">
       <span className="font-semibold">{label}: </span>
       <span className="border-b border-black/70">{valor || " ".repeat(32)}</span>
     </p>
@@ -41,7 +41,7 @@ function ItemClausula({
   extra?: React.ReactNode;
 }) {
   return (
-    <p className="text-[8.3pt] leading-snug text-justify mb-1.5">
+    <p className="text-[8.7pt] leading-snug text-justify mb-1.5">
       {letra}) {texto}
       {extra}
     </p>
@@ -72,11 +72,11 @@ export function ContratoImpresso({ dados }: { dados: DadosContrato }) {
   return (
     <div id="contrato-imprimir">
       <Pagina>
-        <h1 className="text-center font-bold text-[13pt] mb-3">
+        <h1 className="text-center font-bold text-[13.5pt] mb-3">
           CONTRATO DE PRESTAÇÃO DE SERVIÇOS ESTÉTICOS
         </h1>
 
-        <p className="text-[9pt] leading-snug mb-4">{CONTRATADA_TEXTO}</p>
+        <p className="text-[9.5pt] leading-relaxed mb-4">{CONTRATADA_TEXTO}</p>
 
         <div className="grid grid-cols-2 gap-x-6 mb-5">
           <div className="col-span-2">
@@ -92,15 +92,15 @@ export function ContratoImpresso({ dados }: { dados: DadosContrato }) {
           </div>
         </div>
 
-        <p className="text-[8.3pt] leading-snug mb-4">{CLAUSULA_1_INTRO}</p>
+        <p className="text-[9pt] leading-relaxed mb-4">{CLAUSULA_1_INTRO}</p>
 
-        <h2 className="font-bold text-[10pt] mb-2">CLÁUSULA 1 - DO OBJETO</h2>
-        <p className="text-[8.3pt] leading-snug mb-1.5">{CLAUSULA_1_OBJETO_INTRO}</p>
-        <div className="mb-3 min-h-[60px] border-y border-black/40 py-1.5">
+        <h2 className="font-bold text-[10.5pt] mb-2">CLÁUSULA 1 - DO OBJETO</h2>
+        <p className="text-[9pt] leading-relaxed mb-2">{CLAUSULA_1_OBJETO_INTRO}</p>
+        <div className="mb-4 min-h-[60px] border-y border-black/40 py-2">
           {itensValidos.length === 0 ? (
-            <p className="text-[9pt]">&nbsp;</p>
+            <p className="text-[9.5pt]">&nbsp;</p>
           ) : (
-            <ul className="text-[9pt] leading-snug list-none font-bold">
+            <ul className="text-[9.5pt] leading-relaxed list-none font-bold">
               {itensValidos.map((item) => (
                 <li key={item.chave}>
                   {item.quantidade} sessão(ões) de {item.descricao}
@@ -110,29 +110,29 @@ export function ContratoImpresso({ dados }: { dados: DadosContrato }) {
           )}
         </div>
 
-        <div>
+        <div className="mb-4">
           {CLAUSULA_1_ITENS.map((texto) => (
+            <ItemClausula key={texto} letra={String.fromCharCode(97 + contador++)} texto={texto} />
+          ))}
+        </div>
+
+        <h2 className="font-bold text-[10.5pt] mb-2">CLÁUSULA 2 - DO PAGAMENTO</h2>
+        <p className="text-[9pt] leading-relaxed mb-2">{CLAUSULA_2_INTRO}</p>
+        <div className="mb-4 min-h-[35px] border-y border-black/40 py-2">
+          <p className="text-[9.5pt] leading-relaxed whitespace-pre-wrap font-bold">
+            {dados.formaPagamento || " "}
+          </p>
+        </div>
+        <div>
+          {CLAUSULA_2_ITENS.map((texto) => (
             <ItemClausula key={texto} letra={String.fromCharCode(97 + contador++)} texto={texto} />
           ))}
         </div>
       </Pagina>
 
       <Pagina>
-        <h2 className="font-bold text-[10pt] mb-2">CLÁUSULA 2 - DO PAGAMENTO</h2>
-        <p className="text-[8.3pt] leading-snug mb-1.5">{CLAUSULA_2_INTRO}</p>
-        <div className="mb-3 min-h-[35px] border-y border-black/40 py-1.5">
-          <p className="text-[9pt] leading-snug whitespace-pre-wrap font-bold">
-            {dados.formaPagamento || " "}
-          </p>
-        </div>
-        <div className="mb-4">
-          {CLAUSULA_2_ITENS.map((texto) => (
-            <ItemClausula key={texto} letra={String.fromCharCode(97 + contador++)} texto={texto} />
-          ))}
-        </div>
-
-        <h2 className="font-bold text-[10pt] mb-2">CLÁUSULA 3 - DAS CONDIÇÕES GERAIS</h2>
-        <div className="mb-4">
+        <h2 className="font-bold text-[10.5pt] mb-1.5">CLÁUSULA 3 - DAS CONDIÇÕES GERAIS</h2>
+        <div className="mb-3">
           {CLAUSULA_3_ITENS.map((texto, i) => {
             const ultima = i === CLAUSULA_3_ITENS.length - 1;
             return (
@@ -153,21 +153,21 @@ export function ContratoImpresso({ dados }: { dados: DadosContrato }) {
           })}
         </div>
 
-        <h2 className="font-bold text-[10pt] mb-2">CLÁUSULA 4 - DA RESCISÃO</h2>
-        <div className="mb-4">
+        <h2 className="font-bold text-[10.5pt] mb-1.5">CLÁUSULA 4 - DA RESCISÃO</h2>
+        <div className="mb-3">
           {CLAUSULA_4_ITENS.map((texto) => (
             <ItemClausula key={texto} letra={String.fromCharCode(97 + contador++)} texto={texto} />
           ))}
         </div>
 
-        <p className="text-[8.3pt] leading-snug text-justify mb-6">{FORO_TEXTO}</p>
+        <p className="text-[8.7pt] leading-snug text-justify mb-4">{FORO_TEXTO}</p>
 
-        <p className="text-[9pt] text-center mb-6">
+        <p className="text-[9.5pt] text-center mb-4">
           Sete Lagoas, {dados.dataDia || "____"} de{" "}
           {dados.dataMes ? mesPorExtenso : "________________"} de {dados.dataAno || "________"}
         </p>
 
-        <div className="grid grid-cols-2 gap-10 text-center text-[9pt]">
+        <div className="grid grid-cols-2 gap-10 text-center text-[9.5pt]">
           <div className="border-t border-black pt-1">
             {dados.nome}
             <br />
