@@ -115,7 +115,7 @@ function PaginaPendentes() {
                     nomeCliente: s.ficha.nome,
                     dataBR: dataBR(s.data),
                   })}
-                  target="_blank"
+                  target="whatsapp"
                   rel="noreferrer"
                   title="Enviar por WhatsApp"
                   className="inline-flex items-center gap-1.5 rounded-full bg-painel-primary text-white px-3.5 py-2 text-xs font-medium hover:bg-painel-primary/90 transition-colors"

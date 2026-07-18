@@ -29,7 +29,7 @@ export function Header() {
           </a>
           <a
             href={WHATSAPP_URL}
-            target="_blank"
+            target="whatsapp"
             rel="noreferrer"
             className="inline-flex items-center gap-2 rounded-full bg-primary text-primary-foreground px-5 py-2.5 text-sm font-medium hover:bg-primary/90 transition-colors"
           >
@@ -72,7 +72,7 @@ export function Header() {
             </div>
             <a
               href={WHATSAPP_URL}
-              target="_blank"
+              target="whatsapp"
               rel="noreferrer"
               className="mt-2 inline-flex items-center justify-center gap-2 rounded-full bg-primary text-primary-foreground px-5 py-3"
             >

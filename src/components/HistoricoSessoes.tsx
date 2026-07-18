@@ -1021,7 +1021,7 @@ export function HistoricoSessoes({
     const s = (sessoes ?? []).find((x) => x.id === sessaoId);
     if (!s) return;
     if (s.areas.length <= 1) {
-      window.open(whatsappDe(s.token, s.data), "_blank", "noreferrer");
+      window.open(whatsappDe(s.token, s.data), "whatsapp", "noreferrer");
       return;
     }
     setEnviandoSessaoId(sessaoId);
@@ -1064,7 +1064,7 @@ export function HistoricoSessoes({
         );
         return [...pendentes, ...atualizado];
       });
-      window.open(whatsappDe(s.token, s.data), "_blank", "noreferrer");
+      window.open(whatsappDe(s.token, s.data), "whatsapp", "noreferrer");
       setEnviandoSessaoId(null);
     } catch (e) {
       setErroEnvio(e instanceof Error ? e.message : "Erro ao preparar o envio.");
@@ -1264,7 +1264,7 @@ export function HistoricoSessoes({
       setSessoes((prev) => [nova, ...(prev ?? [])]);
       // Mesmo padrão de qualquer sessão registrada: abre o link de
       // confirmação por WhatsApp na hora, em vez de deixar pendente.
-      window.open(whatsappDe(nova.token, nova.data), "_blank", "noreferrer");
+      window.open(whatsappDe(nova.token, nova.data), "whatsapp", "noreferrer");
     } catch (e) {
       setErroBonusPendente(e instanceof Error ? e.message : "Erro ao registrar o brinde usado.");
     } finally {
@@ -1556,7 +1556,7 @@ export function HistoricoSessoes({
           nomeCliente,
           item: g.item,
         }),
-        "_blank",
+        "whatsapp",
         "noreferrer",
       );
     } catch (e) {

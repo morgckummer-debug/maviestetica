@@ -33,7 +33,7 @@ export function ServicePage({ service }: { service: Service }) {
 
             <a
               href={WHATSAPP_URL}
-              target="_blank"
+              target="whatsapp"
               rel="noreferrer"
               className="mt-10 inline-flex items-center gap-2 rounded-full bg-primary text-primary-foreground px-7 py-3.5 text-sm font-medium hover:bg-primary/90 transition-all hover:-translate-y-0.5"
             >

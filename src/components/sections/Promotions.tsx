@@ -115,7 +115,7 @@ export function Promotions() {
               );
 
               const openWhatsapp = () =>
-                window.open(`${WHATSAPP_BASE_URL}?text=${whatsappMsg}`, "_blank", "noreferrer");
+                window.open(`${WHATSAPP_BASE_URL}?text=${whatsappMsg}`, "whatsapp", "noreferrer");
 
               const handlePointerDown = (e: React.PointerEvent) => {
                 pointerStartX.current = e.clientX;

@@ -53,7 +53,7 @@ export function DrenagemLinfaticaResultados() {
 
             <a
               href={WHATSAPP_URL}
-              target="_blank"
+              target="whatsapp"
               rel="noreferrer"
               className="mt-8 inline-flex items-center gap-2 rounded-full bg-primary text-primary-foreground px-7 py-3.5 text-sm font-medium hover:bg-primary/90 transition-all hover:-translate-y-0.5 shadow-lg shadow-primary/20"
             >
@@ -109,7 +109,7 @@ export function DrenagemLinfaticaResultados() {
             <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
               <a
                 href={WHATSAPP_URL}
-                target="_blank"
+                target="whatsapp"
                 rel="noreferrer"
                 className="inline-flex items-center gap-2 rounded-full bg-primary text-primary-foreground px-8 py-4 text-sm font-medium hover:bg-primary/90 transition-all hover:-translate-y-0.5 shadow-lg shadow-primary/20"
               >
