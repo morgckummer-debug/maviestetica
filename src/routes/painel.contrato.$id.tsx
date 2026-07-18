@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
-import { ArrowLeft, Loader2, Plus, Printer, Trash2 } from "lucide-react";
+import { ArrowLeft, Camera, CameraOff, Loader2, Plus, Printer, Trash2 } from "lucide-react";
 import { listarFichas, type Ficha } from "@/lib/painel";
 import { clientePorFichaId } from "@/lib/clientes";
 import { OPCOES_SESSAO, TIPOS, nomeCurto, type Tipo } from "@/data/anamnese";
@@ -49,6 +49,7 @@ function GerarContrato() {
   const [endereco, setEndereco] = useState("");
   const [itens, setItens] = useState<ItemContratado[]>([novoItem()]);
   const [formaPagamento, setFormaPagamento] = useState("");
+  const [autorizaFoto, setAutorizaFoto] = useState(false);
   const [dataDia, setDataDia] = useState("");
   const [dataMes, setDataMes] = useState("");
   const [dataAno, setDataAno] = useState("");
@@ -83,6 +84,7 @@ function GerarContrato() {
     setCpf(cliente.cpf ? aplicarMascara("cpf", cliente.cpf) : "");
     setTelefone(cliente.telefone ? aplicarMascara("telefone", cliente.telefone) : "");
     setEndereco([enderecoBruto, cidadeBruta].filter(Boolean).join(", "));
+    setAutorizaFoto(cliente.autorizaFoto);
     setHidratado(true);
   }, [cliente, hidratado]);
 
@@ -102,6 +104,7 @@ function GerarContrato() {
     endereco,
     itens,
     formaPagamento,
+    autorizaFoto,
     dataDia,
     dataMes,
     dataAno,
@@ -310,6 +313,43 @@ function GerarContrato() {
                 );
               })}
             </div>
+          </div>
+
+          <div>
+            <span className="text-xs font-medium text-painel-muted mb-1.5 block">
+              Autoriza uso de imagem (fotos/vídeos)?
+            </span>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setAutorizaFoto(true)}
+                className={[
+                  "inline-flex items-center gap-1.5 rounded-full border px-4 py-2 text-sm transition-colors",
+                  autorizaFoto
+                    ? "bg-painel-primary border-painel-primary text-white font-medium"
+                    : "bg-white border-painel-border text-painel-title hover:border-painel-primary/40",
+                ].join(" ")}
+              >
+                <Camera className="h-3.5 w-3.5" />
+                Sim
+              </button>
+              <button
+                type="button"
+                onClick={() => setAutorizaFoto(false)}
+                className={[
+                  "inline-flex items-center gap-1.5 rounded-full border px-4 py-2 text-sm transition-colors",
+                  !autorizaFoto
+                    ? "bg-painel-primary border-painel-primary text-white font-medium"
+                    : "bg-white border-painel-border text-painel-title hover:border-painel-primary/40",
+                ].join(" ")}
+              >
+                <CameraOff className="h-3.5 w-3.5" />
+                Não
+              </button>
+            </div>
+            <p className="text-[11px] text-painel-muted mt-1.5">
+              Vem preenchido conforme a ficha da cliente — ajuste aqui se ela mudou de ideia.
+            </p>
           </div>
 
           <div>

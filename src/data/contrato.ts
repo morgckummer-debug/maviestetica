@@ -123,6 +123,7 @@ export type DadosContrato = {
   endereco: string;
   itens: ItemContratado[];
   formaPagamento: string;
+  autorizaFoto: boolean;
   dataDia: string;
   dataMes: string;
   dataAno: string;
