@@ -186,9 +186,22 @@ const ETAPA_DADOS: Etapa = {
     {
       tipo: "texto",
       id: "endereco",
-      label: "Endereço",
-      placeholder: "Rua, número, complemento",
+      label: "Endereço (rua, bairro)",
+      placeholder: "Preenchido automaticamente pelo CEP",
       obrigatorio: true,
+    },
+    {
+      tipo: "texto",
+      id: "numero",
+      label: "Número",
+      placeholder: "123",
+      obrigatorio: true,
+    },
+    {
+      tipo: "texto",
+      id: "complemento",
+      label: "Complemento (opcional)",
+      placeholder: "Apto, bloco, casa...",
     },
     { tipo: "texto", id: "cidade", label: "Cidade", placeholder: "Sete Lagoas", obrigatorio: true },
     {
@@ -708,9 +721,22 @@ const ETAPA_DADOS_DEPILACAO: Etapa = {
     {
       tipo: "texto",
       id: "endereco",
-      label: "Endereço",
-      placeholder: "Rua, número, bairro",
+      label: "Endereço (rua, bairro)",
+      placeholder: "Preenchido automaticamente pelo CEP",
       obrigatorio: true,
+    },
+    {
+      tipo: "texto",
+      id: "numero",
+      label: "Número",
+      placeholder: "123",
+      obrigatorio: true,
+    },
+    {
+      tipo: "texto",
+      id: "complemento",
+      label: "Complemento (opcional)",
+      placeholder: "Apto, bloco, casa...",
     },
     { tipo: "texto", id: "cidade", label: "Cidade", placeholder: "Sete Lagoas", obrigatorio: true },
     {
