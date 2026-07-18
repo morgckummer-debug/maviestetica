@@ -51,6 +51,8 @@
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
@@ -86,6 +88,7 @@
   --color-painel-badge-bg: var(--painel-badge-bg);
   --color-painel-icon-muted: var(--painel-icon-muted);
   --color-painel-gold: var(--painel-gold);
+  --color-painel-green: var(--painel-green);
   --color-painel-alert-bg: var(--painel-alert-bg);
   --color-painel-alert-border: var(--painel-alert-border);
   --color-painel-alert-text: var(--painel-alert-text);
@@ -115,6 +118,8 @@
   --accent-foreground: oklch(0.98 0.005 60);
   --destructive: oklch(0.577 0.245 27.325);
   --destructive-foreground: oklch(0.984 0.003 247.858);
+  --success: oklch(0.627 0.194 149.214);
+  --success-foreground: oklch(0.982 0.018 155.826);
   --border: oklch(0.9 0.03 296);
   --input: oklch(0.9 0.03 296);
   --ring: oklch(0.6 0.1 296);
@@ -150,6 +155,7 @@
   --painel-badge-bg: #f1e4f5;
   --painel-icon-muted: #d9c8e8;
   --painel-gold: #b3924c;
+  --painel-green: #5a9c6f;
   --painel-alert-bg: #f6dde3;
   --painel-alert-border: #eabfca;
   --painel-alert-text: #a45d6f;
