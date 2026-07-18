@@ -19,6 +19,7 @@ import { Route as PainelIndexRouteImport } from './routes/painel.index'
 import { Route as AvaliacaoIndexRouteImport } from './routes/avaliacao.index'
 import { Route as ServicosSlugRouteImport } from './routes/servicos.$slug'
 import { Route as ResultadosPowerReduxRouteImport } from './routes/resultados.power-redux'
+import { Route as RelatorioTokenRouteImport } from './routes/relatorio.$token'
 import { Route as PainelPendentesRouteImport } from './routes/painel.pendentes'
 import { Route as PainelNovaRouteImport } from './routes/painel.nova'
 import { Route as PainelIdRouteImport } from './routes/painel.$id'
@@ -78,6 +79,11 @@ const ServicosSlugRoute = ServicosSlugRouteImport.update({
 const ResultadosPowerReduxRoute = ResultadosPowerReduxRouteImport.update({
   id: '/resultados/power-redux',
   path: '/resultados/power-redux',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RelatorioTokenRoute = RelatorioTokenRouteImport.update({
+  id: '/relatorio/$token',
+  path: '/relatorio/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PainelPendentesRoute = PainelPendentesRouteImport.update({
@@ -148,6 +154,7 @@ export interface FileRoutesByFullPath {
   '/painel/$id': typeof PainelIdRoute
   '/painel/nova': typeof PainelNovaRoute
   '/painel/pendentes': typeof PainelPendentesRoute
+  '/relatorio/$token': typeof RelatorioTokenRoute
   '/resultados/power-redux': typeof ResultadosPowerReduxRoute
   '/servicos/$slug': typeof ServicosSlugRoute
   '/avaliacao/': typeof AvaliacaoIndexRoute
@@ -169,6 +176,7 @@ export interface FileRoutesByTo {
   '/painel/$id': typeof PainelIdRoute
   '/painel/nova': typeof PainelNovaRoute
   '/painel/pendentes': typeof PainelPendentesRoute
+  '/relatorio/$token': typeof RelatorioTokenRoute
   '/resultados/power-redux': typeof ResultadosPowerReduxRoute
   '/servicos/$slug': typeof ServicosSlugRoute
   '/avaliacao': typeof AvaliacaoIndexRoute
@@ -192,6 +200,7 @@ export interface FileRoutesById {
   '/painel/$id': typeof PainelIdRoute
   '/painel/nova': typeof PainelNovaRoute
   '/painel/pendentes': typeof PainelPendentesRoute
+  '/relatorio/$token': typeof RelatorioTokenRoute
   '/resultados/power-redux': typeof ResultadosPowerReduxRoute
   '/servicos/$slug': typeof ServicosSlugRoute
   '/avaliacao/': typeof AvaliacaoIndexRoute
@@ -216,6 +225,7 @@ export interface FileRouteTypes {
     | '/painel/$id'
     | '/painel/nova'
     | '/painel/pendentes'
+    | '/relatorio/$token'
     | '/resultados/power-redux'
     | '/servicos/$slug'
     | '/avaliacao/'
@@ -237,6 +247,7 @@ export interface FileRouteTypes {
     | '/painel/$id'
     | '/painel/nova'
     | '/painel/pendentes'
+    | '/relatorio/$token'
     | '/resultados/power-redux'
     | '/servicos/$slug'
     | '/avaliacao'
@@ -259,6 +270,7 @@ export interface FileRouteTypes {
     | '/painel/$id'
     | '/painel/nova'
     | '/painel/pendentes'
+    | '/relatorio/$token'
     | '/resultados/power-redux'
     | '/servicos/$slug'
     | '/avaliacao/'
@@ -279,6 +291,7 @@ export interface RootRouteChildren {
   Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   AvaliacaoTipoRoute: typeof AvaliacaoTipoRoute
   ConfirmarTokenRoute: typeof ConfirmarTokenRoute
+  RelatorioTokenRoute: typeof RelatorioTokenRoute
   ResultadosPowerReduxRoute: typeof ResultadosPowerReduxRoute
   ServicosSlugRoute: typeof ServicosSlugRoute
   AvaliacaoIndexRoute: typeof AvaliacaoIndexRoute
@@ -356,6 +369,13 @@ declare module '@tanstack/react-router' {
       path: '/resultados/power-redux'
       fullPath: '/resultados/power-redux'
       preLoaderRoute: typeof ResultadosPowerReduxRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/relatorio/$token': {
+      id: '/relatorio/$token'
+      path: '/relatorio/$token'
+      fullPath: '/relatorio/$token'
+      preLoaderRoute: typeof RelatorioTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/painel/pendentes': {
@@ -462,6 +482,7 @@ const rootRouteChildren: RootRouteChildren = {
     Char91DotwellKnownChar93OauthProtectedResourceRoute,
   AvaliacaoTipoRoute: AvaliacaoTipoRoute,
   ConfirmarTokenRoute: ConfirmarTokenRoute,
+  RelatorioTokenRoute: RelatorioTokenRoute,
   ResultadosPowerReduxRoute: ResultadosPowerReduxRoute,
   ServicosSlugRoute: ServicosSlugRoute,
   AvaliacaoIndexRoute: AvaliacaoIndexRoute,
