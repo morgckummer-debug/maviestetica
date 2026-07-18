@@ -1,6 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link, useParams, useNavigate } from "@tanstack/react-router";
-import { ArrowLeft, AlertTriangle, Archive, Loader2, Send, Trash2 } from "lucide-react";
+import {
+  ArrowLeft,
+  AlertTriangle,
+  Archive,
+  FileSignature,
+  Loader2,
+  Send,
+  Trash2,
+} from "lucide-react";
 import { FICHAS, TIPOS, nomeTipo, nomeCurto } from "@/data/anamnese";
 import { listarFichas, excluirFicha, excluirFichaDefinitivamente, type Ficha } from "@/lib/painel";
 import { clientePorFichaId, type Cliente } from "@/lib/clientes";
@@ -178,16 +186,26 @@ function PaginaCliente() {
                 {cliente.fichas.length} ficha(s)
               </p>
             </div>
-            {!confirmandoExclusao && (
-              <button
-                type="button"
-                onClick={() => setConfirmandoExclusao(true)}
-                className="inline-flex items-center gap-1.5 rounded-full border border-painel-alert-border px-4 py-2 text-sm font-medium text-painel-alert-text hover:bg-painel-alert-bg transition-colors shrink-0"
+            <div className="flex items-center gap-2 shrink-0">
+              <Link
+                to="/painel/contrato/$id"
+                params={{ id }}
+                className="inline-flex items-center gap-1.5 rounded-full border border-white/25 px-4 py-2 text-sm font-medium text-white hover:border-white/50 transition-colors"
               >
-                <Trash2 className="h-4 w-4" />
-                Excluir
-              </button>
-            )}
+                <FileSignature className="h-4 w-4" />
+                Gerar contrato
+              </Link>
+              {!confirmandoExclusao && (
+                <button
+                  type="button"
+                  onClick={() => setConfirmandoExclusao(true)}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-painel-alert-border px-4 py-2 text-sm font-medium text-painel-alert-text hover:bg-painel-alert-bg transition-colors"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  Excluir
+                </button>
+              )}
+            </div>
           </div>
         </div>
 

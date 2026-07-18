@@ -64,3 +64,11 @@ export function formatarDataBR(v: string): string {
   if (m) return `${m[3]}.${m[2]}.${m[1]}`;
   return v;
 }
+
+// Mesma conversão de formatarDataBR, mas com barras: "1977-12-30" -> "30/12/1977"
+// (formato usado no contrato impresso).
+export function formatarDataBRBarra(v: string): string {
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(v.trim());
+  if (m) return `${m[3]}/${m[2]}/${m[1]}`;
+  return v;
+}

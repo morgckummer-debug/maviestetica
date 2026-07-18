@@ -219,3 +219,28 @@
     letter-spacing: -0.01em;
   }
 }
+
+/* Impressão do contrato de prestação de serviços (/painel/contrato/$id):
+   esconde todo o resto da página, deixando só a folha do contrato — cada
+   .contrato-pagina vira uma página impressa separada. */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #contrato-imprimir,
+  #contrato-imprimir * {
+    visibility: visible;
+  }
+  #contrato-imprimir {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+  }
+  .contrato-pagina {
+    page-break-after: always;
+  }
+  .contrato-pagina:last-child {
+    page-break-after: auto;
+  }
+}
