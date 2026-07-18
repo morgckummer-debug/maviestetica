@@ -130,7 +130,7 @@ begin
     -- o que ela já tinha (o formulário de uma ficha nova pode vir com
     -- menos detalhe do que o cadastro já tem).
     update public.clientes set
-      nome          = coalesce(nullif(p_nome, ''), nome),
+      nome          = coalesce(nullif(nome, ''), p_nome),
       cpf           = coalesce(nullif(cpf, ''), p_cpf),
       email         = coalesce(nullif(email, ''), p_email),
       nascimento    = coalesce(nullif(nascimento, ''), p_nascimento),
