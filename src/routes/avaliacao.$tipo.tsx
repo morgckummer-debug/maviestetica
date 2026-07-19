@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { createFileRoute, useNavigate, useParams, Link } from "@tanstack/react-router";
 import { motion, AnimatePresence } from "motion/react";
-import { ArrowLeft, ArrowRight, AlertTriangle, Sparkles, Loader2, UserRound } from "lucide-react";
+import { ArrowLeft, ArrowRight, AlertTriangle, Sparkles, Loader2 } from "lucide-react";
 import { SITE_URL } from "@/data/services";
 import {
   getFicha,
@@ -32,7 +32,7 @@ export const Route = createFileRoute("/avaliacao/$tipo")({
         { property: "og:title", content: `${nome} | MAVI Centro de Estética` },
         { property: "og:description", content: descricao },
         { property: "og:type", content: "website" },
-        ...(def && def.tipo !== "cadastro"
+        ...(def
           ? [
               { property: "og:image", content: `${SITE_URL}/og/ficha-${def.tipo}.png` },
               { property: "og:image:width", content: "1200" },
@@ -94,26 +94,19 @@ function FichaPage() {
   }
 
   const etapas = def.etapas;
-  // Cadastro não é procedimento clínico: pula a etapa de termo/autorização
-  // de imagem, envia direto depois da última etapa de dados.
-  const semTermo = Boolean(def.semTermoConsentimento);
-  const totalEtapas = etapas.length + (semTermo ? 0 : 1);
-  const stepLabels = semTermo
-    ? etapas.map((e) => e.titulo)
-    : [...etapas.map((e) => e.titulo), "Termo"];
+  const totalEtapas = etapas.length + 1; // + termo
+  const stepLabels = [...etapas.map((e) => e.titulo), "Termo"];
 
   const set = (id: string, v: string | boolean | null) => setRespostas((r) => ({ ...r, [id]: v }));
 
   const alertas = calcularAlertas(tipo, respostas);
-  const naTermo = !semTermo && step === etapas.length;
-  const ehEtapaFinal = semTermo ? step === etapas.length - 1 : naTermo;
+  const naTermo = step === etapas.length;
 
   const podeAvancar = (() => {
     if (naTermo) return termoAceito && !enviando;
-    const camposOk = etapas[step].campos.every(
+    return etapas[step].campos.every(
       (c) => !campoVisivel(c, respostas) || campoValido(c, respostas),
     );
-    return ehEtapaFinal ? camposOk && !enviando : camposOk;
   })();
 
   const enviar = async () => {
@@ -127,8 +120,8 @@ function FichaPage() {
           telefone: String(respostas.whatsapp ?? "").trim(),
           respostas,
           alertas,
-          termo_aceito: semTermo ? true : termoAceito,
-          autoriza_foto: semTermo ? false : autorizaFoto,
+          termo_aceito: termoAceito,
+          autoriza_foto: autorizaFoto,
         },
       });
       navigate({ to: "/obrigado" });
@@ -158,21 +151,17 @@ function FichaPage() {
               Antes do seu atendimento
             </p>
             <h1 className="font-display text-4xl lg:text-5xl leading-tight flex items-center justify-center gap-3 text-white">
-              {def.tipo === "cadastro" ? (
-                <UserRound className="h-11 w-11 lg:h-14 lg:w-14 shrink-0 text-[var(--painel-lilac-soft)]" />
-              ) : (
-                <img
-                  src={ICONES_FICHA[def.tipo]}
-                  alt=""
-                  className="h-11 w-11 lg:h-14 lg:w-14 shrink-0"
-                  style={{
-                    filter:
-                      "brightness(0) saturate(100%) invert(74%) sepia(16%) saturate(3701%) hue-rotate(204deg) brightness(121%) contrast(88%)",
-                  }}
-                />
-              )}
+              <img
+                src={ICONES_FICHA[def.tipo]}
+                alt=""
+                className="h-11 w-11 lg:h-14 lg:w-14 shrink-0"
+                style={{
+                  filter:
+                    "brightness(0) saturate(100%) invert(74%) sepia(16%) saturate(3701%) hue-rotate(204deg) brightness(121%) contrast(88%)",
+                }}
+              />
               <span>
-                {def.tipo === "cadastro" ? "" : "Ficha "}
+                Ficha{" "}
                 <em
                   className="italic font-normal"
                   style={{
@@ -183,9 +172,7 @@ function FichaPage() {
                     color: "transparent",
                   }}
                 >
-                  {def.tipo === "cadastro"
-                    ? def.nome.toLowerCase()
-                    : def.nome.replace(/^Anamnese\s*/i, "").toLowerCase() || def.nome}
+                  {def.nome.replace(/^Anamnese\s*/i, "").toLowerCase() || def.nome}
                 </em>
               </span>
             </h1>
@@ -261,12 +248,6 @@ function FichaPage() {
                         ))}
                     </div>
                   )}
-
-                  {semTermo && ehEtapaFinal && erro && (
-                    <div className="mt-6 rounded-xl border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive">
-                      {erro}
-                    </div>
-                  )}
                 </div>
               )}
 
@@ -340,7 +321,7 @@ function FichaPage() {
                 Voltar
               </button>
             )}
-            {!ehEtapaFinal ? (
+            {!naTermo ? (
               <button
                 type="button"
                 aria-disabled={!podeAvancar}
@@ -367,11 +348,11 @@ function FichaPage() {
                 {enviando ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin" />
-                    {semTermo ? "Salvando..." : "Enviando..."}
+                    Enviando...
                   </>
                 ) : (
                   <>
-                    {semTermo ? "Salvar cadastro" : "Enviar ficha"}
+                    Enviar ficha
                     <ArrowRight className="h-4 w-4" />
                   </>
                 )}
