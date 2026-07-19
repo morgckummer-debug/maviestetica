@@ -50,12 +50,12 @@ function Invoke-Api {
     $uri = "$SupabaseUrl/rest/v1/$Path"
     Write-Host "[debug] $Method $uri (headers: $($headers.Keys -join ', '))" -ForegroundColor DarkGray
     if ($null -ne $Body) {
-        # So manda Content-Type quando realmente tem corpo (POST/PATCH) -
-        # mandar esse cabeçalho numa consulta GET sem corpo faz o Supabase
-        # responder errado (confirmado: devolvia só 1 linha em vez de todas).
-        $headers["Content-Type"] = "application/json"
         $json = $Body | ConvertTo-Json -Depth 10 -Compress
-        $resultado = Invoke-RestMethod -Uri $uri -Method $Method -Headers $headers -Body $json
+        # Content-Type vai pelo parametro -ContentType (nao dentro de
+        # -Headers): no Windows PowerShell, Content-Type dentro de -Headers
+        # nao chega certo no corpo da requisicao (confirmado: o Supabase
+        # recebia corpo vazio/invalido - erro PGRST102).
+        $resultado = Invoke-RestMethod -Uri $uri -Method $Method -Headers $headers -Body $json -ContentType "application/json"
         Write-Host "[debug] resposta: $($resultado.Count) item(ns)" -ForegroundColor DarkGray
         return $resultado
     }
