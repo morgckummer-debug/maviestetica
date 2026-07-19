@@ -32,7 +32,9 @@ export const Route = createFileRoute("/avaliacao/$tipo")({
         { property: "og:title", content: `${nome} | MAVI Centro de Estética` },
         { property: "og:description", content: descricao },
         { property: "og:type", content: "website" },
-        ...(def
+        // Cadastro não tem imagem própria de compartilhamento (só as 3
+        // fichas de tratamento têm og/ficha-*.png).
+        ...(def && def.tipo !== "cadastro"
           ? [
               { property: "og:image", content: `${SITE_URL}/og/ficha-${def.tipo}.png` },
               { property: "og:image:width", content: "1200" },

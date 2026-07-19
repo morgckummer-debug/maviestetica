@@ -1,4 +1,5 @@
-// Configuração das fichas de anamnese da MAVI (3 tipos: corporal, facial, laser).
+// Configuração das fichas da MAVI: 3 anamneses de tratamento (corporal,
+// facial, laser) + o cadastro (só dados pessoais, sem anamnese clínica).
 // As perguntas ficam aqui — para mudar/criar uma ficha, edite só este arquivo.
 // As respostas são salvas no Supabase no campo `respostas` (JSONB), indexadas
 // pelo `id` de cada campo, então mudar perguntas não exige alterar o banco.
@@ -70,7 +71,10 @@ export type Etapa = {
   campos: Campo[];
 };
 
-export type Tipo = "corporal" | "facial" | "laser";
+// "cadastro" é uma ficha só com a etapa de dados pessoais (sem anamnese
+// clínica) — usada para mandar um link de cadastro puro, sem vincular a
+// cliente a nenhum tratamento ainda.
+export type Tipo = "corporal" | "facial" | "laser" | "cadastro";
 
 // Campos da avaliação clínica preenchida pela Marina no painel (não pela
 // paciente). Guardados junto das medidas — seleção como texto, múltipla como
@@ -212,6 +216,18 @@ const ETAPA_DADOS: Etapa = {
 // cliente nova entram no sistema), mas a edição depois de enviada a ficha
 // passa a acontecer no Cadastro, não mais dentro de cada ficha.
 export const CAMPOS_CADASTRO: Campo[] = ETAPA_DADOS.campos;
+
+// ---------- CADASTRO (só dados pessoais, sem anamnese clínica) ----------
+// Link que a Marina manda pra uma cliente nova se cadastrar antes de
+// escolher/agendar um tratamento — mesma etapa de dados das outras fichas,
+// sem perguntas de saúde nem medidas.
+const CADASTRO: DefinicaoFicha = {
+  tipo: "cadastro",
+  nome: "Cadastro",
+  emoji: "📋",
+  camposMedidas: [],
+  etapas: [ETAPA_DADOS],
+};
 
 // Perguntas que não se aplicam a pacientes do sexo masculino
 // (menstruação, gravidez, menopausa, amamentação).
@@ -923,6 +939,7 @@ export const FICHAS: Record<Tipo, DefinicaoFicha> = {
   corporal: CORPORAL,
   facial: FACIAL,
   laser: LASER,
+  cadastro: CADASTRO,
 };
 
 // Áreas de depilação, reaproveitadas no registro de sessões do painel
@@ -956,6 +973,8 @@ export const OPCOES_SESSAO: Record<Tipo, string[]> = {
     "Drenagem para Gestantes",
     "Max Pós-Parto",
   ],
+  // Cadastro não é um tratamento — nunca vira sessão.
+  cadastro: [],
 };
 
 // Rótulo do grupo de botões conforme o tipo (áreas x procedimentos).
@@ -963,10 +982,16 @@ export function rotuloItensSessao(tipo: Tipo): string {
   return tipo === "laser" ? "Áreas realizadas" : "Procedimentos realizados";
 }
 
+// Fichas de tratamento (usadas para escolher/filtrar procedimento — não
+// inclui "cadastro", que não é um tratamento).
 export const TIPOS: Tipo[] = ["corporal", "facial", "laser"];
 
+// Todas as fichas que dá pra mandar um link — cadastro primeiro, por ser
+// o ponto de entrada de uma cliente nova.
+export const TIPOS_ENVIO: Tipo[] = ["cadastro", ...TIPOS];
+
 export function ehTipo(v: string): v is Tipo {
-  return v === "corporal" || v === "facial" || v === "laser";
+  return v === "corporal" || v === "facial" || v === "laser" || v === "cadastro";
 }
 
 export function getFicha(tipo: string): DefinicaoFicha | undefined {

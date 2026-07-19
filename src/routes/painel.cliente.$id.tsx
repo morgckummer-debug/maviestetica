@@ -462,14 +462,18 @@ function PaginaCliente() {
 
   const agregado = useMemo(() => agregarFichas(fichas ?? []), [fichas]);
 
+  // Cadastro não é tratamento — não entra na lista de procedimentos do
+  // histórico de sessões.
   const procedimentos: Procedimento[] = useMemo(
     () =>
-      (fichas ?? []).map((f) => ({
-        id: f.id,
-        tipo: f.tipo,
-        nome: f.nome,
-        pacotes: f.pacotes ?? {},
-      })),
+      (fichas ?? [])
+        .filter((f) => f.tipo !== "cadastro")
+        .map((f) => ({
+          id: f.id,
+          tipo: f.tipo,
+          nome: f.nome,
+          pacotes: f.pacotes ?? {},
+        })),
     [fichas],
   );
 
