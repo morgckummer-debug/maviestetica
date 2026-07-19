@@ -170,7 +170,13 @@ function GerarContrato() {
     } finally {
       setSalvando(false);
     }
+    // O navegador sugere o <title> da página como nome do arquivo ao
+    // "Salvar como PDF" na impressão — troca pelo nome da cliente nessa
+    // hora, sem mudar o título da aba fora disso.
+    const tituloOriginal = document.title;
+    document.title = `Contrato - ${cliente.nome}`;
     window.print();
+    document.title = tituloOriginal;
   };
 
   const dados = {
