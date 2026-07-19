@@ -128,12 +128,17 @@ function Group-Fichas($fichas) {
         }
     }
 
+    # Usa arrays comuns do PowerShell (nao List<Object>) para os grupos -
+    # List<Object> com exatamente 1 item dava "Os tipos de argumento nao
+    # correspondem" mais adiante, ao envolver o grupo com @() de novo
+    # (confirmado rodando contra os dados reais).
     $grupos = @{}
     for ($i = 0; $i -lt $n; $i++) {
         $r = Find-Raiz $pai $i
-        if (-not $grupos.ContainsKey($r)) { $grupos[$r] = New-Object System.Collections.Generic.List[object] }
-        $grupos[$r].Add($fichas[$i])
+        if (-not $grupos.ContainsKey($r)) { $grupos[$r] = @() }
+        $grupos[$r] += $fichas[$i]
     }
+
     return $grupos.Values
 }
 
