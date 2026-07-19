@@ -93,7 +93,7 @@ export function CampoView({
           setCepNaoEncontrado(true);
           return;
         }
-        const rua = [endereco.logradouro, endereco.bairro].filter(Boolean).join(" - ");
+        const rua = [endereco.logradouro, endereco.bairro].filter(Boolean).join(", ");
         if (rua) set("endereco", rua);
         if (endereco.localidade) {
           set(

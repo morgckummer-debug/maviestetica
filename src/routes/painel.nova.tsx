@@ -13,7 +13,7 @@ import {
   type Tipo,
   type Respostas,
 } from "@/data/anamnese";
-import { criarFicha } from "@/lib/painel";
+import { criarFicha, encontrarOuCriarCliente } from "@/lib/painel";
 import { CampoView } from "@/components/FichaCampos";
 import { RamosWatermark } from "@/components/RamosWatermark";
 
@@ -78,10 +78,13 @@ function Formulario({ tipo, onTrocarTipo }: { tipo: Tipo; onTrocarTipo: () => vo
     setErro(null);
     setEnviando(true);
     try {
+      const telefone = String(respostas.whatsapp ?? "").trim() || null;
+      const clienteId = await encontrarOuCriarCliente(respostas, telefone);
       const ficha = await criarFicha({
         tipo,
         nome: String(respostas.nome ?? "").trim(),
-        telefone: String(respostas.whatsapp ?? "").trim() || null,
+        telefone,
+        clienteId,
         respostas,
         alertas,
         termo_aceito: termoFisico,

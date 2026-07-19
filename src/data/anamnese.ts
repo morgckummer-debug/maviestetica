@@ -72,10 +72,6 @@ export type Etapa = {
 
 export type Tipo = "corporal" | "facial" | "laser";
 
-// "cadastro" é a ficha de dados pessoais (preenchida uma vez), separada das
-// 3 fichas de serviço acima — ver TipoFicha/CADASTRO mais abaixo.
-export type TipoFicha = Tipo | "cadastro";
-
 // Campos da avaliação clínica preenchida pela Marina no painel (não pela
 // paciente). Guardados junto das medidas — seleção como texto, múltipla como
 // texto separado por ", ".
@@ -89,7 +85,7 @@ export type GrupoAvaliacao = {
 };
 
 export type DefinicaoFicha = {
-  tipo: TipoFicha;
+  tipo: Tipo;
   nome: string; // ex.: "Anamnese Corporal"
   emoji: string;
   etapas: Etapa[];
@@ -99,9 +95,6 @@ export type DefinicaoFicha = {
   avaliacao?: GrupoAvaliacao[];
   // true enquanto as perguntas ainda não foram transcritas do papel
   emConstrucao?: boolean;
-  // Ficha de Cadastro: não é procedimento clínico, então pula a etapa de
-  // termo de responsabilidade / autorização de imagem no formulário público.
-  semTermoConsentimento?: boolean;
 };
 
 export const TERMO_TEXTO =
@@ -124,9 +117,7 @@ export const ESTADOS_CIVIS = [
   "União estável",
 ] as const;
 
-// Etapa de dados pessoais completa (endereço, nascimento, e-mail...) — usada
-// só pela ficha de Cadastro (ver CADASTRO). As fichas de serviço usam a
-// versão enxuta logo abaixo (ETAPA_DADOS_SERVICO).
+// Etapa de dados pessoais — comum às 3 fichas.
 const ETAPA_DADOS: Etapa = {
   titulo: "Seus dados",
   descricao: "Para a Marina te receber com cuidado e segurança.",
@@ -222,48 +213,12 @@ const ETAPA_DADOS: Etapa = {
   ],
 };
 
-// Dados pessoais nas fichas de serviço (corporal/facial/depilação): só o
-// necessário pra localizar/linkar o cadastro da cliente (nome + CPF) e pra
-// decidir perguntas condicionadas ao gênero. O resto (endereço, nascimento,
-// e-mail, profissão...) mora só na ficha de Cadastro.
-const ETAPA_DADOS_SERVICO: Etapa = {
-  titulo: "Seus dados",
-  descricao: "Pra localizar seu cadastro. Ainda não se cadastrou? Fale com a Marina antes.",
-  campos: [
-    {
-      tipo: "texto",
-      id: "nome",
-      label: "Nome completo",
-      placeholder: "Seu nome",
-      obrigatorio: true,
-    },
-    {
-      tipo: "texto",
-      id: "cpf",
-      label: "CPF",
-      placeholder: "254.654.325-86",
-      inputMode: "numeric",
-      mascara: "cpf",
-      obrigatorio: true,
-    },
-    {
-      tipo: "selecao",
-      id: "sexo",
-      label: "Gênero",
-      opcoes: ["Feminino", "Masculino"],
-      obrigatorio: true,
-    },
-    {
-      tipo: "texto",
-      id: "whatsapp",
-      label: "Celular",
-      placeholder: "(31)93998-3485",
-      inputMode: "tel",
-      mascara: "telefone",
-      obrigatorio: true,
-    },
-  ],
-};
+// Campos do Cadastro da cliente (aba "Cadastro", tabela `clientes` —
+// migração 0012_clientes.sql). Mesmos campos de ETAPA_DADOS: continuam
+// sendo perguntados no formulário de ficha (é assim que os dados de uma
+// cliente nova entram no sistema), mas a edição depois de enviada a ficha
+// passa a acontecer no Cadastro, não mais dentro de cada ficha.
+export const CAMPOS_CADASTRO: Campo[] = ETAPA_DADOS.campos;
 
 // Perguntas que não se aplicam a pacientes do sexo masculino
 // (menstruação, gravidez, menopausa, amamentação).
@@ -290,7 +245,7 @@ const CORPORAL: DefinicaoFicha = {
     { id: "panturrilhaEsq", label: "Panturrilha Esq." },
   ],
   etapas: [
-    ETAPA_DADOS_SERVICO,
+    ETAPA_DADOS,
     {
       titulo: "Rotina e hábitos",
       campos: [
@@ -550,7 +505,7 @@ const FACIAL: DefinicaoFicha = {
     },
   ],
   etapas: [
-    ETAPA_DADOS_SERVICO,
+    ETAPA_DADOS,
     {
       titulo: "Rotina e hábitos",
       campos: [
@@ -720,13 +675,96 @@ const FACIAL: DefinicaoFicha = {
 };
 
 // ---------- DEPILAÇÃO (transcrita do papel da Mavi) ----------
+// Dados pessoais próprios da ficha de depilação (inclui Sexo, como no papel).
+const ETAPA_DADOS_DEPILACAO: Etapa = {
+  titulo: "Seus dados",
+  descricao: "Para a Marina te receber com cuidado e segurança.",
+  campos: [
+    {
+      tipo: "texto",
+      id: "nome",
+      label: "Nome completo",
+      placeholder: "Seu nome",
+      obrigatorio: true,
+    },
+    {
+      tipo: "texto",
+      id: "cpf",
+      label: "CPF",
+      placeholder: "254.654.325-86",
+      inputMode: "numeric",
+      mascara: "cpf",
+      obrigatorio: true,
+    },
+    { tipo: "texto", id: "nascimento", label: "Data de nascimento", inputMode: "date" },
+    {
+      tipo: "texto",
+      id: "profissao",
+      label: "Profissão (opcional)",
+      placeholder: "Sua profissão",
+    },
+    {
+      tipo: "selecao",
+      id: "estadoCivil",
+      label: "Estado civil (opcional)",
+      opcoes: [...ESTADOS_CIVIS],
+    },
+    {
+      tipo: "selecao",
+      id: "sexo",
+      label: "Gênero",
+      opcoes: ["Feminino", "Masculino"],
+      obrigatorio: true,
+    },
+    {
+      tipo: "texto",
+      id: "cep",
+      label: "CEP",
+      placeholder: "35700-000",
+      inputMode: "numeric",
+      mascara: "cep",
+      obrigatorio: true,
+    },
+    {
+      tipo: "texto",
+      id: "endereco",
+      label: "Endereço (rua, bairro)",
+      placeholder: "Preenchido automaticamente pelo CEP",
+      obrigatorio: true,
+    },
+    {
+      tipo: "texto",
+      id: "numero",
+      label: "Número",
+      placeholder: "123",
+      obrigatorio: true,
+    },
+    {
+      tipo: "texto",
+      id: "complemento",
+      label: "Complemento (opcional)",
+      placeholder: "Apto, bloco, casa...",
+    },
+    { tipo: "texto", id: "cidade", label: "Cidade", placeholder: "Sete Lagoas", obrigatorio: true },
+    {
+      tipo: "texto",
+      id: "whatsapp",
+      label: "Celular",
+      placeholder: "(31)93998-3485",
+      inputMode: "tel",
+      mascara: "telefone",
+      obrigatorio: true,
+    },
+  ],
+};
+
 const LASER: DefinicaoFicha = {
   tipo: "laser",
   nome: "Anamnese Depilação",
   emoji: "🔆",
   camposMedidas: [],
   etapas: [
-    ETAPA_DADOS_SERVICO,
+    ETAPA_DADOS_DEPILACAO,
     {
       titulo: "Sobre sua pele",
       campos: [
@@ -901,20 +939,6 @@ export const FICHAS: Record<Tipo, DefinicaoFicha> = {
   laser: LASER,
 };
 
-// Ficha de Cadastro: dados pessoais completos, preenchida uma vez (link
-// próprio, fora do fluxo de escolha de serviço). Fica de fora de FICHAS/TIPOS
-// de propósito — não é um serviço, então não deve aparecer junto de
-// corporal/facial/laser nos seletores, histórico de sessões, pacotes etc.
-// getFicha() resolve tanto os 3 serviços quanto "cadastro".
-const CADASTRO: DefinicaoFicha = {
-  tipo: "cadastro",
-  nome: "Cadastro",
-  emoji: "🗂️",
-  camposMedidas: [],
-  semTermoConsentimento: true,
-  etapas: [ETAPA_DADOS],
-};
-
 // Áreas de depilação, reaproveitadas no registro de sessões do painel
 // (mesma lista da ficha a laser, para a Marina marcar o que foi feito).
 export const AREAS_DEPILACAO: string[] = [
@@ -959,12 +983,7 @@ export function ehTipo(v: string): v is Tipo {
   return v === "corporal" || v === "facial" || v === "laser";
 }
 
-export function ehTipoFicha(v: string): v is TipoFicha {
-  return v === "cadastro" || ehTipo(v);
-}
-
 export function getFicha(tipo: string): DefinicaoFicha | undefined {
-  if (tipo === "cadastro") return CADASTRO;
   return ehTipo(tipo) ? FICHAS[tipo] : undefined;
 }
 
