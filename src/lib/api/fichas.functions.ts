@@ -46,6 +46,7 @@ async function encontrarOuCriarCliente(
       p_cep: texto(respostas.cep),
       p_endereco: texto(respostas.endereco),
       p_numero: texto(respostas.numero),
+      p_bairro: texto(respostas.bairro),
       p_complemento: texto(respostas.complemento),
       p_cidade: texto(respostas.cidade),
       p_como_conheceu: texto(respostas.comoConheceu),

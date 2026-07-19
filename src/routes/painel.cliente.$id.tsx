@@ -74,6 +74,8 @@ function clienteParaForm(c: Cliente): Record<string, string> {
     cpf: c.cpf ?? "",
     cep: c.cep ?? "",
     endereco: c.endereco ?? "",
+    numero: c.numero ?? "",
+    bairro: c.bairro ?? "",
     complemento: c.complemento ?? "",
     cidade: c.cidade ?? "",
     comoConheceu: c.como_conheceu ?? "",
@@ -93,10 +95,21 @@ function formParaPatch(form: Record<string, string>): Partial<Cliente> {
     cpf: t(form.cpf),
     cep: t(form.cep),
     endereco: t(form.endereco),
+    numero: t(form.numero),
+    bairro: t(form.bairro),
     complemento: t(form.complemento),
     cidade: t(form.cidade),
     como_conheceu: t(form.comoConheceu),
   };
+}
+
+// Junta rua, número, bairro e cidade numa linha só de exibição (a Marina
+// edita os campos separados, mas a visão geral não precisa de uma linha
+// pra cada pedaço do endereço).
+function enderecoCompleto(c: Cliente): string {
+  return [[c.endereco, c.numero].filter(Boolean).join(", "), c.bairro, c.cidade]
+    .filter(Boolean)
+    .join(" - ");
 }
 
 // Formata o valor exibido conforme o campo (celular, CPF, data de nascimento).
@@ -303,7 +316,19 @@ function AbaCadastro({
         </div>
       ) : (
         <dl className="grid md:grid-cols-2 gap-x-8">
-          {CAMPOS_CADASTRO.map((c) => {
+          {/* Rua, número, bairro e cidade viram uma única linha "Endereço" —
+              os campos separados só aparecem na edição. */}
+          {enderecoCompleto(cliente) && (
+            <div className="flex justify-between gap-4 py-1.5 text-sm border-b border-painel-border/50">
+              <dt className="text-painel-muted shrink-0">Endereço</dt>
+              <dd className="text-right font-medium text-painel-title min-w-0 break-words">
+                {enderecoCompleto(cliente)}
+              </dd>
+            </div>
+          )}
+          {CAMPOS_CADASTRO.filter(
+            (c) => !["endereco", "numero", "bairro", "cidade"].includes(c.id),
+          ).map((c) => {
             const bruto = clienteParaForm(cliente)[c.id];
             if (!bruto) return null;
             return (
