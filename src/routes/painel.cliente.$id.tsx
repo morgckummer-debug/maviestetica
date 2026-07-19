@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link, useParams, useNavigate } from "@tanstack/react-router";
 import {
   ArrowLeft,
@@ -318,29 +318,32 @@ function AbaCadastro({
         <dl className="grid md:grid-cols-2 gap-x-8">
           {/* Rua, número, bairro e cidade viram uma única linha "Endereço" —
               os campos separados só aparecem na edição. */}
-          {enderecoCompleto(cliente) && (
-            <div className="flex justify-between gap-4 py-1.5 text-sm border-b border-painel-border/50">
-              <dt className="text-painel-muted shrink-0">Endereço</dt>
-              <dd className="text-right font-medium text-painel-title min-w-0 break-words">
-                {enderecoCompleto(cliente)}
-              </dd>
-            </div>
-          )}
           {CAMPOS_CADASTRO.filter(
             (c) => !["endereco", "numero", "bairro", "cidade"].includes(c.id),
           ).map((c) => {
             const bruto = clienteParaForm(cliente)[c.id];
-            if (!bruto) return null;
             return (
-              <div
-                key={c.id}
-                className="flex justify-between gap-4 py-1.5 text-sm border-b border-painel-border/50"
-              >
-                <dt className="text-painel-muted shrink-0">{c.label}</dt>
-                <dd className="text-right font-medium text-painel-title min-w-0 break-words">
-                  {formatarValorCampo(c.id, bruto)}
-                </dd>
-              </div>
+              <Fragment key={c.id}>
+                {bruto && (
+                  <div className="flex justify-between gap-4 py-1.5 text-sm border-b border-painel-border/50">
+                    <dt className="text-painel-muted shrink-0">{c.label}</dt>
+                    <dd className="text-right font-medium text-painel-title min-w-0 break-words">
+                      {formatarValorCampo(c.id, bruto)}
+                    </dd>
+                  </div>
+                )}
+                {/* Endereço combinado logo depois do nome — inverte a dupla
+                    Endereço/Nome que ficava na 1ª linha (rua não vem antes
+                    do nome da cliente). */}
+                {c.id === "nome" && enderecoCompleto(cliente) && (
+                  <div className="flex justify-between gap-4 py-1.5 text-sm border-b border-painel-border/50">
+                    <dt className="text-painel-muted shrink-0">Endereço</dt>
+                    <dd className="text-right font-medium text-painel-title min-w-0 break-words">
+                      {enderecoCompleto(cliente)}
+                    </dd>
+                  </div>
+                )}
+              </Fragment>
             );
           })}
         </dl>

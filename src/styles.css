@@ -243,4 +243,10 @@
   .contrato-pagina:last-child {
     page-break-after: auto;
   }
+  /* A pré-visualização encolhe pra caber na coluna (ver
+     ContratoPreviewEscalado em painel.contrato.$id.tsx) — na impressão de
+     verdade, sempre em tamanho real. */
+  .contrato-preview-escala {
+    transform: none !important;
+  }
 }
