@@ -93,25 +93,19 @@ export function CampoView({
           setCepNaoEncontrado(true);
           return;
         }
-        const rua = [endereco.logradouro, endereco.bairro].filter(Boolean).join(", ");
-        if (rua) set("endereco", rua);
+        if (endereco.logradouro) set("endereco", endereco.logradouro);
+        if (endereco.bairro) set("bairro", endereco.bairro);
         if (endereco.localidade) {
           set(
             "cidade",
             endereco.uf ? `${endereco.localidade} - ${endereco.uf}` : endereco.localidade,
           );
         }
-        // Já deixa o cursor logo depois do nome da rua (antes da vírgula do
-        // bairro) — a cliente só continua digitando o número ali, sem
-        // precisar clicar no meio do texto pra achar o lugar certo.
-        if (rua && endereco.logradouro) {
-          const posicao = endereco.logradouro.length;
-          requestAnimationFrame(() => {
-            const inputEndereco = document.getElementById("endereco") as HTMLInputElement | null;
-            inputEndereco?.focus();
-            inputEndereco?.setSelectionRange(posicao, posicao);
-          });
-        }
+        // Já deixa o foco no Número — só o que falta a cliente preencher
+        // à mão, já que rua/bairro/cidade acabaram de vir prontos do CEP.
+        requestAnimationFrame(() => {
+          document.getElementById("numero")?.focus();
+        });
       } finally {
         setBuscandoCep(false);
       }

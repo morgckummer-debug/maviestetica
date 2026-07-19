@@ -227,6 +227,10 @@ type EnvioWhatsapp = {
   onConfirmar: () => void;
   onCancelar: () => void;
   onIniciar: (sessaoId: string) => void;
+  // Depois de salvar, o link fica aqui pronto pra Marina clicar (não abre
+  // sozinho — ver comentário em `linkEnvioPronto`).
+  linkPronto: string | null;
+  onLinkAberto: () => void;
 };
 
 // Arquivar uma sessão que a cliente JÁ confirmou (tem "assinatura" digital)
@@ -313,6 +317,25 @@ function LinhaSessaoView({
   }
 
   if (envio.sessaoId === id) {
+    if (envio.linkPronto) {
+      return (
+        <li className="rounded-lg border border-painel-border bg-painel-badge-bg/50 p-3">
+          <p className="text-xs font-medium text-painel-title mb-2">
+            Sessão salva! Clique pra abrir o WhatsApp com o link de confirmação.
+          </p>
+          <a
+            href={envio.linkPronto}
+            target="whatsapp"
+            rel="noreferrer"
+            onClick={envio.onLinkAberto}
+            className="inline-flex items-center gap-1.5 rounded-full bg-painel-primary text-white px-3.5 py-1.5 text-xs font-medium hover:bg-painel-primary/90 transition-colors"
+          >
+            <MessageCircle className="h-3.5 w-3.5" />
+            Abrir WhatsApp
+          </a>
+        </li>
+      );
+    }
     return (
       <li className="rounded-lg border border-painel-border bg-painel-badge-bg/50 p-3">
         <p className="text-xs font-medium text-painel-title mb-1">
@@ -656,6 +679,10 @@ export function HistoricoSessoes({
   const [enviarAreas, setEnviarAreas] = useState<string[]>([]);
   const [salvandoEnvio, setSalvandoEnvio] = useState(false);
   const [erroEnvio, setErroEnvio] = useState<string | null>(null);
+  // Link pronto depois de salvar: fica como um <a> de verdade pra Marina
+  // clicar, em vez de abrir sozinho com window.open (bloqueador de popup
+  // do navegador barra chamadas que não vêm direto de um clique).
+  const [linkEnvioPronto, setLinkEnvioPronto] = useState<string | null>(null);
 
   // Pacotes salvos nesta sessão do painel (além dos que já vieram nas
   // fichas), pra refletir na hora sem precisar recarregar a página.
@@ -704,6 +731,18 @@ export function HistoricoSessoes({
   // pacote por vez (chave = `${fichaId}::${item}::${numero}`).
   const [enviandoRelatorioChave, setEnviandoRelatorioChave] = useState<string | null>(null);
   const [erroRelatorioChave, setErroRelatorioChave] = useState<Record<string, string>>({});
+
+  // Links prontos pra abrir no WhatsApp depois de salvar (brinde confirmado
+  // / relatório gerado) — não abrem sozinhos (window.open depois de um
+  // await esbarra no bloqueador de popup do navegador), ficam aqui como um
+  // <a> de verdade pra Marina clicar.
+  const [linkBonusPronto, setLinkBonusPronto] = useState<{ item: string; url: string } | null>(
+    null,
+  );
+  const [linkRelatorioPronto, setLinkRelatorioPronto] = useState<{
+    item: string;
+    url: string;
+  } | null>(null);
 
   const fichaPorId = useMemo(() => {
     const m = new Map<string, Procedimento>();
@@ -1035,6 +1074,7 @@ export function HistoricoSessoes({
   const cancelarEnvio = () => {
     setEnviandoSessaoId(null);
     setErroEnvio(null);
+    setLinkEnvioPronto(null);
   };
 
   const confirmarEnvio = async () => {
@@ -1064,8 +1104,9 @@ export function HistoricoSessoes({
         );
         return [...pendentes, ...atualizado];
       });
-      window.open(whatsappDe(s.token, s.data), "whatsapp", "noreferrer");
-      setEnviandoSessaoId(null);
+      // Não abre sozinho (window.open depois de um await esbarra no
+      // bloqueador de popup) — deixa o link pronto pra Marina clicar.
+      setLinkEnvioPronto(whatsappDe(s.token, s.data));
     } catch (e) {
       setErroEnvio(e instanceof Error ? e.message : "Erro ao preparar o envio.");
     } finally {
@@ -1075,6 +1116,8 @@ export function HistoricoSessoes({
 
   const envioSessao: EnvioWhatsapp = {
     sessaoId: enviandoSessaoId,
+    linkPronto: linkEnvioPronto,
+    onLinkAberto: cancelarEnvio,
     areasDisponiveis: (sessoes ?? []).find((x) => x.id === enviandoSessaoId)?.areas ?? [],
     areasMarcadas: enviarAreas,
     salvando: salvandoEnvio,
@@ -1253,7 +1296,7 @@ export function HistoricoSessoes({
     const data = dataBonusPendente[subChave] || hojeISO();
     if (
       !window.confirm(
-        `Confirma que a cliente usou o brinde de ${b.item} em ${dataBR(data)}? Isso registra a sessão e abre o link de confirmação por WhatsApp.`,
+        `Confirma que a cliente usou o brinde de ${b.item} em ${dataBR(data)}? Isso registra a sessão e deixa o link de confirmação por WhatsApp pronto pra abrir.`,
       )
     )
       return;
@@ -1262,9 +1305,7 @@ export function HistoricoSessoes({
     try {
       const nova = await criarSessao(b.fichaId, { data, areas: [b.item], observacao: "" });
       setSessoes((prev) => [nova, ...(prev ?? [])]);
-      // Mesmo padrão de qualquer sessão registrada: abre o link de
-      // confirmação por WhatsApp na hora, em vez de deixar pendente.
-      window.open(whatsappDe(nova.token, nova.data), "whatsapp", "noreferrer");
+      setLinkBonusPronto({ item: b.item, url: whatsappDe(nova.token, nova.data) });
     } catch (e) {
       setErroBonusPendente(e instanceof Error ? e.message : "Erro ao registrar o brinde usado.");
     } finally {
@@ -1526,8 +1567,8 @@ export function HistoricoSessoes({
     }
   };
 
-  // Gera (ou atualiza) o relatório público desse pacote e já abre o
-  // WhatsApp com o link — a cliente confere sozinha data por data e a
+  // Gera (ou atualiza) o relatório público desse pacote e deixa o link do
+  // WhatsApp pronto pra abrir — a cliente confere sozinha data por data e a
   // contagem que falta, em vez de precisar confiar de memória.
   const enviarRelatorio = async (g: GrupoItem, seg: Segmento) => {
     if (seg.pacoteTotal === undefined) return;
@@ -1548,17 +1589,16 @@ export function HistoricoSessoes({
           confirmado_em: l.confirmado_em,
         })),
       });
-      window.open(
-        linkWhatsappRelatorio({
+      setLinkRelatorioPronto({
+        item: g.item,
+        url: linkWhatsappRelatorio({
           origin,
           token,
           telefone: telefoneCliente,
           nomeCliente,
           item: g.item,
         }),
-        "whatsapp",
-        "noreferrer",
-      );
+      });
     } catch (e) {
       setErroRelatorioChave((prev) => ({
         ...prev,
@@ -1587,6 +1627,30 @@ export function HistoricoSessoes({
       <p className="text-sm text-painel-muted mb-5">
         Registre o atendimento e envie o link para a cliente confirmar.
       </p>
+
+      {(linkBonusPronto || linkRelatorioPronto) && (
+        <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-painel-lilac-soft/40 bg-painel-badge-bg/60 px-4 py-3">
+          <p className="text-xs font-medium text-painel-title">
+            {linkBonusPronto
+              ? `Brinde de ${linkBonusPronto.item} registrado!`
+              : `Relatório de ${linkRelatorioPronto!.item} gerado!`}{" "}
+            Clique pra abrir o WhatsApp com o link.
+          </p>
+          <a
+            href={(linkBonusPronto ?? linkRelatorioPronto)!.url}
+            target="whatsapp"
+            rel="noreferrer"
+            onClick={() => {
+              setLinkBonusPronto(null);
+              setLinkRelatorioPronto(null);
+            }}
+            className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-painel-primary text-white px-3.5 py-1.5 text-xs font-medium hover:bg-painel-primary/90 transition-colors"
+          >
+            <MessageCircle className="h-3.5 w-3.5" />
+            Abrir WhatsApp
+          </a>
+        </div>
+      )}
 
       {(bonusPendentesSemOrigem.length > 0 || bonusRealizadosSemOrigem.length > 0) && (
         <div className="mb-5 rounded-xl border border-painel-gold/40 bg-painel-gold/10 p-3.5">
