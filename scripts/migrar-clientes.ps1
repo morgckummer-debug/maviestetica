@@ -171,6 +171,9 @@ $criados = 0
 $fichasLigadas = 0
 
 foreach ($grupo in $grupos) {
+  try {
+    Write-Host "[debug] grupo: tipo=$($grupo.GetType().FullName) count=$($grupo.Count)" -ForegroundColor DarkGray
+
     $pendentes = @($grupo | Where-Object { -not $_.cliente_id })
     if ($pendentes.Count -eq 0) { continue }
 
@@ -210,6 +213,11 @@ foreach ($grupo in $grupos) {
         Invoke-Api -Path "fichas?id=eq.$($f.id)" -Method "PATCH" -Body @{ cliente_id = $clienteId } -Prefer "return=minimal" | Out-Null
         $fichasLigadas++
     }
+  } catch {
+    Write-Host "[erro no grupo] $($_.Exception.GetType().FullName): $($_.Exception.Message)" -ForegroundColor Red
+    Write-Host "  linha: $($_.InvocationInfo.ScriptLineNumber), comando: $($_.InvocationInfo.Line.Trim())" -ForegroundColor Red
+    throw
+  }
 }
 
 Write-Host ""
