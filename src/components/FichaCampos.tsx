@@ -101,6 +101,17 @@ export function CampoView({
             endereco.uf ? `${endereco.localidade} - ${endereco.uf}` : endereco.localidade,
           );
         }
+        // Já deixa o cursor logo depois do nome da rua (antes da vírgula do
+        // bairro) — a cliente só continua digitando o número ali, sem
+        // precisar clicar no meio do texto pra achar o lugar certo.
+        if (rua && endereco.logradouro) {
+          const posicao = endereco.logradouro.length;
+          requestAnimationFrame(() => {
+            const inputEndereco = document.getElementById("endereco") as HTMLInputElement | null;
+            inputEndereco?.focus();
+            inputEndereco?.setSelectionRange(posicao, posicao);
+          });
+        }
       } finally {
         setBuscandoCep(false);
       }
@@ -127,6 +138,7 @@ export function CampoView({
         ) : (
           <div className="relative">
             <input
+              id={campo.id}
               type={campo.inputMode === "date" ? "date" : "text"}
               inputMode={
                 campo.inputMode === "tel"

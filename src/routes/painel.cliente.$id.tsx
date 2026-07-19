@@ -311,8 +311,8 @@ function AbaCadastro({
                 key={c.id}
                 className="flex justify-between gap-4 py-1.5 text-sm border-b border-painel-border/50"
               >
-                <dt className="text-painel-muted">{c.label}</dt>
-                <dd className="text-right font-medium text-painel-title shrink-0">
+                <dt className="text-painel-muted shrink-0">{c.label}</dt>
+                <dd className="text-right font-medium text-painel-title min-w-0 break-words">
                   {formatarValorCampo(c.id, bruto)}
                 </dd>
               </div>
