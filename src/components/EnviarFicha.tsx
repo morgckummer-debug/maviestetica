@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Send, Copy, Check, MessageCircle, X } from "lucide-react";
 import { digitos } from "@/lib/clientes";
 import { aplicarMascara } from "@/lib/mascaras";
-import { TIPOS, getFicha, nomeCurto, type Tipo } from "@/data/anamnese";
+import { TIPOS_ENVIO, getFicha, nomeCurto, type Tipo } from "@/data/anamnese";
 import { PainelModal } from "@/components/PainelModal";
 
 // Painel para gerar e compartilhar o link de uma ficha (anamnese) — link
@@ -24,7 +24,7 @@ export function EnviarFicha({
   onFechar?: () => void;
 }) {
   const [origin, setOrigin] = useState("");
-  const [tipo, setTipo] = useState<Tipo>(tipoInicial ?? "corporal");
+  const [tipo, setTipo] = useState<Tipo>(tipoInicial ?? "cadastro");
   const [copiado, setCopiado] = useState(false);
   const [convite, setConvite] = useState(convitePadrao);
   const [nome, setNome] = useState(nomeInicial);
@@ -99,7 +99,7 @@ export function EnviarFicha({
       </div>
 
       <div className="flex flex-wrap gap-2 mb-4">
-        {TIPOS.map((t) => (
+        {TIPOS_ENVIO.map((t) => (
           <button
             key={t}
             type="button"
