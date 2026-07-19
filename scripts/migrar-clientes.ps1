@@ -50,7 +50,12 @@ function Invoke-Api {
     $uri = "$SupabaseUrl/rest/v1/$Path"
     Write-Host "[debug] $Method $uri (headers: $($headers.Keys -join ', '))" -ForegroundColor DarkGray
     if ($null -ne $Body) {
-        $json = $Body | ConvertTo-Json -Depth 10 -Compress
+        # Usa -InputObject em vez de "$Body | ConvertTo-Json": passar um
+        # [ordered]@{} (ou hashtable) pelo pipe pode fazer o PowerShell
+        # "desenrolar" cada chave/valor separadamente em vez de converter o
+        # objeto inteiro de uma vez - -InputObject evita essa ambiguidade.
+        $json = ConvertTo-Json -InputObject $Body -Depth 10 -Compress
+        Write-Host "[debug] corpo enviado: $json" -ForegroundColor DarkGray
         # Content-Type vai pelo parametro -ContentType (nao dentro de
         # -Headers): no Windows PowerShell, Content-Type dentro de -Headers
         # nao chega certo no corpo da requisicao (confirmado: o Supabase
