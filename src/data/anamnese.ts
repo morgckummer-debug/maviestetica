@@ -186,15 +186,8 @@ const ETAPA_DADOS: Etapa = {
     {
       tipo: "texto",
       id: "endereco",
-      label: "Endereço (rua, bairro)",
-      placeholder: "Preenchido automaticamente pelo CEP",
-      obrigatorio: true,
-    },
-    {
-      tipo: "texto",
-      id: "numero",
-      label: "Número",
-      placeholder: "123",
+      label: "Endereço (rua, número, bairro)",
+      placeholder: "Preenchido pelo CEP — complete com número e bairro",
       obrigatorio: true,
     },
     {
@@ -728,15 +721,8 @@ const ETAPA_DADOS_DEPILACAO: Etapa = {
     {
       tipo: "texto",
       id: "endereco",
-      label: "Endereço (rua, bairro)",
-      placeholder: "Preenchido automaticamente pelo CEP",
-      obrigatorio: true,
-    },
-    {
-      tipo: "texto",
-      id: "numero",
-      label: "Número",
-      placeholder: "123",
+      label: "Endereço (rua, número, bairro)",
+      placeholder: "Preenchido pelo CEP — complete com número e bairro",
       obrigatorio: true,
     },
     {
