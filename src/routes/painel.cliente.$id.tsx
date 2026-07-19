@@ -10,6 +10,7 @@ import {
   FileSignature,
   FileText,
   Loader2,
+  Paperclip,
   Pencil,
   Send,
   Trash2,
@@ -23,6 +24,8 @@ import {
   atualizarCliente,
   excluirCliente,
   excluirClienteDefinitivamente,
+  anexarContratoPdf,
+  urlContratoPdf,
   type Cliente,
   type Ficha,
   type Contrato,
@@ -404,12 +407,95 @@ function AbaFichas({ fichas }: { fichas: Ficha[] }) {
   );
 }
 
+// Anexa (ou baixa) o PDF do contrato — impresso e salvo pela Marina fora
+// do app, depois anexado aqui pra ficar guardado junto do histórico.
+function AnexoContratoPdf({
+  contrato,
+  clienteId,
+  onAnexado,
+}: {
+  contrato: Contrato;
+  clienteId: string;
+  onAnexado: (c: Contrato) => void;
+}) {
+  const [enviando, setEnviando] = useState(false);
+  const [abrindo, setAbrindo] = useState(false);
+  const [erro, setErro] = useState<string | null>(null);
+
+  const anexar = async (arquivo: File | undefined) => {
+    if (!arquivo) return;
+    setEnviando(true);
+    setErro(null);
+    try {
+      const pdf_path = await anexarContratoPdf({ id: contrato.id, clienteId }, arquivo);
+      onAnexado({ ...contrato, pdf_path });
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : "Erro ao anexar o PDF.");
+    } finally {
+      setEnviando(false);
+    }
+  };
+
+  const abrir = async () => {
+    if (!contrato.pdf_path) return;
+    setAbrindo(true);
+    setErro(null);
+    try {
+      const url = await urlContratoPdf(contrato.pdf_path);
+      window.open(url, "_blank", "noreferrer");
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : "Erro ao abrir o PDF.");
+    } finally {
+      setAbrindo(false);
+    }
+  };
+
+  return (
+    <div className="flex flex-col items-end gap-1 shrink-0">
+      {contrato.pdf_path ? (
+        <button
+          type="button"
+          onClick={abrir}
+          disabled={abrindo}
+          className="inline-flex items-center gap-1.5 rounded-full border border-painel-border px-3 py-1.5 text-xs font-medium text-painel-title hover:border-painel-primary/40 transition-colors disabled:opacity-40"
+        >
+          {abrindo ? (
+            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+          ) : (
+            <FileText className="h-3.5 w-3.5" />
+          )}
+          Ver PDF
+        </button>
+      ) : (
+        <label className="inline-flex items-center gap-1.5 rounded-full border border-painel-border px-3 py-1.5 text-xs font-medium text-painel-title hover:border-painel-primary/40 transition-colors cursor-pointer disabled:opacity-40">
+          {enviando ? (
+            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+          ) : (
+            <Paperclip className="h-3.5 w-3.5" />
+          )}
+          Anexar PDF
+          <input
+            type="file"
+            accept="application/pdf"
+            className="hidden"
+            disabled={enviando}
+            onChange={(e) => anexar(e.target.files?.[0])}
+          />
+        </label>
+      )}
+      {erro && <p className="text-[11px] text-painel-alert-text">{erro}</p>}
+    </div>
+  );
+}
+
 function AbaContratos({
   clienteId,
   contratos,
+  onAtualizado,
 }: {
   clienteId: string;
   contratos: Contrato[] | null;
+  onAtualizado: (c: Contrato) => void;
 }) {
   return (
     <div className="rounded-[14px] border border-painel-border bg-white p-5 sm:p-6">
@@ -452,6 +538,7 @@ function AbaContratos({
                   {c.forma_pagamento ? ` · ${c.forma_pagamento}` : ""}
                 </p>
               </div>
+              <AnexoContratoPdf contrato={c} clienteId={clienteId} onAnexado={onAtualizado} />
             </li>
           ))}
         </ul>
@@ -631,7 +718,17 @@ function PaginaCliente() {
             telefoneCliente={cliente.telefone}
           />
         )}
-        {aba === "contratos" && <AbaContratos clienteId={cliente.id} contratos={contratos} />}
+        {aba === "contratos" && (
+          <AbaContratos
+            clienteId={cliente.id}
+            contratos={contratos}
+            onAtualizado={(atualizado) =>
+              setContratos((prev) =>
+                (prev ?? []).map((c) => (c.id === atualizado.id ? atualizado : c)),
+              )
+            }
+          />
+        )}
       </div>
     </div>
   );

@@ -99,6 +99,9 @@ export type Contrato = {
   forma_pagamento: string | null;
   autoriza_foto: boolean;
   data_contrato: string; // "YYYY-MM-DD"
+  // Caminho do PDF assinado, anexado manualmente depois de imprimir (ver
+  // migração 0018_contrato_pdf.sql). Null até a Marina anexar.
+  pdf_path: string | null;
 };
 
 function agora(): number {
@@ -235,6 +238,21 @@ async function apiRest(path: string, init: RequestInit = {}): Promise<Response> 
       apikey: SUPABASE_ANON_KEY ?? "",
       Authorization: `Bearer ${s.access_token}`,
       "Content-Type": "application/json",
+    },
+  });
+}
+
+// Igual a apiRest, mas para o Storage (upload/link do PDF do contrato) —
+// não fixa Content-Type, já que o upload manda o tipo do próprio arquivo.
+async function apiStorage(path: string, init: RequestInit = {}): Promise<Response> {
+  const s = await sessaoValida();
+  if (!s) throw new Error("NAO_AUTENTICADO");
+  return fetch(`${SUPABASE_URL}/storage/v1/${path}`, {
+    ...init,
+    headers: {
+      ...init.headers,
+      apikey: SUPABASE_ANON_KEY ?? "",
+      Authorization: `Bearer ${s.access_token}`,
     },
   });
 }
@@ -533,6 +551,45 @@ export async function criarContrato(dados: {
   }
   const arr = (await res.json()) as Contrato[];
   return arr[0];
+}
+
+// Sobe o PDF (já impresso/salvo pela Marina, fora do app) pro Storage e
+// vincula ao contrato — ver migração 0018_contrato_pdf.sql (bucket
+// "contratos" + coluna pdf_path). Um upload novo substitui o anterior
+// (mesmo caminho, x-upsert).
+export async function anexarContratoPdf(
+  contrato: { id: string; clienteId: string },
+  arquivo: File,
+): Promise<string> {
+  const caminho = `${contrato.clienteId}/${contrato.id}.pdf`;
+  const res = await apiStorage(`object/contratos/${caminho}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": arquivo.type || "application/pdf",
+      "x-upsert": "true",
+    },
+    body: arquivo,
+  });
+  if (!res.ok) throw new Error("Não foi possível anexar o PDF.");
+  await apiRest(`contratos?id=eq.${encodeURIComponent(contrato.id)}`, {
+    method: "PATCH",
+    headers: { Prefer: "return=minimal" },
+    body: JSON.stringify({ pdf_path: caminho }),
+  });
+  return caminho;
+}
+
+// Link temporário (1h) pra baixar/ver o PDF anexado — o bucket é privado,
+// só a Marina autenticada consegue gerar esse link.
+export async function urlContratoPdf(caminho: string): Promise<string> {
+  const res = await apiStorage(`object/sign/contratos/${caminho}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ expiresIn: 3600 }),
+  });
+  if (!res.ok) throw new Error("Não foi possível abrir o PDF.");
+  const data = (await res.json()) as { signedURL: string };
+  return `${SUPABASE_URL}/storage/v1${data.signedURL}`;
 }
 
 // ------------------------------------------------------------
