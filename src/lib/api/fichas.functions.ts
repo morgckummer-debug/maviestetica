@@ -16,6 +16,7 @@ const schema = z.object({
   alertas: z.array(z.string()).default([]),
   termo_aceito: z.boolean(),
   autoriza_foto: z.boolean().default(false),
+  consentimento_dados: z.boolean(),
 });
 
 // Acha (por telefone/CPF) ou cria a cliente dona da ficha, pela função
@@ -70,6 +71,9 @@ export const salvarFicha = createServerFn({ method: "POST" })
     if (!data.termo_aceito) {
       throw new Error("É necessário aceitar o termo de responsabilidade.");
     }
+    if (!data.consentimento_dados) {
+      throw new Error("É necessário autorizar o tratamento dos seus dados (LGPD).");
+    }
 
     const clienteId = await encontrarOuCriarCliente(data.respostas, data.telefone);
 
@@ -90,6 +94,7 @@ export const salvarFicha = createServerFn({ method: "POST" })
         alertas: data.alertas,
         termo_aceito: data.termo_aceito,
         autoriza_foto: data.autoriza_foto,
+        consentimento_dados: data.consentimento_dados,
       }),
     });
 

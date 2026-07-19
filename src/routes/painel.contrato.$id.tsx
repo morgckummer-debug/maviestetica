@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { ArrowLeft, Camera, CameraOff, Loader2, Plus, Printer, Trash2 } from "lucide-react";
 import { obterCliente, criarContrato, type Cliente } from "@/lib/painel";
@@ -32,6 +32,48 @@ let proximoIdItem = 0;
 function novoItem(): ItemContratado {
   proximoIdItem += 1;
   return { chave: `item-${proximoIdItem}`, tipo: "", descricao: "", quantidade: "" };
+}
+
+// Encolhe a pré-visualização (tamanho real de impressão, A4) pra caber na
+// largura da coluna, sem cortar nem precisar rolar de lado. Não afeta a
+// impressão de verdade — o @media print em styles.css (.contrato-preview-
+// escala) desfaz a escala nesse momento.
+function ContratoPreviewEscalado({ children }: { children: React.ReactNode }) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const conteudoRef = useRef<HTMLDivElement>(null);
+  const [escala, setEscala] = useState(1);
+  const [alturaEscalada, setAlturaEscalada] = useState<number | undefined>(undefined);
+
+  useEffect(() => {
+    const atualizar = () => {
+      const container = containerRef.current;
+      const conteudo = conteudoRef.current;
+      if (!container || !conteudo) return;
+      const largura = conteudo.scrollWidth;
+      if (largura === 0) return;
+      const novaEscala = Math.min(1, container.clientWidth / largura);
+      setEscala(novaEscala);
+      setAlturaEscalada(conteudo.scrollHeight * novaEscala);
+    };
+    atualizar();
+    const ro = new ResizeObserver(atualizar);
+    if (containerRef.current) ro.observe(containerRef.current);
+    return () => ro.disconnect();
+  });
+
+  return (
+    <div ref={containerRef} className="w-full">
+      <div style={{ height: alturaEscalada }}>
+        <div
+          ref={conteudoRef}
+          className="contrato-preview-escala mx-auto w-fit"
+          style={{ transform: `scale(${escala})`, transformOrigin: "top center" }}
+        >
+          {children}
+        </div>
+      </div>
+    </div>
+  );
 }
 
 function GerarContrato() {
@@ -457,9 +499,9 @@ function GerarContrato() {
 
         {/* Pré-visualização — o que sai na impressão (3 folhas) */}
         <div className="rounded-[14px] border border-painel-border bg-painel-bg p-4 overflow-auto max-h-[85vh]">
-          <div className="mx-auto w-fit">
+          <ContratoPreviewEscalado>
             <ContratoImpresso dados={dados} />
-          </div>
+          </ContratoPreviewEscalado>
         </div>
       </div>
     </div>
