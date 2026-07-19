@@ -56,11 +56,13 @@ function Invoke-Api {
         # objeto inteiro de uma vez - -InputObject evita essa ambiguidade.
         $json = ConvertTo-Json -InputObject $Body -Depth 10 -Compress
         Write-Host "[debug] corpo enviado: $json" -ForegroundColor DarkGray
-        # Content-Type vai pelo parametro -ContentType (nao dentro de
-        # -Headers): no Windows PowerShell, Content-Type dentro de -Headers
-        # nao chega certo no corpo da requisicao (confirmado: o Supabase
-        # recebia corpo vazio/invalido - erro PGRST102).
-        $resultado = Invoke-RestMethod -Uri $uri -Method $Method -Headers $headers -Body $json -ContentType "application/json"
+        # Manda o corpo como bytes UTF-8 explicitos: no Windows PowerShell,
+        # passar uma string com acento (ex.: "Cândido") direto pro -Body faz
+        # a contagem de bytes ficar errada e o Supabase recusar como corpo
+        # vazio/invalido (PGRST102) - convertendo pra bytes na mao isso nao
+        # acontece.
+        $jsonBytes = [System.Text.Encoding]::UTF8.GetBytes($json)
+        $resultado = Invoke-RestMethod -Uri $uri -Method $Method -Headers $headers -Body $jsonBytes -ContentType "application/json; charset=utf-8"
         Write-Host "[debug] resposta: $($resultado.Count) item(ns)" -ForegroundColor DarkGray
         return $resultado
     }
