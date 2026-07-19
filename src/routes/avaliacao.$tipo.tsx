@@ -7,6 +7,7 @@ import {
   getFicha,
   TERMO_TEXTO,
   AUTORIZACAO_FOTO_TEXTO,
+  CONSENTIMENTO_DADOS_TEXTO,
   calcularAlertas,
   campoVisivel,
   campoValido,
@@ -58,6 +59,7 @@ function FichaPage() {
   const [respostas, setRespostas] = useState<Respostas>({});
   const [termoAceito, setTermoAceito] = useState(false);
   const [autorizaFoto, setAutorizaFoto] = useState(false);
+  const [consentimentoDados, setConsentimentoDados] = useState(false);
   const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const [mostrarErros, setMostrarErros] = useState(false);
@@ -105,7 +107,7 @@ function FichaPage() {
   const naTermo = step === etapas.length;
 
   const podeAvancar = (() => {
-    if (naTermo) return termoAceito && !enviando;
+    if (naTermo) return termoAceito && consentimentoDados && !enviando;
     return etapas[step].campos.every(
       (c) => !campoVisivel(c, respostas) || campoValido(c, respostas),
     );
@@ -124,6 +126,7 @@ function FichaPage() {
           alertas,
           termo_aceito: termoAceito,
           autoriza_foto: autorizaFoto,
+          consentimento_dados: consentimentoDados,
         },
       });
       navigate({ to: "/obrigado" });
@@ -272,6 +275,23 @@ function FichaPage() {
                     </span>
                   </label>
 
+                  <label
+                    className={`flex gap-3 rounded-xl border bg-background px-4 py-4 cursor-pointer ${
+                      mostrarErros && !consentimentoDados ? "border-rose" : "border-border"
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={consentimentoDados}
+                      onChange={(e) => setConsentimentoDados(e.target.checked)}
+                      className="mt-1 h-4 w-4 shrink-0 accent-[var(--primary)]"
+                    />
+                    <span className="text-sm text-foreground/80 leading-relaxed">
+                      <strong className="text-foreground">Tratamento de dados (LGPD).</strong>{" "}
+                      {CONSENTIMENTO_DADOS_TEXTO}
+                    </span>
+                  </label>
+
                   <label className="flex gap-3 rounded-xl border border-border bg-background px-4 py-4 cursor-pointer">
                     <input
                       type="checkbox"
@@ -364,7 +384,7 @@ function FichaPage() {
           {mostrarErros && !podeAvancar && !enviando && (
             <p className="mt-3 text-sm text-rose text-right">
               {naTermo
-                ? "Aceite o termo de responsabilidade para enviar."
+                ? "Aceite o termo de responsabilidade e o tratamento de dados para enviar."
                 : "Responda todas as perguntas para continuar."}
             </p>
           )}

@@ -111,6 +111,18 @@ export const AUTORIZACAO_FOTO_TEXTO =
   "documentação e divulgação em redes sociais ou material publicitário. A autorização é " +
   "concedida gratuitamente, sem nada a ser reclamado a título de direitos.";
 
+// Consentimento específico de tratamento de dados (LGPD, Lei 13.709/2018) —
+// separado do termo de responsabilidade acima, que é sobre a avaliação
+// clínica, não sobre proteção de dados. Fica destacado por ser dado
+// sensível (saúde) quando a ficha tem perguntas de anamnese (Art. 11).
+export const CONSENTIMENTO_DADOS_TEXTO =
+  "Autorizo o tratamento dos meus dados pessoais e de saúde informados nesta ficha " +
+  "(nome, contato, endereço e as respostas desta avaliação) pela MAVI Centro de Estética, " +
+  "para as finalidades de prestação do serviço, histórico de atendimento e contato sobre " +
+  "meus tratamentos, conforme a Lei Geral de Proteção de Dados (LGPD). Posso pedir acesso, " +
+  "correção ou exclusão dos meus dados, ou retirar este consentimento, a qualquer momento, " +
+  "falando com a Marina.";
+
 // Opções de estado civil — usadas na ficha e reaproveitadas no contrato de
 // prestação de serviços (ver src/data/contrato.ts).
 export const ESTADOS_CIVIS = [

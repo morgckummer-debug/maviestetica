@@ -17,7 +17,8 @@ export function Footer() {
         <div className="md:col-span-1">
           <img src={logo} alt="MAVI" className="h-14 w-auto mb-4" />
           <p className="text-sm text-muted-foreground leading-relaxed">
-            Centro de estética facial e corporal em {CITY}. Cuidado dedicado para a sua melhor versão.
+            Centro de estética facial e corporal em {CITY}. Cuidado dedicado para a sua melhor
+            versão.
           </p>
         </div>
 
@@ -43,13 +44,23 @@ export function Footer() {
           <ul className="space-y-3 text-sm text-muted-foreground">
             <li className="flex items-start gap-2">
               <MessageCircle className="h-4 w-4 mt-0.5 text-primary" />
-              <a href={WHATSAPP_URL} target="whatsapp" rel="noreferrer" className="hover:text-primary">
+              <a
+                href={WHATSAPP_URL}
+                target="whatsapp"
+                rel="noreferrer"
+                className="hover:text-primary"
+              >
                 {WHATSAPP_DISPLAY}
               </a>
             </li>
             <li className="flex items-start gap-2">
               <Instagram className="h-4 w-4 mt-0.5 text-primary" />
-              <a href={INSTAGRAM_URL} target="_blank" rel="noreferrer" className="hover:text-primary">
+              <a
+                href={INSTAGRAM_URL}
+                target="_blank"
+                rel="noreferrer"
+                className="hover:text-primary"
+              >
                 {INSTAGRAM_HANDLE}
               </a>
             </li>
@@ -81,6 +92,9 @@ export function Footer() {
       <div className="border-t border-border/50">
         <div className="mx-auto max-w-7xl px-6 lg:px-10 py-6 flex flex-col md:flex-row justify-between items-center gap-2 text-xs text-muted-foreground">
           <p>© {new Date().getFullYear()} MAVI Centro de Estética. Todos os direitos reservados.</p>
+          <Link to="/politica-de-privacidade" className="hover:text-primary transition-colors">
+            Política de Privacidade
+          </Link>
           <p>Seja a sua melhor versão.</p>
         </div>
       </div>

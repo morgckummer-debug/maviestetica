@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as PowerReduxRouteImport } from './routes/power-redux'
+import { Route as PoliticaDePrivacidadeRouteImport } from './routes/politica-de-privacidade'
 import { Route as PainelRouteImport } from './routes/painel'
 import { Route as ObrigadoRouteImport } from './routes/obrigado'
 import { Route as McpRouteImport } from './routes/mcp'
@@ -35,6 +36,11 @@ import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.
 const PowerReduxRoute = PowerReduxRouteImport.update({
   id: '/power-redux',
   path: '/power-redux',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PoliticaDePrivacidadeRoute = PoliticaDePrivacidadeRouteImport.update({
+  id: '/politica-de-privacidade',
+  path: '/politica-de-privacidade',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PainelRoute = PainelRouteImport.update({
@@ -152,6 +158,7 @@ export interface FileRoutesByFullPath {
   '/mcp': typeof McpRoute
   '/obrigado': typeof ObrigadoRoute
   '/painel': typeof PainelRouteWithChildren
+  '/politica-de-privacidade': typeof PoliticaDePrivacidadeRoute
   '/power-redux': typeof PowerReduxRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
@@ -175,6 +182,7 @@ export interface FileRoutesByTo {
   '/drenagem-linfatica': typeof DrenagemLinfaticaRoute
   '/mcp': typeof McpRoute
   '/obrigado': typeof ObrigadoRoute
+  '/politica-de-privacidade': typeof PoliticaDePrivacidadeRoute
   '/power-redux': typeof PowerReduxRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
@@ -200,6 +208,7 @@ export interface FileRoutesById {
   '/mcp': typeof McpRoute
   '/obrigado': typeof ObrigadoRoute
   '/painel': typeof PainelRouteWithChildren
+  '/politica-de-privacidade': typeof PoliticaDePrivacidadeRoute
   '/power-redux': typeof PowerReduxRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
@@ -226,6 +235,7 @@ export interface FileRouteTypes {
     | '/mcp'
     | '/obrigado'
     | '/painel'
+    | '/politica-de-privacidade'
     | '/power-redux'
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
@@ -249,6 +259,7 @@ export interface FileRouteTypes {
     | '/drenagem-linfatica'
     | '/mcp'
     | '/obrigado'
+    | '/politica-de-privacidade'
     | '/power-redux'
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
@@ -273,6 +284,7 @@ export interface FileRouteTypes {
     | '/mcp'
     | '/obrigado'
     | '/painel'
+    | '/politica-de-privacidade'
     | '/power-redux'
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
@@ -298,6 +310,7 @@ export interface RootRouteChildren {
   McpRoute: typeof McpRoute
   ObrigadoRoute: typeof ObrigadoRoute
   PainelRoute: typeof PainelRouteWithChildren
+  PoliticaDePrivacidadeRoute: typeof PoliticaDePrivacidadeRoute
   PowerReduxRoute: typeof PowerReduxRoute
   Char91DotmcpChar93ListToolsRoute: typeof Char91DotmcpChar93ListToolsRoute
   Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
@@ -318,6 +331,13 @@ declare module '@tanstack/react-router' {
       path: '/power-redux'
       fullPath: '/power-redux'
       preLoaderRoute: typeof PowerReduxRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/politica-de-privacidade': {
+      id: '/politica-de-privacidade'
+      path: '/politica-de-privacidade'
+      fullPath: '/politica-de-privacidade'
+      preLoaderRoute: typeof PoliticaDePrivacidadeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/painel': {
@@ -497,6 +517,7 @@ const rootRouteChildren: RootRouteChildren = {
   McpRoute: McpRoute,
   ObrigadoRoute: ObrigadoRoute,
   PainelRoute: PainelRouteWithChildren,
+  PoliticaDePrivacidadeRoute: PoliticaDePrivacidadeRoute,
   PowerReduxRoute: PowerReduxRoute,
   Char91DotmcpChar93ListToolsRoute: Char91DotmcpChar93ListToolsRoute,
   Char91DotwellKnownChar93OauthProtectedResourceRoute:

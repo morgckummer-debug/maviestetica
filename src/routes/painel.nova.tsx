@@ -54,6 +54,7 @@ function Formulario({ tipo, onTrocarTipo }: { tipo: Tipo; onTrocarTipo: () => vo
   const [respostas, setRespostas] = useState<Respostas>({});
   const [termoFisico, setTermoFisico] = useState(false);
   const [autorizaFoto, setAutorizaFoto] = useState(false);
+  const [consentimentoDados, setConsentimentoDados] = useState(false);
   const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const [mostrarErros, setMostrarErros] = useState(false);
@@ -68,7 +69,7 @@ function Formulario({ tipo, onTrocarTipo }: { tipo: Tipo; onTrocarTipo: () => vo
   const alertas = calcularAlertas(tipo, respostas);
 
   const podeAvancar = (() => {
-    if (naConfirmacao) return termoFisico && !enviando;
+    if (naConfirmacao) return termoFisico && consentimentoDados && !enviando;
     return etapas[step].campos.every(
       (c) => !campoVisivel(c, respostas) || campoValido(c, respostas),
     );
@@ -89,6 +90,7 @@ function Formulario({ tipo, onTrocarTipo }: { tipo: Tipo; onTrocarTipo: () => vo
         alertas,
         termo_aceito: termoFisico,
         autoriza_foto: autorizaFoto,
+        consentimento_dados: consentimentoDados,
       });
       navigate({ to: "/painel/$id", params: { id: ficha.id } });
     } catch (e) {
@@ -197,6 +199,26 @@ function Formulario({ tipo, onTrocarTipo }: { tipo: Tipo; onTrocarTipo: () => vo
                   </span>
                 </label>
 
+                <label
+                  className={`flex gap-3 rounded-xl border bg-painel-bg px-4 py-4 cursor-pointer ${
+                    mostrarErros && !consentimentoDados
+                      ? "border-painel-alert-border"
+                      : "border-painel-border"
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={consentimentoDados}
+                    onChange={(e) => setConsentimentoDados(e.target.checked)}
+                    className="mt-1 h-4 w-4 shrink-0 accent-painel-primary"
+                  />
+                  <span className="text-sm text-painel-title leading-relaxed">
+                    <strong>Consentimento de dados (LGPD) assinado no papel.</strong> Confirmo que a
+                    ficha física também tinha a autorização de tratamento de dados assinada pela
+                    cliente.
+                  </span>
+                </label>
+
                 <label className="flex gap-3 rounded-xl border border-painel-border bg-painel-bg px-4 py-4 cursor-pointer">
                   <input
                     type="checkbox"
@@ -284,7 +306,7 @@ function Formulario({ tipo, onTrocarTipo }: { tipo: Tipo; onTrocarTipo: () => vo
         {mostrarErros && !podeAvancar && !enviando && (
           <p className="mt-3 text-sm text-painel-alert-text text-right">
             {naConfirmacao
-              ? "Confirme o termo assinado no papel para cadastrar."
+              ? "Confirme os dois termos assinados no papel para cadastrar."
               : "Responda todas as perguntas para continuar."}
           </p>
         )}

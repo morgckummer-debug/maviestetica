@@ -46,6 +46,7 @@ export type Ficha = {
   alertas: string[];
   termo_aceito: boolean;
   autoriza_foto: boolean;
+  consentimento_dados: boolean;
   medidas: Record<string, string>;
   relatorio: string | null;
   arquivada: boolean;
@@ -297,6 +298,7 @@ export async function criarFicha(dados: {
   alertas: string[];
   termo_aceito: boolean;
   autoriza_foto: boolean;
+  consentimento_dados: boolean;
 }): Promise<Ficha> {
   const res = await apiRest("fichas", {
     method: "POST",
@@ -310,6 +312,7 @@ export async function criarFicha(dados: {
       alertas: dados.alertas,
       termo_aceito: dados.termo_aceito,
       autoriza_foto: dados.autoriza_foto,
+      consentimento_dados: dados.consentimento_dados,
     }),
   });
   if (!res.ok) throw new Error("Não foi possível cadastrar a ficha.");
